@@ -8,9 +8,22 @@ authors = [
 readme = "README.md"
 requires-python = "^3.13"
 dependencies = [
+    "django (>=6.0.4,<7.0.0)",
+    "django-environ (>=0.13.0,<0.14.0)"
 ]
 
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "pytest (>=9.0.3,<10.0.0)",
+    "pytest-django (>=4.12.0,<5.0.0)"
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "settings.dev"
+python_files = ["test_*.py", "tests.py"]
+django_debug_mode = "keep"
