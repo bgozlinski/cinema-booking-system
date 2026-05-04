@@ -4,7 +4,7 @@
 **Data:** 2026-05-04
 **Powiązane dokumenty:** `workflow_scrum_agile.md`, `backlog.md`
 
-> **Rola Claude'a:** quality gates + propozycja commit message + (po akceptacji usera) wykonanie `git commit`. Kod aplikacji pisze user — Claude commituje już-napisany przez usera kod, nigdy własny. Pełne reguły w `workflow_scrum_agile.md` §2-3.
+> **Rola Claude'a:** quality gates + propozycja commit message (jako blok do skopiowania) + (po akceptacji usera) **user samodzielnie wkleja i uruchamia** `git commit` w terminalu. Claude **nie wywołuje** komend `git` Bashem. Kod aplikacji pisze user — Claude reviewuje już-napisany kod i podpowiada komendy. Pełne reguły w `workflow_scrum_agile.md` §2-3.
 
 ---
 
@@ -145,21 +145,22 @@ stripe listen --forward-to and where to copy the whsec_ secret to .env.
 
 ## 6. Co Claude robi w ramach commita
 
-> **Rola Claude'a w cyklu commita:** verifikacja + propozycja message + (na zgodę) wykonanie. **Kod aplikacji** napisany przez usera **przed** rozpoczęciem cyklu commita.
+> **Rola Claude'a w cyklu commita:** verifikacja + propozycja treści message i komendy `git commit`. **User samodzielnie** uruchamia komendy `git` w terminalu. **Kod aplikacji** napisany przez usera **przed** rozpoczęciem cyklu commita.
 
-**Przed każdym `git commit`:**
+**Przed każdym commitem:**
 1. **User** ogłasza „skończyłem implementację" / „zrób review" / „commitujemy".
-2. **Claude** czyta diff (`git diff` lub `git diff --cached`) — code review.
-3. **Claude** uruchamia quality gates lokalnie:
+2. **Claude** czyta diff przez `Read`/`Grep` na zmienionych plikach (NIE używa `git diff` — wszystkie git ops po stronie usera).
+3. **Claude** uruchamia quality gates lokalnie (te są w gestii Claude'a):
    - `poetry run ruff check .`
    - `poetry run ruff format --check .`
    - `poetry run mypy .`
    - `poetry run pytest --cov`
 4. **Claude** raportuje wynik wszystkich gates użytkownikowi (zielone / błędy + linie).
 5. Jeśli błędy — **Claude** wskazuje co poprawić; user poprawia; wracamy do kroku 2.
-6. Gdy zielone — **Claude** pokazuje proponowany commit message w bloku do skopiowania:
+6. Gdy zielone — **Claude** pokazuje proponowany commit message w bloku do skopiowania (HEREDOC bezpieczny dla bash i PowerShell, gdy jest tylko 1 linia używamy `git commit -m "..."`):
 
 ```bash
+git add <pliki>
 git commit -m "$(cat <<'EOF'
 feat(FR-07): implement booking creation with row locking
 
@@ -172,9 +173,18 @@ EOF
 )"
 ```
 
-7. **Claude** czeka na akceptację użytkownika („merge" / „commit" / „ok").
-8. Po akceptacji **Claude** wykonuje commit Bash'em (uruchomienie `git commit` to operacja gita, nie pisanie kodu — w obrębie roli Process Steward).
+7. **User** kopiuje blok, wkleja do terminala, wykonuje. Akceptacja jest implicite (skoro user uruchamia, zgadza się).
+8. **Claude** sprawdza wynik (np. user wkleja output, lub Claude czyta `.git/HEAD` przez Read jeśli musi potwierdzić).
 9. Po commicie **Claude** aktualizuje `backlog.md` (status board: US → Done jeśli ukończony) i sprawdza czy zostały jakieś gaps względem AC.
+
+**Komendy git które Claude proponuje (nie uruchamia):**
+- `git add <pliki>` (zawsze konkretne ścieżki, nigdy `-A`/`.`)
+- `git commit -m "..."` (z HEREDOC dla wieloliniowych)
+- `git checkout -b feat/FR-XX-slug`
+- `git push -u origin feat/FR-XX-slug`
+- `git push` (po pierwszym push z `-u`)
+- `git tag -a v0.X.0 -m "MX: description"` + `git push --tags`
+- `gh pr create --title "..." --body "$(cat <<'EOF' ... EOF)"`
 
 ---
 
@@ -245,10 +255,11 @@ feat(FR-07): implement booking creation with row locking
 
 ## 10. Operacje wymagające ręcznej akceptacji
 
-Claude NIE wykonuje samodzielnie nawet jeśli pozornie „bezpieczne":
+Claude NIE wykonuje samodzielnie:
 
+- **Wszystkie komendy `git` i `gh`** (z definicji roli — user uruchamia każdą z nich sam, Claude tylko proponuje treść).
 - Cokolwiek dotykającego sekretów (`.env`, klucze, hasła w czacie) — Claude flaguje, user wprowadza ręcznie.
-- Force-push, rebase na `main`, `git reset --hard` — destruktywne, zawsze pyta.
+- Force-push, rebase na `main`, `git reset --hard` — destruktywne, zawsze flaguje przed propozycją.
 - Merge do `main` (zawsze przez PR, zawsze user klika *Squash & merge* na GitHubie).
 - Zmiana migracji która już wygenerowała plik (nowa migracja zamiast edytować istniejącą).
 - Tag releasowy — Claude przygotowuje komendę, user uruchamia.

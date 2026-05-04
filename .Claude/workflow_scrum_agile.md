@@ -67,9 +67,9 @@ Backlog → Ready → In Progress (WIP=1) → Review → Done
 
 ### 3.4 Process Steward
 
-- **Backlog management** — aktualizacja `backlog.md` (live status board, oznaczanie US jako Done po merge, dodawanie nowych US-44+ jeśli wynikają z pracy).
-- **Propozycje commitów** — Conventional Commits z scope FR (`feat(FR-07): ...`), gotowe do skopiowania do `git commit -m`. Po akceptacji usera (`ok`/`commit`/`merge`) Claude może wykonać commit Bash'em — to operacja gita, nie pisanie kodu.
-- **Propozycje PR-ów** — tytuł + opis (Summary / Test plan / Linked FR / Definition of Done checklist) gotowe pod `gh pr create`. PR otwiera Claude na polecenie usera.
+- **Backlog management** — aktualizacja `backlog.md` (live status board, oznaczanie US jako Done po merge, dodawanie nowych US-44+ jeśli wynikają z pracy). To są edycje pliku `.md`, w zakresie roli (dokumenty meta).
+- **Propozycje commitów** — Conventional Commits z scope FR (`feat(FR-07): ...`), gotowe do skopiowania do terminala. **Wszystkie komendy `git` wykonuje user samodzielnie** — Claude pokazuje treść w bloku do skopiowania, nigdy nie uruchamia `git commit`/`git push`/`git tag`/`git merge`/etc. Bash'em.
+- **Propozycje PR-ów** — tytuł + opis (Summary / Test plan / Linked FR / Definition of Done checklist) gotowe pod `gh pr create`. **`gh pr create` uruchamia user samodzielnie** (Claude przygotowuje pełną komendę z `--title` i `--body` w HEREDOC do skopiowania).
 - **Milestone retro** — Claude pisze 3 sekcje (Wnioski / Co poprawić / Co zatrzymać) w `docs/retros/MX-retro.md` po każdym milestone.
 
 ---
@@ -179,15 +179,16 @@ class FooBar:
 - [ ] (kopiowane z §5)
 ```
 
-User pisze implementację, prosi o review. Claude czyta diff (`git diff`), uruchamia quality gates, wskazuje issues, proponuje commit message po akceptacji.
+User pisze implementację, prosi o review. Claude czyta diff (przez `Read`/`Grep` na plikach — nie przez `git diff`, żeby nie wywoływać git'a), uruchamia quality gates, wskazuje issues, proponuje treść commit message i komendy `git commit -m "$(cat <<'EOF' ... EOF)"` do uruchomienia przez usera.
 
 ---
 
 ## 10. Obowiązujące zasady (TL;DR)
 
 - ✅ Claude pisze: dokumenty `.md`, configi (`pyproject.toml`, `docker-compose.yml`, `.github/workflows/ci.yml`, `.pre-commit-config.yaml`, `.gitignore`, `.env.example`).
-- ✅ Claude robi: quality gates, code review, propozycje commitów/PR-ów, aktualizacja backlogu, retro.
-- ✅ Claude pokazuje: szkielety plików, listy testów, sygnatury, file layouts, decyzje architektoniczne.
+- ✅ Claude robi: quality gates (`pytest`, `ruff`, `mypy`), code review (czytanie plików), propozycje treści commitów/PR-ów, aktualizacja backlogu, retro.
+- ✅ Claude pokazuje: szkielety plików, listy testów, sygnatury, file layouts, decyzje architektoniczne, treści komend `git`/`gh` do skopiowania przez usera.
 - ❌ Claude NIE pisze: kodu aplikacji (`.py`, `.html`, `.js`, `.css`, migracje, `manage.py`).
-- ❌ Claude NIE commituje: bez wyraźnej zgody usera (`ok` / `commit` / `merge`).
-- ❌ Claude NIE pushuje na `main` ani nie mergeuje PR-ów (zawsze user przez GitHub UI lub `gh`).
+- ❌ Claude NIE uruchamia komend `git` (`git commit`, `git push`, `git tag`, `git merge`, `git checkout`, `git branch`, `git remote add`, `git rebase`, `git reset`, etc.) — wszystkie git ops wykonuje user samodzielnie z proponowanych przez Claude'a treści.
+- ❌ Claude NIE uruchamia `gh pr create`, `gh repo create`, `gh pr merge` — przygotowuje komendę, user uruchamia.
+- ❌ Claude NIE pushuje na `main` ani nie mergeuje PR-ów (z definicji powyżej).
