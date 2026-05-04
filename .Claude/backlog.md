@@ -320,10 +320,12 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 |---|---|
 | **In Progress (WIP=1)** | _none_ |
 | **Ready (DoR ✅)** | _none_ |
-| **Backlog** | US-01..US-43 |
-| **Done** | _none — sprint zerowy nie ma US (T0.1..T0.8 trackowane w planie sprint-zero)_ |
+| **Backlog** | US-02..US-43 |
+| **Done** | **US-01** ✅ |
 
-**Następny task po sprincie zerowym:** US-01 (Setup projektu i konfiguracja Poetry).
+**Bieżący milestone:** M1 — Foundation (`v0.1.0`). 1/9 US zmergowanych.
+
+**Następny task:** US-02 (Docker Compose dla PostgreSQL).
 
 ---
 
