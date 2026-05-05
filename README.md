@@ -24,6 +24,17 @@ KinoMania is a learning-grade Django + DRF cinema booking system with Stripe san
 
 > Application setup will be added in M1 (US-01). For now, this repo holds documentation only.
 
+## Local development hooks
+
+```bash
+poetry install
+poetry run pre-commit install
+poetry run pre-commit install --hook-type pre-push
+```
+
+`ruff` (lint + format), `mypy`, and file checks run on every commit; `pytest` runs on every push.
+
+
 ## Milestones
 
 - [ ] **M1 — Foundation** (`v0.1.0`) — Django bootstrap, custom User, Docker, CI
