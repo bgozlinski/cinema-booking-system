@@ -1,6 +1,4 @@
-"""Development profile — DEBUG=True, lokalna baza, wyższa verbosity."""
-
-from settings.base import *  # noqa: F401, F403
+from settings.base import *
 
 # Force DEBUG on regardless of .env (dev profile invariant)
 DEBUG = True

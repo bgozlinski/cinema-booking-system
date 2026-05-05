@@ -6,7 +6,7 @@ authors = [
     {name = "bgozlinski",email = "bartlomiej.gozlinski@gmail.com"}
 ]
 readme = "README.md"
-requires-python = "^3.13"
+requires-python = ">=3.13,<4.0"
 dependencies = [
     "django (>=6.0.4,<7.0.0)",
     "django-environ (>=0.13.0,<0.14.0)",
@@ -21,10 +21,95 @@ build-backend = "poetry.core.masonry.api"
 [dependency-groups]
 dev = [
     "pytest (>=9.0.3,<10.0.0)",
-    "pytest-django (>=4.12.0,<5.0.0)"
+    "pytest-django (>=4.12.0,<5.0.0)",
+    "ruff (>=0.15.12,<0.16.0)",
+    "mypy (>=1.20.2,<2.0.0)",
+    "pytest-cov (>=7.1.0,<8.0.0)",
+    "pytest-mock (>=3.15.1,<4.0.0)",
+    "factory-boy (>=3.3.3,<4.0.0)",
+    "faker (>=40.15.0,<41.0.0)",
+    "django-stubs[compatible-mypy] (>=6.0.3,<7.0.0)"
 ]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+extend-exclude = ["migrations", "media", "static", "locale"]
+
+[tool.ruff.lint]
+select = [
+  "E", "F", "W",       # pycodestyle + pyflakes
+  "I",                                          # isort
+  "B",                                 # bugbear
+  "UP",                # pyupgrade
+  "DJ",                # flake8-django
+  "SIM",               # simplify
+  "C4",                # comprehensions
+  "RET",               # return
+  "PT",                # pytest-style
+  "RUF",               # ruff-specific
+]
+ ignore = ["E501"]   # line length handled by formatter
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S101"]   # asserts allowed in tests
+"**/settings/*.py" = ["F405", "F403"]   # star imports OK in dev/prod profiles
+
+[tool.mypy]
+python_version = "3.13"
+strict_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_untyped_defs = false
+check_untyped_defs = true
+plugins = ["mypy_django_plugin.main"]
+
+
+[[tool.mypy.overrides]]
+module = ["*.migrations.*", "*.tests.*"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["environ"]
+ignore_missing_imports = true
+
+[tool.django-stubs]
+django_settings_module = "settings.dev"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "settings.dev"
 python_files = ["test_*.py", "tests.py"]
 django_debug_mode = "keep"
+addopts = [
+  "--cov=accounts",
+  "--cov=cinema",
+  "--cov=payments",
+  "--cov-report=term-missing",
+  "--cov-report=html:htmlcov",
+  "--reuse-db",
+  "-ra",
+]
+markers = [
+  "integration: integration tests (slower)",
+  "stripe: tests touching Stripe (mocked)",
+]
+
+
+[tool.coverage.run]
+source = ["accounts", "cinema", "payments"]
+omit = [
+  "*/migrations/*",
+  "*/tests/*",
+  "*/factories.py",
+  "manage.py",
+  "settings/*",
+]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "raise NotImplementedError",
+  "if TYPE_CHECKING:",
+  "if __name__ == .__main__.:",
+]
