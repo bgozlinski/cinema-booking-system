@@ -10,6 +10,12 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  SECRET_KEY: ci-secret-not-for-prod
+  DEBUG: "False"
+  ALLOWED_HOSTS: localhost,127.0.0.1
+  DATABASE_URL: sqlite:///dummy.db
+
 jobs:
   quality:
     name: Lint & type-check
