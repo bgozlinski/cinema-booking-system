@@ -1,19 +1,22 @@
-"""Smoke tests for US-01 — verify the project skeleton boots.
+"""Smoke tests for the project skeleton.
 
-Two tests:
-- `test_app_starts` — Django serves /admin/login/ without 500.
+Three tests:
+- `test_app_starts` — Django serves /admin/login/ without 500. (US-01)
 - `test_settings_loads_env_vars` — django-environ correctly populated
-  SECRET_KEY and DEBUG from .env / .env.example.
+  SECRET_KEY and DEBUG from .env / .env.example. (US-01)
+- `test_database_is_postgres` — DATABASE_URL points at PostgreSQL via
+  docker-compose, not SQLite. (US-02)
 
 These tests have no business logic to assert — they only confirm that
-the Poetry venv, settings package, and pytest-django wiring are sane.
-Domain tests start at US-06 (custom User model).
+the Poetry venv, settings package, pytest-django wiring, and dockerised
+PostgreSQL are sane. Domain tests start at US-06 (custom User model).
 """
 
 from __future__ import annotations
 
 import pytest
 from django.conf import settings
+from django.db import connection
 from django.test import Client
 
 
@@ -50,4 +53,25 @@ def test_settings_loads_env_vars() -> None:
     assert settings.DEBUG is True, (
         f"settings.DEBUG should be True under settings.dev, got {settings.DEBUG}. "
         "Verify settings/dev.py forces DEBUG = True after `from settings.base import *`."
+    )
+
+
+@pytest.mark.django_db
+def test_database_is_postgres() -> None:
+    """GIVEN DATABASE_URL pointing at the docker-compose Postgres instance
+    WHEN django opens its default DB connection
+    THEN connection.vendor == 'postgresql' (proves we're not on SQLite anymore).
+
+    Catches accidental SQLite fallback (e.g. `.env` not loaded, DATABASE_URL
+    typo) and confirms the docker-compose service is reachable.
+    """
+    assert connection.vendor == "postgresql", (
+        f"Expected 'postgresql', got '{connection.vendor}'. "
+        "Verify DATABASE_URL in .env starts with 'postgres://' and that "
+        "`docker compose up -d` is running (check with `docker compose ps`)."
+    )
+    assert connection.is_usable(), (
+        "Postgres connection opened but is not usable — likely the container "
+        "is up but the DB inside is still initialising. Wait for healthcheck "
+        "to report 'healthy', then re-run."
     )
