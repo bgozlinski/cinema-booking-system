@@ -68,8 +68,9 @@ plugins = ["mypy_django_plugin.main"]
 
 
 [[tool.mypy.overrides]]
-module = ["*.migrations.*", "*.tests.*"]
+module = ["*.migrations.*", "*.tests.*", "tests.*"]
 ignore_errors = true
+
 
 [[tool.mypy.overrides]]
 module = ["environ"]
