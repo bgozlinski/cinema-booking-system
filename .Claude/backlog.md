@@ -157,27 +157,52 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 
 ---
 
-### US-07 — Login/Logout/Register flow (web)
-- **FR:** FR-05, FR-06 | **Branch:** `feat/FR-06-email-auth-flow` | **Estymata:** M
+### US-07 — Login/Logout/Register flow with email activation (web)
+- **FR:** FR-05, FR-06 | **Branch:** `feat/FR-06-email-auth-flow` | **Estymata:** L
 - **Zależy od:** US-06
+- **Spec:** [`docs/superpowers/specs/2026-05-18-email-activation-flow-design.md`](../docs/superpowers/specs/2026-05-18-email-activation-flow-design.md)
+- **Plan:** [`docs/superpowers/plans/2026-05-18-email-activation-flow.md`](../docs/superpowers/plans/2026-05-18-email-activation-flow.md)
 
 **Story:**
-*Jako użytkownik, chcę zarejestrować się i zalogować przez email + hasło, aby móc rezerwować bilety.*
+*Jako użytkownik, chcę zarejestrować się przez email + hasło i potwierdzić adres przez klik w link aktywacyjny, aby mieć pewność że konto jest powiązane z moim realnym mailem.*
 
-**Acceptance Criteria:**
-- **GIVEN** formularz `/accounts/register/` **WHEN** POST z poprawnym emailem + 2× hasłem **THEN** user utworzony, automatycznie zalogowany, redirect na `/`.
-- **GIVEN** próba rejestracji z istniejącym emailem **WHEN** POST **THEN** błąd walidacji przy polu email, status 200, formularz wyświetlony ponownie.
-- **GIVEN** `EmailAuthenticationForm` na `/accounts/login/` **WHEN** POST email + hasło **THEN** sesja zalogowana, redirect na `?next=` lub `/`.
-- **GIVEN** błędne hasło **WHEN** POST **THEN** błąd „nieprawidłowe dane logowania", brak sesji.
-- **GIVEN** zalogowany user **WHEN** POST `/accounts/logout/` **THEN** sesja zniszczona, redirect na `/`.
+**Acceptance Criteria (Given/When/Then):**
 
-**DoR:** [ ] story / [ ] AC / [ ] zależności / [ ] szkielet od Claude
+*Rejestracja:*
+- **GIVEN** formularz `/accounts/register/` **WHEN** POST z poprawnym emailem + 2× tym samym hasłem **THEN** user utworzony z `is_active=False`, email z linkiem aktywacyjnym w `mail.outbox`, user NIE zalogowany, redirect na `/accounts/activate/sent/`.
+- **GIVEN** próba rejestracji z istniejącym emailem **WHEN** POST **THEN** form error przy polu email, status 200, brak nowego usera, brak emaila w outboxie.
+- **GIVEN** mismatched passwords **WHEN** POST **THEN** form error przy `password2`, status 200, brak nowego usera, brak emaila.
 
-**Tests-first (user pisze) — `accounts/tests/test_views.py`:**
-- `test_register_with_valid_email_creates_user`
-- `test_register_rejects_duplicate_email`
-- `test_login_with_email_works`
-- `test_login_with_wrong_password_fails`
+*Aktywacja:*
+- **GIVEN** świeży link aktywacyjny **WHEN** GET `/accounts/activate/<uidb64>/<token>/` **THEN** `user.is_active=True`, flash sukcesu, redirect na `/accounts/login/`.
+- **GIVEN** link z podrobionym tokenem **WHEN** GET **THEN** redirect na `/accounts/activate/invalid/`, user pozostaje `is_active=False`.
+- **GIVEN** malformed `uidb64` (śmieci w URL) **WHEN** GET **THEN** redirect na `/accounts/activate/invalid/`.
+- **GIVEN** uidb64 dla nieistniejącego usera **WHEN** GET **THEN** redirect na `/accounts/activate/invalid/`.
+- **GIVEN** link starszy niż `PASSWORD_RESET_TIMEOUT` (3 dni) **WHEN** GET **THEN** redirect na `/accounts/activate/invalid/`.
+- **GIVEN** user już zaktywowany **WHEN** klika link drugi raz **THEN** flash „konto już aktywne" + redirect na `/accounts/login/` (idempotent).
+
+*Resend:*
+- **GIVEN** `/accounts/activate/resend/` **WHEN** POST email nieaktywnego usera **THEN** nowy email w outboxie, render `resend_done.html`.
+- **GIVEN** POST email aktywnego usera **THEN** outbox bez nowych maili, render `resend_done.html` (no enum leak).
+- **GIVEN** POST email nieistniejącego usera **THEN** outbox bez maili, render `resend_done.html` (no enum leak).
+
+*Login/Logout:*
+- **GIVEN** active user **WHEN** POST email+password na `/accounts/login/` **THEN** sesja zalogowana, redirect na `?next=` lub `/`.
+- **GIVEN** inactive user z poprawnym hasłem **WHEN** POST **THEN** generic „nieprawidłowe dane", brak sesji (decyzja security-first — no enum leak).
+- **GIVEN** zły password **WHEN** POST **THEN** generic „nieprawidłowe dane", brak sesji.
+- **GIVEN** zalogowany user **WHEN** POST `/accounts/logout/` **THEN** sesja zniszczona, redirect na `/`. GET `/accounts/logout/` → 405 (Django 5+ default).
+
+**DoR:** [✅] story / [✅] AC / [✅] zależności / [✅] szkielet od Claude (spec + plan)
+
+**Tests-first (Claude pisze) — `tests/accounts/`:**
+- `test_registration.py` — register GET/POST, inactive user creation, email sent, no auto-login, redirect, walidacje (duplicate email, mismatched passwords, invalid email)
+- `test_activation.py` — valid/invalid/expired/malformed/nonexistent/already-active scenarios (8 cases, `freezegun` na expired)
+- `test_resend.py` — inactive (sends), active (silent), nonexistent (silent), zawsze render `resend_done`
+- `test_login.py` — active OK, inactive fails generic, wrong password, `?next=` redirect
+- `test_logout.py` — POST destroys session, GET 405
+- `test_emails.py` — `send_activation_email()` subject/body/from, link absolute z uidb64+token
+- `test_forms.py` — RegistrationForm + ResendActivationForm walidacje
+- `test_factories.py` — UserFactory `inactive` trait smoke
 
 ---
 
@@ -318,12 +343,12 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 
 | Status | US |
 |---|---|
-| **In Progress (WIP=1)** | _none_ |
-| **Ready (DoR ✅)** | **US-07** (Login/Logout/Register flow — zależy od US-06) |
+| **In Progress (WIP=1)** | **US-07** (Login/Logout/Register + email activation — FR-05, FR-06) |
+| **Ready (DoR ✅)** | _none_ |
 | **Backlog** | US-08..US-43 |
 | **Done** | **US-01**, **US-02**, **US-03**, **US-04**, **US-05**, **US-06** ✅✅✅✅✅✅ |
 
-**Bieżący milestone:** M1 — Foundation (`v0.1.0`). 6/9 US zmergowanych. **Pierwszy realny kod aplikacji w drzewie** (`apps/accounts/User` + `UserManager` + `UserAdmin`, email-only auth, FR-05). Następny task: US-07 (web auth flow).
+**Bieżący milestone:** M1 — Foundation (`v0.1.0`). 6/9 US zmergowanych, US-07 w toku (rozszerzony scope o email activation — estymata `M → L`). Spec + plan w `docs/superpowers/`.
 
 ---
 
@@ -331,11 +356,11 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 
 | Milestone | US | Suma estymat | Szacunek (3-4h/dzień) |
 |---|---|---|---|
-| M1 | 9 | ~6 dni | ~1 tydzień |
+| M1 | 9 | ~7 dni | ~1 tydzień |
 | M2 | 8 | ~6 dni | ~1 tydzień |
 | M3 | 11 | ~9 dni | ~1.5 tygodnia |
 | M4 | 8 | ~9 dni | ~1.5 tygodnia |
 | M5 | 7 | ~5 dni | ~1 tydzień |
-| **Suma** | **43** | **~35 dni** | **~5-6 tygodni** |
+| **Suma** | **43** | **~36 dni** | **~5-6 tygodni** |
 
 > Estymaty są wskazówkami, nie deadlinami. Solo + AI workflow nie ma sprintów ani burndown chartów — milestone-based znaczy „kończymy gdy milestone jest done", nie „kończymy 31 maja".
