@@ -40,8 +40,10 @@ KinoMania to serwis internetowy dla kina, umożliwiający użytkownikom przeglą
 | Aktor | Opis | Logowanie | Uprawnienia |
 |---|---|---|---|
 | **Gość (anonim)** | Niezalogowany użytkownik | — | Przeglądanie repertuaru, szczegółów filmów, harmonogramu seansów |
-| **Użytkownik zarejestrowany** | Zalogowany użytkownik | **email + hasło** | Wszystko co Gość + rezerwacje, panel rezerwacji, anulowanie |
+| **Użytkownik zarejestrowany** | Zalogowany użytkownik (`is_active=True`) | **email + hasło** | Wszystko co Gość + rezerwacje, panel rezerwacji, anulowanie |
 | **Administrator (staff)** | Pracownik kina | email + hasło | Pełen dostęp do panelu Django Admin |
+
+> **Stan `is_active`:** świeżo zarejestrowane konto ma `is_active=False` i pozostaje takie do momentu kliknięcia linku aktywacyjnego (FR-05). `ModelBackend.user_can_authenticate()` odrzuca taki login z generic „nieprawidłowe dane" — efektywnie konto nieaktywne ma uprawnienia Gościa do czasu aktywacji.
 
 ---
 
@@ -226,24 +228,35 @@ Persystowany rejestr każdego odebranego webhooka Stripe — gwarantuje, że ten
 - Lista posortowana po `start_time`, pogrupowana po filmie.
 - Każdy seans: tytuł (link do FR-03), godzina, hall, price, dostępne miejsca, przycisk rezerwacji.
 
-### FR-05 — Rejestracja użytkownika
-**URL:** `/accounts/register/`
+### FR-05 — Rejestracja użytkownika z aktywacją email
+**URLe:** `/accounts/register/`, `/accounts/activate/sent/`, `/accounts/activate/<uidb64>/<token>/`, `/accounts/activate/invalid/`, `/accounts/activate/resend/`
+
 **Akceptacja:**
-- Formularz pól: `email`, `password1`, `password2`, opcjonalnie `first_name`, `last_name`. **Brak pola username.**
+- Formularz `/accounts/register/` z polami: `email`, `password1`, `password2`, opcjonalnie `first_name`, `last_name`. **Brak pola username.**
 - Walidacja:
   - `email` — wymagany, format prawidłowy, **unikalny w systemie**.
   - `password1 == password2`, zgodność z `AUTH_PASSWORD_VALIDATORS`.
-- Po sukcesie → automatyczne logowanie i redirect na `/`.
+- Po sukcesie POST:
+  1. Konto tworzone z `is_active=False`.
+  2. Generowany token (Django `default_token_generator` — HMAC, bezstanowy).
+  3. Wysyłany email na podany adres z absolutnym linkiem aktywacyjnym `/accounts/activate/<uidb64>/<token>/`.
+  4. User **nie** jest automatycznie logowany.
+  5. Redirect na `/accounts/activate/sent/` z komunikatem „Sprawdź skrzynkę email".
+- **Aktywacja:** klik w link z maila → walidacja tokenu → `user.is_active=True` → flash sukcesu → redirect na `/accounts/login/`.
+- **Token ważny przez `PASSWORD_RESET_TIMEOUT`** (Django default, 3 dni). Po wygaśnięciu lub uszkodzeniu linku → redirect na `/accounts/activate/invalid/` z linkiem do resendu.
+- **Idempotencja:** drugi klik linku po aktywacji → flash „konto już aktywne" → redirect na login (nie błąd).
+- **Resend** (`/accounts/activate/resend/`): formularz z polem email. Niezależnie od stanu konta (istniejące/nieistniejące/aktywne) renderowana ta sama strona `resend_done.html` — **bez enumeration leak**. Realnie email wysyłany tylko dla `is_active=False`.
 - Komunikaty błędów przy polach (tłumaczone).
+
+**Wykluczone z M1 (follow-up):** rate limiting na resend (M5 security), dedykowany salt dla activation tokenu (razem z password reset), HTML email template, tłumaczenia treści maili (M5 i18n), realny SMTP w prod.
 
 ### FR-06 — Logowanie i wylogowanie
 **URLe:** `/accounts/login/`, `/accounts/logout/`
 **Akceptacja:**
-- Formularz logowania zawiera pola **`email`** i **`password`** (NIE username).
-- Implementacja: custom `EmailAuthenticationForm` dziedzicząca po `AuthenticationForm`, z polem `username` przemianowanym/zastąpionym `email` (label = `_("Email")`, widget `EmailInput`).
-- Po zalogowaniu → redirect na `?next=` lub `/`.
-- Po wylogowaniu → redirect na `/`.
-- Standardowy `LogoutView`.
+- Formularz logowania na polach **email** i **password** (brak `username`). Standardowy `django.contrib.auth.views.LoginView` z `AuthenticationForm` — pole formularza nadal nazywa się `username`, ale `USERNAME_FIELD="email"` w modelu sprawia, że Django automatycznie traktuje wartość jako email. Custom form nie jest potrzebny.
+- **Stan `is_active=False` blokuje login** — `ModelBackend.user_can_authenticate()` zwraca False, formularz pokazuje generic „nieprawidłowe dane logowania" (decyzja security-first — bez enumeration leak ujawniającego że konto czeka na aktywację). Aby się zalogować user musi najpierw aktywować konto (FR-05).
+- Po zalogowaniu → redirect na `?next=` lub `LOGIN_REDIRECT_URL` (`/`).
+- Wylogowanie: `LogoutView` (POST only — Django 5+ default, GET zwraca 405). Po wylogowaniu → redirect na `LOGOUT_REDIRECT_URL` (`/`).
 
 ### FR-07 — Rezerwacja biletów
 **URL:** `/screenings/<int:pk>/book/`
@@ -438,7 +451,7 @@ Persystowany rejestr każdego odebranego webhooka Stripe — gwarantuje, że ten
 **Bazowy URL:** `/api/v1/auth/`
 
 **Endpointy:**
-- `POST /api/v1/auth/register/` — rejestracja (analogicznie do FR-05; pola: `email`, `password`, opcjonalnie `first_name`, `last_name`); zwraca `{user, access, refresh}`.
+- `POST /api/v1/auth/register/` — rejestracja (analogicznie do FR-05 z aktywacją email; pola: `email`, `password`, opcjonalnie `first_name`, `last_name`). Konto tworzone z `is_active=False`, wysyłany email aktywacyjny, **bez** zwrotu tokenów JWT (login API możliwy dopiero po aktywacji przez web link z FR-05 — w M4 nie powielamy mechanizmu aktywacji). Zwraca `{user, detail: "activation email sent"}`.
 - `POST /api/v1/auth/token/` — login (`email` + `password`); zwraca `{access, refresh}`.
 - `POST /api/v1/auth/token/refresh/` — odświeżenie access tokenu; zwraca `{access}`.
 - `GET /api/v1/auth/me/` — dane zalogowanego usera (`IsAuthenticated`).
@@ -672,8 +685,9 @@ kinomania/
 │   │   ├── apps.py               # AccountsConfig (name = "apps.accounts")
 │   │   ├── models.py             # custom User
 │   │   ├── managers.py           # UserManager
-│   │   ├── forms.py              # EmailAuthenticationForm, RegistrationForm
-│   │   ├── views.py              # Register, custom Login (web)
+│   │   ├── forms.py              # RegistrationForm, ResendActivationForm
+│   │   ├── views.py              # RegisterView, ActivateView, ResendActivationView, ActivationSentView, ActivationInvalidView (login/logout = django.contrib.auth.views)
+│   │   ├── emails.py             # send_activation_email() helper
 │   │   ├── urls.py
 │   │   ├── admin.py              # custom UserAdmin
 │   │   ├── migrations/
