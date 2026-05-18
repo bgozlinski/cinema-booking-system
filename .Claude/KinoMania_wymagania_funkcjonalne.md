@@ -2,7 +2,7 @@
 
 **Wersja:** 3.0
 **Data:** 2026-05-04
-**Cel dokumentu:** Specyfikacja wymagań funkcjonalnych przeznaczona do implementacji przez agentów Claude Code w środowisku PyCharm. Wersja 3.0 dodaje równoległe REST API (DRF) oraz integrację płatności Stripe (sandbox).
+**Cel dokumentu:** Specyfikacja wymagań funkcjonalnych przeznaczona do implementacji. Wersja 3.0 dodaje równoległe REST API (DRF) oraz integrację płatności Stripe (sandbox).
 
 ---
 
@@ -32,18 +32,6 @@ KinoMania to serwis internetowy dla kina, umożliwiający użytkownikom przeglą
 - **Treści dla użytkownika końcowego (etykiety formularzy, treść szablonów, komunikaty, `verbose_name`, `help_text`, `choices` labels):** opakowane w `gettext_lazy("...")` i tłumaczone na PL/EN.
 - **Dokumentacja techniczna i komentarze w kodzie:** angielski.
 - **Ten dokument wymagań:** polski.
-
-### 1.4 Słownik pojęć
-| PL | EN (kod) |
-|---|---|
-| Repertuar | Movies / Repertoire |
-| Seans | Screening |
-| Rezerwacja | Booking |
-| Sala | Hall |
-| Film | Movie |
-| Reżyser | Director |
-| Aktor | Actor |
-| Gatunek | Genre |
 
 ---
 
