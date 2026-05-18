@@ -1,0 +1,9 @@
+{% extends "accounts/_base.html" %}
+{% block title %}Link nieprawidłowy — KinoMania{% endblock %}
+{% block content %}
+
+<h1>Link aktywacyjny jest nieprawidłowy lub wygasł</h1>
+<p>Możliwe przyczyny: link został już użyty, hasło zostało zmienione, albo link wygasł (3 dni).</p>
+<p><a href="{% url 'accounts:activation_resend' %}">Wyślij link aktywacyjny ponownie</a></p>
+
+{% endblock %}
