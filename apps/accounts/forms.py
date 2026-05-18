@@ -10,6 +10,14 @@ class RegistrationForm(UserCreationForm):
         model = User
         fields = ("email",)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.setdefault("class", "form-control")
+
 
 class ResendActivationForm(forms.Form):
-    email = forms.EmailField(required=True)
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={"class": "form-control"}),
+    )
