@@ -82,9 +82,7 @@ DJANGO_SETTINGS_MODULE = "settings.dev"
 python_files = ["test_*.py", "tests.py"]
 django_debug_mode = "keep"
 addopts = [
-  "--cov=accounts",
-  "--cov=cinema",
-  "--cov=payments",
+  "--cov=apps",
   "--cov-report=term-missing",
   "--cov-report=html:htmlcov",
   "--reuse-db",
@@ -97,7 +95,7 @@ markers = [
 
 
 [tool.coverage.run]
-source = ["accounts", "cinema", "payments"]
+source = ["apps"]
 omit = [
   "*/migrations/*",
   "*/tests/*",

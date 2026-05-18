@@ -638,6 +638,11 @@ Tworzenie `Booking` w `transaction.atomic()` z `Screening.objects.select_for_upd
 
 ## 8. Struktura projektu
 
+**Konwencja:**
+- **Kod aplikacji** żyje pod `apps/<nazwa>/` — każda appka to pełny pakiet Pythonowy (`AppConfig.name = "apps.<nazwa>"`).
+- **Testy + factories** żyją pod `tests/<nazwa>/` — całkowicie poza kodem aplikacji, importowane przez pełną ścieżkę (`from tests.accounts.factories import UserFactory`).
+- **Etykieta aplikacji** (`AppConfig.label`) domyślnie = ostatni segment `name` → tabele dostają prefiks `accounts_`, `cinema_`, `payments_`. `AUTH_USER_MODEL = "accounts.User"` używa właśnie label, nie dotted name.
+
 ```
 kinomania/
 ├── manage.py
@@ -660,51 +665,95 @@ kinomania/
 │   ├── urls.py                   # main urlconf — include API + web + webhooks
 │   ├── wsgi.py
 │   └── asgi.py
-├── accounts/                     # aplikacja autoryzacji
-│   ├── models.py                 # custom User + UserManager
-│   ├── managers.py
-│   ├── forms.py                  # EmailAuthenticationForm, RegistrationForm
-│   ├── views.py                  # Register, custom Login (web)
-│   ├── urls.py
-│   ├── admin.py                  # custom UserAdmin
-│   ├── factories.py              # UserFactory (factory_boy)
-│   ├── api/                      # FR-16
+├── apps/                         # kod aplikacji (wszystkie appki Django)
+│   ├── __init__.py
+│   ├── accounts/                 # aplikacja autoryzacji
 │   │   ├── __init__.py
-│   │   ├── serializers.py        # RegisterSerializer, MeSerializer
-│   │   ├── views.py              # RegisterView, MeView (token endpoints z simplejwt)
+│   │   ├── apps.py               # AccountsConfig (name = "apps.accounts")
+│   │   ├── models.py             # custom User
+│   │   ├── managers.py           # UserManager
+│   │   ├── forms.py              # EmailAuthenticationForm, RegistrationForm
+│   │   ├── views.py              # Register, custom Login (web)
 │   │   ├── urls.py
-│   │   └── permissions.py
-│   ├── tests/
+│   │   ├── admin.py              # custom UserAdmin
+│   │   ├── migrations/
+│   │   ├── api/                  # FR-16
+│   │   │   ├── __init__.py
+│   │   │   ├── serializers.py    # RegisterSerializer, MeSerializer
+│   │   │   ├── views.py          # RegisterView, MeView (token endpoints z simplejwt)
+│   │   │   ├── urls.py
+│   │   │   └── permissions.py
+│   │   └── templates/accounts/
+│   │       ├── login.html
+│   │       └── register.html
+│   ├── cinema/                   # główna aplikacja
+│   │   ├── __init__.py
+│   │   ├── apps.py
+│   │   ├── models.py             # Genre, Actor, Director, Hall, Movie, Screening, Booking
+│   │   ├── views.py
+│   │   ├── forms.py              # BookingForm, filters
+│   │   ├── urls.py
+│   │   ├── admin.py
+│   │   ├── managers.py           # custom QuerySetów (np. MovieQuerySet.upcoming)
+│   │   ├── migrations/
+│   │   ├── services/             # logika biznesowa wspólna dla web i API
+│   │   │   ├── __init__.py
+│   │   │   └── bookings.py       # create_booking_pending, cancel_booking
+│   │   ├── api/                  # FR-17, FR-18, FR-19
+│   │   │   ├── __init__.py
+│   │   │   ├── serializers.py
+│   │   │   ├── viewsets.py       # MovieViewSet, ScreeningViewSet, BookingViewSet, AdminViewSets
+│   │   │   ├── permissions.py    # IsBookingOwnerOrStaff
+│   │   │   ├── filters.py        # FilterSets (django-filter)
+│   │   │   └── urls.py
+│   │   ├── management/
+│   │   │   ├── __init__.py
+│   │   │   └── commands/
+│   │   │       ├── __init__.py
+│   │   │       └── seed_db.py    # FR-13
+│   │   └── templates/cinema/
+│   │       ├── base.html         # navbar z language switcher
+│   │       ├── movie_list.html
+│   │       ├── movie_detail.html
+│   │       ├── screening_list.html
+│   │       ├── booking_form.html
+│   │       ├── booking_detail.html
+│   │       └── my_bookings.html
+│   └── payments/                 # FR-21..FR-24
+│       ├── __init__.py
+│       ├── apps.py
+│       ├── models.py             # StripeEvent (3.9)
+│       ├── views.py              # StripeWebhookView, CheckoutView (web)
+│       ├── urls.py               # /webhooks/stripe/, /bookings/<id>/checkout/
+│       ├── admin.py              # StripeEventAdmin (read-only)
+│       ├── migrations/
+│       ├── services/
+│       │   ├── __init__.py
+│       │   └── stripe.py         # create_checkout_session, refund, construct_event
+│       ├── api/                  # FR-21 (API), FR-22 (webhook unified — opcjonalnie pod /api/)
+│       │   ├── __init__.py
+│       │   ├── serializers.py
+│       │   ├── views.py          # CheckoutAPIView
+│       │   └── urls.py
+│       └── management/
+│           ├── __init__.py
+│           └── commands/
+│               ├── __init__.py
+│               └── expire_pending_bookings.py   # FR-23
+├── tests/                        # WSZYSTKIE testy + factories — poza apps/
+│   ├── __init__.py
+│   ├── conftest.py               # globalne fixtures pytest (Stripe mocks, etc.)
+│   ├── test_smoke.py             # smoke tests projektu (US-01, US-02)
+│   ├── accounts/
+│   │   ├── __init__.py
+│   │   ├── factories.py          # UserFactory (factory_boy)
 │   │   ├── test_models.py
+│   │   ├── test_admin.py
 │   │   ├── test_views.py
 │   │   └── test_api_auth.py
-│   └── templates/accounts/
-│       ├── login.html
-│       └── register.html
-├── cinema/                       # główna aplikacja
-│   ├── models.py                 # Genre, Actor, Director, Hall, Movie, Screening, Booking
-│   ├── views.py
-│   ├── forms.py                  # BookingForm, filters
-│   ├── urls.py
-│   ├── admin.py
-│   ├── managers.py               # custom QuerySetów (np. MovieQuerySet.upcoming)
-│   ├── factories.py              # MovieFactory, ScreeningFactory, BookingFactory + warianty
-│   ├── services/                 # logika biznesowa wspólna dla web i API
+│   ├── cinema/
 │   │   ├── __init__.py
-│   │   └── bookings.py           # create_booking_pending, cancel_booking
-│   ├── api/                      # FR-17, FR-18, FR-19
-│   │   ├── __init__.py
-│   │   ├── serializers.py
-│   │   ├── viewsets.py           # MovieViewSet, ScreeningViewSet, BookingViewSet, AdminViewSets
-│   │   ├── permissions.py        # IsBookingOwnerOrStaff
-│   │   ├── filters.py            # FilterSets (django-filter)
-│   │   └── urls.py
-│   ├── management/
-│   │   ├── __init__.py
-│   │   └── commands/
-│   │       ├── __init__.py
-│   │       └── seed_db.py        # FR-13
-│   ├── tests/
+│   │   ├── factories.py          # MovieFactory, ScreeningFactory, BookingFactory + warianty
 │   │   ├── test_models.py
 │   │   ├── test_views.py
 │   │   ├── test_forms.py
@@ -712,35 +761,9 @@ kinomania/
 │   │   ├── test_api_movies.py
 │   │   ├── test_api_screenings.py
 │   │   └── test_api_bookings.py
-│   └── templates/cinema/
-│       ├── base.html             # navbar z language switcher
-│       ├── movie_list.html
-│       ├── movie_detail.html
-│       ├── screening_list.html
-│       ├── booking_form.html
-│       ├── booking_detail.html
-│       └── my_bookings.html
-├── payments/                     # NEW — FR-21..FR-24
-│   ├── __init__.py
-│   ├── models.py                 # StripeEvent (3.9)
-│   ├── views.py                  # StripeWebhookView, CheckoutView (web)
-│   ├── urls.py                   # /webhooks/stripe/, /bookings/<id>/checkout/
-│   ├── admin.py                  # StripeEventAdmin (read-only)
-│   ├── factories.py              # StripeEventFactory
-│   ├── services/
-│   │   ├── __init__.py
-│   │   └── stripe.py             # create_checkout_session, refund, construct_event
-│   ├── api/                      # FR-21 (API), FR-22 (webhook unified — opcjonalnie pod /api/)
-│   │   ├── __init__.py
-│   │   ├── serializers.py
-│   │   ├── views.py              # CheckoutAPIView
-│   │   └── urls.py
-│   ├── management/
-│   │   ├── __init__.py
-│   │   └── commands/
-│   │       ├── __init__.py
-│   │       └── expire_pending_bookings.py   # FR-23
-│   └── tests/
+│   └── payments/
+│       ├── __init__.py
+│       ├── factories.py          # StripeEventFactory
 │       ├── test_webhook.py
 │       ├── test_expire_command.py
 │       └── test_refund.py
@@ -759,7 +782,6 @@ kinomania/
 │   ├── posters/
 │   ├── actors/
 │   └── directors/
-├── conftest.py                   # globalne fixtures pytest (Stripe mocks, etc.)
 └── docs/                         # dokumentacja procesu (specs, plans, retros)
     ├── superpowers/
     │   ├── specs/
