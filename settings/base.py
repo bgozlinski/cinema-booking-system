@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "apps.accounts",
 ]
 
 MIDDLEWARE = [
@@ -56,6 +57,10 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "settings.wsgi.application"
+
+# ─── Auth ───────────────────────────────────────────────────────────────────
+AUTH_USER_MODEL = "accounts.User"
+
 
 # ─── Database (default — overridden in dev/prod) ────────────────────────────
 DATABASES = {"default": env.db("DATABASE_URL")}
