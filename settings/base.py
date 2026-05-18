@@ -61,6 +61,16 @@ WSGI_APPLICATION = "settings.wsgi.application"
 # ─── Auth ───────────────────────────────────────────────────────────────────
 AUTH_USER_MODEL = "accounts.User"
 
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 8},
+    },
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
+
 
 # ─── Database (default — overridden in dev/prod) ────────────────────────────
 DATABASES = {"default": env.db("DATABASE_URL")}
@@ -74,3 +84,14 @@ USE_TZ = True
 # ─── Static / Media (placeholder — wypełnimy w US-09 i FR-15) ───────────────
 STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ─── Auth URLs ──────────────────────────────────────────────────────────────
+LOGIN_URL = "accounts:login"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
+
+
+# ─── Email ──────────────────────────────────────────────────────────────────
+# Activation tokens reuse Django's PASSWORD_RESET_TIMEOUT (default 3 days = 259200s).
+# Single timeout for all token-based auth flows — no separate setting.
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="noreply@kinomania.local")

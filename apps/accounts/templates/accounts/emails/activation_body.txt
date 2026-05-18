@@ -1,0 +1,11 @@
+Hello!
+
+To activate your KinoMania account, click the link below:
+
+{{ activation_url }}
+
+This link is valid for 3 days. If you did not create an account,
+just ignore this message - without clicking, the account will
+remain inactive.
+
+- KinoMania team

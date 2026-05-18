@@ -9,6 +9,8 @@ Examples:
     UserFactory()                                  # regular user, hashed pw
     UserFactory(email="alice@example.com")         # explicit email
     UserFactory(is_superuser=True)                 # superuser path
+    UserFactory(inactive=True)                     # user with is_active=False
+                                                   # (FR-06 — pending activation)
 """
 
 from __future__ import annotations
@@ -29,6 +31,14 @@ class UserFactory(factory.django.DjangoModelFactory):
 
     email = factory.Sequence(lambda n: f"user{n}@example.com")
     password = "test1234"
+    is_active = True
+
+    class Params:
+        # ``inactive=True`` flips is_active to False — used by FR-06 tests
+        # to set up users in the "registered but not yet activated" state.
+        # The flag rides through **kwargs to UserManager.create_user, which
+        # forwards it as an ``extra_fields`` setattr on self.model(...).
+        inactive = factory.Trait(is_active=False)
 
     @classmethod
     def _create(cls, model_class: type, *args: Any, **kwargs: Any) -> Any:
