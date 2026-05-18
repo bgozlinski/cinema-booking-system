@@ -319,11 +319,11 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 | Status | US |
 |---|---|
 | **In Progress (WIP=1)** | _none_ |
-| **Ready (DoR ✅)** | **US-06** (Custom User model — kickoff jutro) |
-| **Backlog** | US-07..US-43 |
-| **Done** | **US-01**, **US-02**, **US-03**, **US-04**, **US-05** ✅✅✅✅✅ |
+| **Ready (DoR ✅)** | **US-07** (Login/Logout/Register flow — zależy od US-06) |
+| **Backlog** | US-08..US-43 |
+| **Done** | **US-01**, **US-02**, **US-03**, **US-04**, **US-05**, **US-06** ✅✅✅✅✅✅ |
 
-**Bieżący milestone:** M1 — Foundation (`v0.1.0`). 5/9 US zmergowanych. **Infra M1 zamknięta** — następny task to pierwszy realny kod aplikacji (`accounts.User`).
+**Bieżący milestone:** M1 — Foundation (`v0.1.0`). 6/9 US zmergowanych. **Pierwszy realny kod aplikacji w drzewie** (`apps/accounts/User` + `UserManager` + `UserAdmin`, email-only auth, FR-05). Następny task: US-07 (web auth flow).
 
 ---
 

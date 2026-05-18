@@ -75,7 +75,7 @@ jobs:
         run: poetry install --no-interaction --no-root
 
       - name: Pytest with coverage
-        run: poetry run pytest --cov-fail-under=0
+        run: poetry run pytest --cov-fail-under=80
         env:
           DATABASE_URL: postgres://kinomania:kinomania@localhost:5432/kinomania_test
           SECRET_KEY: ci-secret-not-for-prod
