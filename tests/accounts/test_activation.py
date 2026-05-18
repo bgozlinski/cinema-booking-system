@@ -65,9 +65,9 @@ def test_activate_with_valid_token_shows_success_flash(client) -> None:
     response = client.get(url, follow=True)
 
     messages_list = [str(m) for m in response.context["messages"]]
-    assert any(
-        "aktyw" in m.lower() for m in messages_list
-    ), f"Expected a flash mentioning activation (case-insensitive 'aktyw'). Got: {messages_list}"
+    assert any("aktyw" in m.lower() for m in messages_list), (
+        f"Expected a flash mentioning activation (case-insensitive 'aktyw'). Got: {messages_list}"
+    )
 
 
 @pytest.mark.django_db
@@ -151,9 +151,9 @@ def test_activate_already_active_user_redirects_to_login_with_info(client) -> No
     assert user.is_active is True
     assert response.redirect_chain[-1][0] == reverse("accounts:login")
     messages_list = [str(m) for m in response.context["messages"]]
-    assert any(
-        "już aktyw" in m.lower() or "already" in m.lower() for m in messages_list
-    ), f"Expected an info flash about account already being active. Got: {messages_list}"
+    assert any("już aktyw" in m.lower() or "already" in m.lower() for m in messages_list), (
+        f"Expected an info flash about account already being active. Got: {messages_list}"
+    )
 
 
 @pytest.mark.django_db

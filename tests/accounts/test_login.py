@@ -59,9 +59,9 @@ def test_inactive_user_cannot_log_in(client) -> None:
         data={"username": "dormant@example.com", "password": "test1234"},
     )
 
-    assert (
-        response.status_code == 200
-    ), "Failed login must re-render the form (status 200), not redirect."
+    assert response.status_code == 200, (
+        "Failed login must re-render the form (status 200), not redirect."
+    )
     assert "_auth_user_id" not in client.session, (
         "Inactive user must not get a session — even though the password "
         "was correct, ModelBackend rejects them at user_can_authenticate."
