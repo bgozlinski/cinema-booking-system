@@ -230,26 +230,29 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 
 ---
 
-### US-09 — Baseline templates (base.html, navbar, footer)
+### US-09 — Baseline templates: extract to global + home view
 - **FR:** UI/UX (sekcja 6) | **Branch:** `feat/M1-baseline-templates` | **Estymata:** S
-- **Zależy od:** US-07
+- **Zależy od:** US-07, US-08
+
+> **Scope zmieniony po US-07 (PR #7):** Bootstrap 5 baseline (`_base.html` z navbar + footer + message rendering jako alerts) został już zaimplementowany w `apps/accounts/templates/accounts/_base.html` jako side effect Task 13 z planu US-07. US-09 teraz fokusuje się na: (1) **ekstrakcji** _base.html z accounts do globalnego location (`templates/base.html` + `TEMPLATES.DIRS = [BASE_DIR / "templates"]` w settings/base.py), (2) refactor accounts templates żeby extendowały `base.html` (nie `accounts/_base.html`), (3) **home view** (`/`) renderujący baseline strona z placeholder content + linkami do US-10/US-11 (które dochodzą w M2).
 
 **Story:**
-*Jako użytkownik, chcę widzieć spójny layout (navbar + footer) na każdej podstronie, aby aplikacja wyglądała profesjonalnie od dnia pierwszego.*
+*Jako użytkownik, chcę widzieć spójny layout na każdej podstronie + landing page pod `/`, aby aplikacja wyglądała profesjonalnie od dnia pierwszego.*
 
 **Acceptance Criteria:**
-- **GIVEN** `cinema/templates/cinema/base.html` z Bootstrap 5 (CDN lub static) **WHEN** child template extenduje base **THEN** layout dziedziczy poprawnie.
-- **GIVEN** navbar **WHEN** zalogowany user **THEN** widzi „Wyloguj" + link do panelu; **WHEN** anon **THEN** widzi „Login" / „Register".
-- **GIVEN** flash messages region w base.html **WHEN** `messages.success(...)` w view **THEN** komunikat renderuje się na górze.
-- **GIVEN** placeholder linki Movies / Screenings / My Bookings (nieistniejące widoki w M1) **WHEN** klikam **THEN** 404 lub nieaktywne (wstępna decyzja: wyszarzone, aktywne dochodzą w M2).
+- **GIVEN** `templates/base.html` na globalnym poziomie + `TEMPLATES.DIRS` ustawione **WHEN** dowolna app extenduje `base.html` **THEN** layout dziedziczy poprawnie.
+- **GIVEN** wszystkie 6 accounts templates **WHEN** sprawdzam `{% extends %}` **THEN** dziedziczą z `base.html` (NIE z `accounts/_base.html`), `accounts/_base.html` usunięty.
+- **GIVEN** home view `/` (np. `TemplateView` z `templates/home.html`) **WHEN** GET **THEN** 200 + render z navbar/footer z `base.html`.
+- **GIVEN** istniejące testy accounts (np. login.html messages flash) **WHEN** uruchamiam pytest po refactor **THEN** wszystkie zielone (regression check).
 
 **DoR:** [ ] story / [ ] AC / [ ] zależności / [ ] szkielet od Claude
 
-**Tests-first (user pisze) — `cinema/tests/test_base_template.py`:**
-- `test_base_template_includes_navbar` — render `/`, sprawdź obecność `<nav>` i linków.
-- `test_navbar_shows_login_for_anon` — anon klient, sprawdź obecność linku Login.
-- `test_navbar_shows_logout_for_authenticated` — zalogowany klient, sprawdź obecność Logout.
-- `test_flash_message_renders` — view z `messages.add_message`, sprawdź render.
+**Tests-first (Claude pisze) — `tests/cinema/test_base_template.py` + `tests/cinema/test_home.py`:**
+- `test_base_template_includes_navbar` — render `/`, sprawdź `<nav>` i linki.
+- `test_navbar_shows_login_for_anon` — anon klient, link Login obecny.
+- `test_navbar_shows_logout_for_authenticated` — zalogowany klient, form Logout obecny.
+- `test_home_view_returns_200_and_extends_base` — `/` zwraca 200, response zawiera markery z `base.html`.
+- `test_accounts_templates_still_extend_base_correctly` — smoke: GET `/accounts/register/` zwraca 200 z navbar (po refactor _base.html → base.html).
 
 ---
 
@@ -343,12 +346,12 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 
 | Status | US |
 |---|---|
-| **In Progress (WIP=1)** | **US-07** (Login/Logout/Register + email activation — FR-05, FR-06) |
-| **Ready (DoR ✅)** | _none_ |
-| **Backlog** | US-08..US-43 |
-| **Done** | **US-01**, **US-02**, **US-03**, **US-04**, **US-05**, **US-06** ✅✅✅✅✅✅ |
+| **In Progress (WIP=1)** | _none_ |
+| **Ready (DoR ✅)** | **US-08** (seed_db initial — Genres + Halls + Users — zależy od US-06) |
+| **Backlog** | US-09..US-43 |
+| **Done** | **US-01..US-07** ✅✅✅✅✅✅✅ |
 
-**Bieżący milestone:** M1 — Foundation (`v0.1.0`). 6/9 US zmergowanych, US-07 w toku (rozszerzony scope o email activation — estymata `M → L`). Spec + plan w `docs/superpowers/`.
+**Bieżący milestone:** M1 — Foundation (`v0.1.0`). 7/9 US zmergowanych. US-07 (PR #7) dostarczył pełny web auth flow z aktywacją email (FR-05, FR-06) + Bootstrap baseline `_base.html` z navbar/footer (scope wchłonięty z US-09 — US-09 dostanie cinema-specific templates). Następny task: US-08 (seed_db initial).
 
 ---
 
