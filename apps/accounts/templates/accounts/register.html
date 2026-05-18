@@ -16,11 +16,7 @@
                         {% if field.help_text %}
                         <div class="form-text">{{ field.help_text|safe }}</div>
                         {% endif %}
-                        {% for error in field.errors %}
-                        <div class="text-danger small mt-1">{{ error
-                            }}
-                        </div>
-                        {% endfor %}
+                        {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
                     {% endfor %}
                     {% if form.non_field_errors %}

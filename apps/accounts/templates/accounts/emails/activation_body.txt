@@ -1,11 +1,11 @@
-Cześć!
+Hello!
 
-Aby aktywować konto KinoMania, kliknij w poniższy link:
+To activate your KinoMania account, click the link below:
 
 {{ activation_url }}
 
-Link jest ważny przez 3 dni. Jeśli to nie Ty zakładałeś/aś konto,
-po prostu zignoruj tę wiadomość — bez kliknięcia konto pozostanie
-nieaktywne.
+This link is valid for 3 days. If you did not create an account,
+just ignore this message - without clicking, the account will
+remain inactive.
 
-— Zespół KinoMania
+- KinoMania team
