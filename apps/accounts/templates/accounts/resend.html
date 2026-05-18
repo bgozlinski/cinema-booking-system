@@ -1,0 +1,11 @@
+{% extends "accounts/_base.html" %}
+{% block title %}Wyślij ponownie link aktywacyjny — KinoMania{% endblock %}
+{% block content %}
+<h1>Wyślij ponownie link aktywacyjny</h1>
+<p>Wpisz swój adres email — jeśli konto istnieje i czeka na aktywację, wyślemy nowy link.</p>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Wyślij</button>
+</form>
+{% endblock %}

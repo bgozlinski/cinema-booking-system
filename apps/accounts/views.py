@@ -62,7 +62,7 @@ class ActivateView(View):
         return redirect("accounts:activation_invalid")
 
 
-class ResendActivationView(View):
+class ResendActivationView(FormView):
     template_name = "accounts/resend.html"
     success_url = reverse_lazy("accounts:activation_resend")
 
