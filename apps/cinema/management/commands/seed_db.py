@@ -24,6 +24,11 @@ class Command(BaseCommand):
             default=10,
             help="Number of users to seed (default 10).",
         )
+        parser.add_argument(
+            "--flush",
+            action="store_true",
+            help="Delete non-superuser users before seeding.",
+        )
 
     def handle(self, *args, **options):
         if not settings.DEBUG and not options["force"]:
@@ -47,13 +52,18 @@ class Command(BaseCommand):
         password = settings.SEED_DB_DEFAULT_PASSWORD
 
         non_super_count = User.objects.filter(is_superuser=False).count()
-        if non_super_count > 0:
+
+        if options["flush"]:
+            pass
+        elif non_super_count > 0:
             raise CommandError(
                 f"Database not empty (found {non_super_count} non-superuser user(s)). "
                 f"Use --flush to wipe non-superusers or --append to add only missing."
             )
 
         with transaction.atomic():
+            if options["flush"]:
+                User.objects.filter(is_superuser=False).delete()
             for i in range(1, n + 1):
                 user = User(
                     email=f"seed.user{i}@kinomania.local",

@@ -82,3 +82,19 @@ def test_seed_db_blocks_on_non_empty_db_without_flags():
 
     assert User.objects.filter(email="existing@example.com").exists()
     assert User.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_seed_db_flush_preserves_superuser_wipes_others():
+    User.objects.create_superuser(email="admin@example.com", password="x" * 12)
+    User.objects.create_user(email="user1@example.com", password="x" * 12)
+    User.objects.create_user(email="user2@example.com", password="x" * 12)
+
+    call_command("seed_db", "--flush", stdout=StringIO(), stderr=StringIO())
+
+    assert User.objects.filter(email="admin@example.com").exists()
+    assert not User.objects.filter(email="user1@example.com").exists()
+    assert not User.objects.filter(email="user2@example.com").exists()
+    seed_count = User.objects.filter(email__startswith="seed.user").count()
+    assert seed_count == 10
+    assert User.objects.count() == 11  # 10 seed + 1 superuser
