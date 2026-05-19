@@ -258,14 +258,17 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 - **GIVEN** home view `/` (np. `TemplateView` z `templates/home.html`) **WHEN** GET **THEN** 200 + render z navbar/footer z `base.html`.
 - **GIVEN** istniejące testy accounts (np. login.html messages flash) **WHEN** uruchamiam pytest po refactor **THEN** wszystkie zielone (regression check).
 
-**DoR:** [ ] story / [ ] AC / [ ] zależności / [ ] szkielet od Claude
+**DoR:** [✅] story / [✅] AC / [✅] zależności / [✅] szkielet od Claude (spec + plan)
 
-**Tests-first (Claude pisze) — `tests/cinema/test_base_template.py` + `tests/cinema/test_home.py`:**
+**Tests-first (Claude pisze) — `tests/cinema/test_base_template.py` + `tests/cinema/test_home.py` + `tests/cinema/test_accounts_templates_regression.py`:**
 - `test_base_template_includes_navbar` — render `/`, sprawdź `<nav>` i linki.
 - `test_navbar_shows_login_for_anon` — anon klient, link Login obecny.
 - `test_navbar_shows_logout_for_authenticated` — zalogowany klient, form Logout obecny.
 - `test_home_view_returns_200_and_extends_base` — `/` zwraca 200, response zawiera markery z `base.html`.
 - `test_accounts_templates_still_extend_base_correctly` — smoke: GET `/accounts/register/` zwraca 200 z navbar (po refactor _base.html → base.html).
+
+- **Spec:** [`docs/superpowers/specs/2026-05-20-baseline-templates-and-home-design.md`](../docs/superpowers/specs/2026-05-20-baseline-templates-and-home-design.md)
+- **Plan:** [`docs/superpowers/plans/2026-05-20-baseline-templates-and-home.md`](../docs/superpowers/plans/2026-05-20-baseline-templates-and-home.md)
 
 ---
 
@@ -359,12 +362,12 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 
 | Status | US |
 |---|---|
-| **In Progress (WIP=1)** | **US-08** (seed_db initial — Users only) |
+| **In Progress (WIP=1)** | **US-09** (baseline templates extract + home view) |
 | **Ready (DoR ✅)** | _none_ |
-| **Backlog** | US-09..US-43 |
-| **Done** | **US-01..US-07** ✅✅✅✅✅✅✅ |
+| **Backlog** | US-10..US-43 |
+| **Done** | **US-01..US-08** ✅✅✅✅✅✅✅✅ |
 
-**Bieżący milestone:** M1 — Foundation (`v0.1.0`). 7/9 US zmergowanych, US-08 in progress. US-08 (FR-13, M1) zwężone do Users only — Genres+Halls przesunięte do US-16 (M2) gdy modele Genre/Hall będą istniały po US-10. Następny task po US-08: US-09 (baseline templates extract + home view).
+**Bieżący milestone:** M1 — Foundation (`v0.1.0`). 8/9 US zmergowanych, US-09 in progress (ostatni task M1). Po merge → `v0.1.0` tag + M2 planning.
 
 ---
 
