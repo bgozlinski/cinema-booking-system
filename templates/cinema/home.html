@@ -15,4 +15,44 @@
         {% endif %}
     </div>
 </section>
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    <div class="col">
+        <div class="card h-100 opacity-75">
+            <div class="card-body">
+                <h5 class="card-title">Repertuar</h5>
+                <p class="card-text">Pełna lista filmów na ten tydzień.</p>
+                <span class="badge bg-secondary">Wkrótce</span>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card h-100 opacity-75">
+            <div class="card-body">
+                <h5 class="card-title">Seanse</h5>
+                <p class="card-text">Harmonogram dzisiejszych seansów.</p>
+                <span class="badge bg-secondary">Wkrótce</span>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Konto</h5>
+                {% if user.is_authenticated %}
+                <p class="card-text">Zalogowany jako {{ user.email }}.</p>
+                <form method="post" action="{% url 'accounts:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-primary btn-sm">Wyloguj się</button>
+                </form>
+                {% else %}
+                <p class="card-text">Załóż konto, aby rezerwować seanse.</p>
+                <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-sm">Zarejestruj się</a>
+                <a href="{% url 'accounts:login' %}" class="btn btn-outline-secondary btn-sm">Zaloguj się</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

@@ -55,3 +55,17 @@ def test_home_view_shows_user_greeting_when_authenticated(client):
     assert hero_end != -1
     hero_html = content[hero_start:hero_end]
     assert "Zaloguj się" not in hero_html
+
+
+@pytest.mark.django_db
+def test_home_view_shows_coming_soon_cards(client):
+    response = client.get("/")
+    content = response.content.decode()
+
+    # Card titles — use the card-title class as the discriminator
+    # (plain ">Repertuar<" would also match the navbar link).
+    assert 'class="card-title">Repertuar<' in content
+    assert 'class="card-title">Seanse<' in content
+    assert 'class="card-title">Konto<' in content
+    # "Wkrótce" badge appears on Repertuar + Seanse cards
+    assert content.count("Wkrótce") >= 2
