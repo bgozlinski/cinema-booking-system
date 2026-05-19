@@ -19,3 +19,16 @@ def test_seed_db_blocked_when_debug_false_without_force():
         call_command("seed_db", stdout=stdout, stderr=stderr)
 
     assert User.objects.count() == 0
+
+
+@pytest.mark.xfail(reason="seed loop implemented in Task 6", strict=True)
+@pytest.mark.django_db
+@override_settings(DEBUG=False)
+def test_seed_db_force_bypasses_production_guard():
+    stdout = StringIO()
+    stderr = StringIO()
+
+    call_command("seed_db", "--force", stdout=stdout, stderr=stderr)
+
+    assert "WARNING" in stderr.getvalue()
+    assert User.objects.count() == 10

@@ -17,3 +17,9 @@ class Command(BaseCommand):
             raise CommandError(
                 "seed_db is disabled when DEBUG=False. Use --force to override (DEV ONLY)."
             )
+        if not settings.DEBUG and options["force"]:
+            self.stderr.write(
+                self.style.WARNING(
+                    "Running seed_db in non-DEBUG environment. This is intended for dev only."
+                )
+            )
