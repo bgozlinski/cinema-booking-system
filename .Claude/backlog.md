@@ -206,27 +206,40 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 
 ---
 
-### US-08 — Komenda `seed_db` (initial — Genres + Halls + Users)
+### US-08 — Komenda `seed_db` (initial — Users only)
 - **FR:** FR-13 (zawężone do M1) | **Branch:** `feat/FR-13-seed-db-initial` | **Estymata:** M
 - **Zależy od:** US-06
+- **Spec:** [`docs/superpowers/specs/2026-05-19-seed-db-initial-design.md`](../docs/superpowers/specs/2026-05-19-seed-db-initial-design.md)
+- **Plan:** [`docs/superpowers/plans/2026-05-19-seed-db-initial.md`](../docs/superpowers/plans/2026-05-19-seed-db-initial.md)
 
 **Story:**
 *Jako developer, chcę mieć komendę zasiewającą bazę testowymi danymi, aby ręcznie testować widoki bez klikania w admin.*
 
-**Zakres M1:** tylko Genres (lista 9), Halls (3-5), Users (10). Movies/Screenings/Bookings dochodzą w US-16 (M2) i US-18 (M3).
+**Zakres M1:** Tylko Users (10 = 8 active + 2 inactive, deterministyczne emaile). Genres+Halls przeniesione do US-16 razem z Movies/Screenings (modele Genre/Hall nie istnieją do US-10).
 
 **Acceptance Criteria:**
-- **GIVEN** `poetry run python manage.py seed_db` **WHEN** baza jest pusta **THEN** tworzy 9 genres (lista hardcoded), 3-5 halls, 10 users z hasłem `test1234`.
-- **GIVEN** `--flush` **WHEN** istniejące dane **THEN** czyści w odpowiedniej kolejności (zachowując superusery).
-- **GIVEN** `DEBUG=False` w env **WHEN** uruchamiam bez `--force` **THEN** komenda kończy się błędem „seed_db disabled in production".
-- **GIVEN** `--force` **WHEN** `DEBUG=False` **THEN** ostrzeżenie + kontynuuje.
+- **GIVEN** `poetry run python manage.py seed_db` **WHEN** baza jest pusta **THEN** tworzy 10 users (8 active + 2 inactive) z hasłem `test1234`, emaile `seed.user{i}@kinomania.local` dla i=1..10, inactive na indeksach 9-10.
+- **GIVEN** `--flush` **WHEN** istnieją non-superuser users **THEN** usuwa ich wszystkich (zachowując superuserów), potem tworzy seed.
+- **GIVEN** `--append` **WHEN** istnieją niektórzy seed userzy **THEN** brakujący są tworzeni, istniejący skip z info do stdout.
+- **GIVEN** `--flush --append` razem **THEN** `CommandError("--flush and --append are mutually exclusive")`.
+- **GIVEN** non-empty DB bez `--flush` i `--append` **THEN** `CommandError("Database not empty...")` z instrukcją.
+- **GIVEN** `DEBUG=False` w env **WHEN** uruchamiam bez `--force` **THEN** `CommandError("seed_db is disabled when DEBUG=False...")`.
+- **GIVEN** `--force` **WHEN** `DEBUG=False` **THEN** ostrzeżenie na stderr + kontynuuje.
+- **GIVEN** `--users 0` lub ujemny **THEN** `CommandError("--users must be >= 1")`.
 
-**DoR:** [ ] story / [ ] AC / [ ] zależności / [ ] szkielet od Claude
+**DoR:** [✅] story / [✅] AC / [✅] zależności / [✅] szkielet od Claude (spec + plan)
 
-**Tests-first (user pisze) — `cinema/tests/test_seed_db.py`:**
-- `test_seed_db_creates_expected_counts` — call command, assert ilości.
-- `test_seed_db_flush_removes_data` — pre-existing data, `--flush`, assert puste.
-- `test_seed_db_blocked_in_production_without_force`.
+**Tests-first (Claude pisze) — `tests/cinema/test_seed_db.py`:**
+- `test_seed_db_creates_default_counts` — empty DB → 10 users (8 active + 2 inactive)
+- `test_seed_db_emails_are_deterministic` — emails seed.user1..10@kinomania.local, inactive at 9-10
+- `test_seed_db_password_is_hashed` — `check_password("test1234")` + PBKDF2 prefix
+- `test_seed_db_no_staff_no_super` — is_staff=False, is_superuser=False for all
+- `test_seed_db_blocked_when_debug_false_without_force` — CommandError, DB unchanged
+- `test_seed_db_force_bypasses_production_guard` — DEBUG=False + --force → 10 users + warning
+- `test_seed_db_flush_and_append_mutually_exclusive` — CommandError on both flags
+- `test_seed_db_blocks_on_non_empty_db_without_flags` — pre-existing user → CommandError, untouched
+- `test_seed_db_flush_preserves_superuser_wipes_others` — superuser stays, non-supers replaced
+- `test_seed_db_append_idempotent_skip_existing` — pre-seed 3 → total 10 (3 skipped + 7 new)
 
 ---
 
@@ -266,7 +279,7 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 | US-13 | MovieDetail view + szablon (z embedded YouTube) | FR-03 | M | `feat/FR-03-movie-detail` |
 | US-14 | ScreeningList view (harmonogram dnia) | FR-04 | S | `feat/FR-04-screening-list` |
 | US-15 | Admin: MovieAdmin, ActorAdmin, DirectorAdmin, GenreAdmin, HallAdmin | FR-11 (parts) | M | `feat/FR-11-cinema-admin` |
-| US-16 | Rozbudowa `seed_db` — Movies, Screenings | FR-13 | S | `feat/FR-13-seed-db-movies` |
+| US-16 | Rozbudowa `seed_db` — Genres, Halls, Movies, Screenings | FR-13 | M | `feat/FR-13-seed-db-movies` |
 | US-17 | Performance: `prefetch_related` na M2M w listingach | NFR | S | `perf/FR-01-prefetch` |
 
 > Pełne karty US-10..US-17 zostaną rozpisane przy planowaniu M2 (po release `v0.1.0`).
@@ -346,12 +359,12 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 
 | Status | US |
 |---|---|
-| **In Progress (WIP=1)** | _none_ |
-| **Ready (DoR ✅)** | **US-08** (seed_db initial — Genres + Halls + Users — zależy od US-06) |
+| **In Progress (WIP=1)** | **US-08** (seed_db initial — Users only) |
+| **Ready (DoR ✅)** | _none_ |
 | **Backlog** | US-09..US-43 |
 | **Done** | **US-01..US-07** ✅✅✅✅✅✅✅ |
 
-**Bieżący milestone:** M1 — Foundation (`v0.1.0`). 7/9 US zmergowanych. US-07 (PR #7) dostarczył pełny web auth flow z aktywacją email (FR-05, FR-06) + Bootstrap baseline `_base.html` z navbar/footer (scope wchłonięty z US-09 — US-09 dostanie cinema-specific templates). Następny task: US-08 (seed_db initial).
+**Bieżący milestone:** M1 — Foundation (`v0.1.0`). 7/9 US zmergowanych, US-08 in progress. US-08 (FR-13, M1) zwężone do Users only — Genres+Halls przesunięte do US-16 (M2) gdy modele Genre/Hall będą istniały po US-10. Następny task po US-08: US-09 (baseline templates extract + home view).
 
 ---
 

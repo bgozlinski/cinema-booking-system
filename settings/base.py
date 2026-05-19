@@ -11,12 +11,14 @@ env = environ.Env(
     ALLOWED_HOSTS=(list, []),
     LANGUAGE_CODE=(str, "pl"),
     TIME_ZONE=(str, "Europe/Warsaw"),
+    SEED_DB_DEFAULT_PASSWORD=(str, "test1234"),
 )
 environ.Env.read_env(BASE_DIR / ".env")
 
 SECRET_KEY = env("SECRET_KEY")
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
+SEED_DB_DEFAULT_PASSWORD = env("SEED_DB_DEFAULT_PASSWORD")
 
 # ─── Application definition ─────────────────────────────────────────────────
 INSTALLED_APPS = [
@@ -27,6 +29,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "apps.accounts",
+    "apps.cinema",
 ]
 
 MIDDLEWARE = [
