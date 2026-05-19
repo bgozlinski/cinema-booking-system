@@ -98,3 +98,24 @@ def test_seed_db_flush_preserves_superuser_wipes_others():
     seed_count = User.objects.filter(email__startswith="seed.user").count()
     assert seed_count == 10
     assert User.objects.count() == 11  # 10 seed + 1 superuser
+
+
+@pytest.mark.django_db
+def test_seed_db_append_idempotent_skip_existing():
+    for i in [1, 2, 3]:
+        User.objects.create_user(email=f"seed.user{i}@kinomania.local", password="x" * 12)
+    original_joined = {
+        u.email: u.date_joined for u in User.objects.filter(email__startswith="seed.user")
+    }
+
+    stdout = StringIO()
+    call_command("seed_db", "--append", stdout=stdout, stderr=StringIO())
+
+    assert User.objects.count() == 10
+    assert User.objects.filter(email__startswith="seed.user").count() == 10
+    for i in [1, 2, 3]:
+        email = f"seed.user{i}@kinomania.local"
+        assert User.objects.get(email=email).date_joined == original_joined[email]
+    out = stdout.getvalue()
+    assert "Skipping existing: seed.user1@kinomania.local" in out
+    assert "Appended 7 users (3 skipped)" in out

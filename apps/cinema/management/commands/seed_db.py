@@ -29,6 +29,11 @@ class Command(BaseCommand):
             action="store_true",
             help="Delete non-superuser users before seeding.",
         )
+        parser.add_argument(
+            "--append",
+            action="store_true",
+            help="Create only missing seed users (skip existing by email).",
+        )
 
     def handle(self, *args, **options):
         if not settings.DEBUG and not options["force"]:
@@ -53,7 +58,7 @@ class Command(BaseCommand):
 
         non_super_count = User.objects.filter(is_superuser=False).count()
 
-        if options["flush"]:
+        if options["flush"] or options["append"]:
             pass
         elif non_super_count > 0:
             raise CommandError(
@@ -61,12 +66,19 @@ class Command(BaseCommand):
                 f"Use --flush to wipe non-superusers or --append to add only missing."
             )
 
+        created_count = 0
+        skipped_count = 0
         with transaction.atomic():
             if options["flush"]:
                 User.objects.filter(is_superuser=False).delete()
             for i in range(1, n + 1):
+                email = f"seed.user{i}@kinomania.local"
+                if options["append"] and User.objects.filter(email=email).exists():
+                    self.stdout.write(f"Skipping existing: {email}")
+                    skipped_count += 1
+                    continue
                 user = User(
-                    email=f"seed.user{i}@kinomania.local",
+                    email=email,
                     first_name=fake.first_name(),
                     last_name=fake.last_name(),
                     is_active=(i <= active_count),
@@ -75,15 +87,26 @@ class Command(BaseCommand):
                 )
                 user.set_password(password)
                 user.save()
+                created_count += 1
 
-        inactive_emails = [f"seed.user{i}@kinomania.local" for i in range(active_count + 1, n + 1)]
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"Seeded {n} users ({active_count} active, {inactive_count} inactive). "
-                f"Default password: {password}."
+        if options["append"]:
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Appended {created_count} users ({skipped_count} skipped). "
+                    f"Default password: {password}."
+                )
             )
-        )
-        if inactive_emails:
-            self.stdout.write("Inactive accounts:")
-            for email in inactive_emails:
-                self.stdout.write(f"  {email}")
+        else:
+            inactive_emails = [
+                f"seed.user{i}@kinomania.local" for i in range(active_count + 1, n + 1)
+            ]
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Seeded {created_count} users ({active_count} active, "
+                    f"{inactive_count} inactive). Default password: {password}."
+                )
+            )
+            if inactive_emails:
+                self.stdout.write("Inactive accounts:")
+                for email in inactive_emails:
+                    self.stdout.write(f"  {email}")
