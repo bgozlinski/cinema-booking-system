@@ -356,7 +356,13 @@ Persystowany rejestr każdego odebranego webhooka Stripe — gwarantuje, że ten
 - `django.contrib.messages` do flash-ów.
 
 ### FR-13 — Komenda management `seed_db`
-**Lokalizacja:** `cinema/management/commands/seed_db.py`
+**Lokalizacja:** `apps/cinema/management/commands/seed_db.py` *(zgodnie z decyzją strukturalną 2026-05-18 — apps żyją pod `apps/<nazwa>/`)*
+
+**Realizacja milestone'owa:**
+- **M1 (US-08):** Users only — 10 users (8 active + 2 inactive), flagi `--flush|--append`, `--force`, `--users N`. Spec: [`docs/superpowers/specs/2026-05-19-seed-db-initial-design.md`](../docs/superpowers/specs/2026-05-19-seed-db-initial-design.md).
+- **M2 (US-16):** + Genres, Halls, Movies, Actors, Directors, Screenings.
+- **M3 (US-18+):** + Bookings z 5% PENDING dla testowania `expire_pending_bookings`.
+
 **Wywołanie:** `python manage.py seed_db [--flush] [--movies=N] [--screenings=N] [--users=N] [--bookings=N]`
 
 **Akceptacja:**
