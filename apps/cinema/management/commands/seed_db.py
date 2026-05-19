@@ -46,6 +46,13 @@ class Command(BaseCommand):
         fake = Faker("pl_PL")
         password = settings.SEED_DB_DEFAULT_PASSWORD
 
+        non_super_count = User.objects.filter(is_superuser=False).count()
+        if non_super_count > 0:
+            raise CommandError(
+                f"Database not empty (found {non_super_count} non-superuser user(s)). "
+                f"Use --flush to wipe non-superusers or --append to add only missing."
+            )
+
         with transaction.atomic():
             for i in range(1, n + 1):
                 user = User(

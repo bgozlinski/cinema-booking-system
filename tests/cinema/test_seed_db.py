@@ -71,3 +71,14 @@ def test_seed_db_no_staff_no_super():
 
     assert User.objects.filter(is_staff=True).count() == 0
     assert User.objects.filter(is_superuser=True).count() == 0
+
+
+@pytest.mark.django_db
+def test_seed_db_blocks_on_non_empty_db_without_flags():
+    User.objects.create_user(email="existing@example.com", password="x" * 12)
+
+    with pytest.raises(CommandError, match="Database not empty"):
+        call_command("seed_db", stdout=StringIO(), stderr=StringIO())
+
+    assert User.objects.filter(email="existing@example.com").exists()
+    assert User.objects.count() == 1
