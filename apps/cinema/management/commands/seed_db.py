@@ -46,6 +46,8 @@ class Command(BaseCommand):
                     "WARNING: Running seed_db in non-DEBUG environment. This is intended for dev only."
                 )
             )
+        if options["append"] and options["flush"]:
+            raise CommandError("--flush and --append are mutually exclusive")
 
         n = options["users"]
         if n < 1:

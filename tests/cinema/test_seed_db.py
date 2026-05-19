@@ -119,3 +119,16 @@ def test_seed_db_append_idempotent_skip_existing():
     out = stdout.getvalue()
     assert "Skipping existing: seed.user1@kinomania.local" in out
     assert "Appended 7 users (3 skipped)" in out
+
+
+@pytest.mark.django_db
+def test_seed_db_flush_and_append_mutually_exclusive():
+    with pytest.raises(CommandError, match="mutually exclusive"):
+        call_command(
+            "seed_db",
+            "--flush",
+            "--append",
+            stdout=StringIO(),
+            stderr=StringIO(),
+        )
+    assert User.objects.count() == 0
