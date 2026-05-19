@@ -21,7 +21,6 @@ def test_seed_db_blocked_when_debug_false_without_force():
     assert User.objects.count() == 0
 
 
-@pytest.mark.xfail(reason="seed loop implemented in Task 6", strict=True)
 @pytest.mark.django_db
 @override_settings(DEBUG=False)
 def test_seed_db_force_bypasses_production_guard():
@@ -32,3 +31,43 @@ def test_seed_db_force_bypasses_production_guard():
 
     assert "WARNING" in stderr.getvalue()
     assert User.objects.count() == 10
+
+
+@pytest.mark.django_db
+def test_seed_db_creates_default_counts():
+    call_command("seed_db", stdout=StringIO(), stderr=StringIO())
+
+    assert User.objects.count() == 10
+    assert User.objects.filter(is_active=True).count() == 8
+    assert User.objects.filter(is_active=False).count() == 2
+
+
+@pytest.mark.django_db
+def test_seed_db_emails_are_deterministic():
+    call_command("seed_db", stdout=StringIO(), stderr=StringIO())
+
+    expected_emails = {f"seed.user{i}@kinomania.local" for i in range(1, 11)}
+    assert set(User.objects.values_list("email", flat=True)) == expected_emails
+
+    inactive_emails = set(User.objects.filter(is_active=False).values_list("email", flat=True))
+    assert inactive_emails == {
+        "seed.user9@kinomania.local",
+        "seed.user10@kinomania.local",
+    }
+
+
+@pytest.mark.django_db
+def test_seed_db_password_is_hashed():
+    call_command("seed_db", stdout=StringIO(), stderr=StringIO())
+
+    user = User.objects.get(email="seed.user1@kinomania.local")
+    assert user.check_password("test1234") is True
+    assert user.password.startswith("pbkdf2_")
+
+
+@pytest.mark.django_db
+def test_seed_db_no_staff_no_super():
+    call_command("seed_db", stdout=StringIO(), stderr=StringIO())
+
+    assert User.objects.filter(is_staff=True).count() == 0
+    assert User.objects.filter(is_superuser=True).count() == 0
