@@ -1,7 +1,18 @@
-  {% extends "base.html" %}
+{% extends "base.html" %}
 
-  {% block title %}KinoMania — Twoje kino online{% endblock %}
+{% block title %}KinoMania — Twoje kino online{% endblock %}
 
-  {% block content %}
-  <h1>Home</h1>
-  {% endblock %}
+{% block content %}
+
+<section class="bg-primary text-white py-5 rounded mb-4">
+    <div class="container text-center">
+        <h1 class="display-4 fw-bold">Witaj w KinoMania</h1>
+        <p class="lead">Twoje kino online — rezerwuj seanse w kilka kliknięć.</p>
+        {% if user.is_authenticated %}
+        <p class="mb-0">Zalogowany jako <strong>{{ user.email }}</strong></p>
+        {% else %}
+        <a href="{% url 'accounts:login' %}" class="btn btn-light btn-lg">Zaloguj się</a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
