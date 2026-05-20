@@ -362,12 +362,12 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 
 | Status | US |
 |---|---|
-| **In Progress (WIP=1)** | **US-10** (cinema models: Genre/Actor/Director/Hall/Movie/Screening) |
-| **Ready (DoR ✅)** | _none_ |
+| **In Progress (WIP=1)** | _none_ |
+| **Ready (DoR ✅)** | **US-15** (cinema admin) — next per `.Claude/m2_planning.md` |
 | **Backlog** | US-11..US-43 |
-| **Done** | **US-01..US-09** ✅✅✅✅✅✅✅✅✅ |
+| **Done** | **US-01..US-10** ✅✅✅✅✅✅✅✅✅✅ |
 
-**Bieżący milestone:** M2 — Catalog web (`v0.2.0`). 0/8 US zmergowanych, US-10 in progress. M1 (Foundation) closed → `v0.1.0`. Ordering za `.Claude/m2_planning.md`: US-10 → US-15 → US-16 → US-11 → US-13 → US-12 → US-14 → US-17.
+**Bieżący milestone:** M2 — Catalog web (`v0.2.0`). 1/8 US zmergowanych. US-10 dostarczyło 6 modeli (Genre/Actor/Director/Hall/Movie/Screening) + 6 migracji + Pillow + MEDIA config + 31 testów (100% coverage na `apps/cinema/models.py`). Następny task: **US-15** (cinema admin) per ordering w `.Claude/m2_planning.md`.
 
 ---
 
