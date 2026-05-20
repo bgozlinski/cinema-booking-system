@@ -1,7 +1,37 @@
-  {% extends "base.html" %}
+{% extends "base.html" %}
 
-  {% block title %}Repertuar — KinoMania{% endblock %}
+{% block title %}Repertuar — KinoMania{% endblock %}
 
-  {% block content %}
-  <h1 class="h2 mb-4">Repertuar</h1>
-  {% endblock %}
+{% block content %}
+<h1 class="h2 mb-4">Repertuar</h1>
+
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4">
+    {% for movie in movies %}
+    <div class="col">
+        <div class="card h-100">
+            {% if movie.poster %}
+            <img src="{{ movie.poster.url }}" class="card-img-top"
+                 alt="{{ movie.title }}"
+                 style="aspect-ratio: 2/3; object-fit: cover;">
+            {% else %}
+            <div class="card-img-top bg-light d-flex align-items-center justify-content-center"
+                 style="aspect-ratio: 2/3; font-size: 3rem;" aria-hidden="true">🎬
+            </div>
+            {% endif %}
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ movie.title }}</h5>
+                <p class="mb-2">
+                    {% for genre in movie.genres.all %}
+                    <span class="badge bg-secondary">{{ genre.name }}</span>
+                    {% endfor %}
+                </p>
+                <p class="text-muted small mb-3">
+                    Najbliższy seans: {{ movie.next_screening_at|date:"d.m.Y H:i" }}
+                </p>
+                <a href="#" class="btn btn-primary btn-sm mt-auto disabled">Szczegóły</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

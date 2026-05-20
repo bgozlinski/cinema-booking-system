@@ -3,12 +3,22 @@
 from datetime import timedelta
 
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django.utils import timezone
 
-from tests.cinema.factories import MovieFactory, ScreeningFactory
+from tests.cinema.factories import GenreFactory, MovieFactory, ScreeningFactory
 
 pytestmark = pytest.mark.django_db
+
+
+# Smallest valid PNG (1x1) — reused from tests/cinema/test_admin.py
+PNG_1X1 = (
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
+    b"\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\rIDATx\x9cc\xfc"
+    b"\xff\xff?\x03\x00\x06\x00\x02\x00\x01\xa5\xc8\x7f\xb1\x00\x00\x00"
+    b"\x00IEND\xaeB`\x82"
+)
 
 
 class TestRouting:
@@ -100,3 +110,71 @@ class TestQueryset:
 
         titles = [m.title for m in response.context["movies"]]
         assert titles == ["Early", "Mid", "Late"]
+
+
+class TestCardRendering:
+    def test_card_shows_title(self, client):
+        movie = MovieFactory(title="Unique Card Title")
+        ScreeningFactory(movie=movie, start_time=timezone.now() + timedelta(days=1))
+
+        response = client.get("/")
+
+        assert "Unique Card Title" in response.content.decode()
+
+    def test_card_shows_all_genre_badges(self, client):
+        movie = MovieFactory()
+        ScreeningFactory(movie=movie, start_time=timezone.now() + timedelta(days=1))
+        movie.genres.add(GenreFactory(name="Drama"), GenreFactory(name="Sci-Fi"))
+
+        response = client.get("/")
+        content = response.content.decode()
+
+        assert "Drama" in content
+        assert "Sci-Fi" in content
+        assert content.count('class="badge bg-secondary"') >= 2
+
+    def test_card_shows_next_screening_date(self, client):
+        movie = MovieFactory()
+        future = timezone.now().replace(hour=18, minute=30) + timedelta(days=2)
+        ScreeningFactory(movie=movie, start_time=future)
+
+        response = client.get("/")
+
+        # Django's |date filter converts UTC → active TZ (Europe/Warsaw); mirror that
+        # locally so the comparison string matches the rendered HTML.
+        local_future = timezone.localtime(future)
+        assert local_future.strftime("%d.%m.%Y %H:%M") in response.content.decode()
+
+    def test_card_shows_disabled_details_button(self, client):
+        movie = MovieFactory()
+        ScreeningFactory(movie=movie, start_time=timezone.now() + timedelta(days=1))
+
+        response = client.get("/")
+        content = response.content.decode()
+
+        assert "Szczegóły" in content
+        # US-13 will drop the `disabled` class + wire href.
+        assert "disabled" in content
+
+    def test_card_uses_emoji_placeholder_when_poster_blank(self, client):
+        movie = MovieFactory(poster="")
+        ScreeningFactory(movie=movie, start_time=timezone.now() + timedelta(days=1))
+
+        response = client.get("/")
+        content = response.content.decode()
+
+        assert "🎬" in content
+        # No broken <img src="">
+        assert 'src=""' not in content
+
+    def test_card_uses_real_poster_when_set(self, client):
+        movie = MovieFactory()
+        movie.poster = SimpleUploadedFile("p.png", PNG_1X1, content_type="image/png")
+        movie.save()
+        ScreeningFactory(movie=movie, start_time=timezone.now() + timedelta(days=1))
+
+        response = client.get("/")
+        content = response.content.decode()
+
+        assert movie.poster.url in content
+        assert "<img" in content
