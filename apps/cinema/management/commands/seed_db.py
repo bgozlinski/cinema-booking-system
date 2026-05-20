@@ -1,5 +1,6 @@
 import random
 from datetime import timedelta
+from decimal import Decimal
 from math import floor
 
 from django.conf import settings
@@ -9,7 +10,7 @@ from django.db import transaction
 from django.utils import timezone
 from faker import Faker
 
-from apps.cinema.models import Actor, Director, Genre, Hall, Movie
+from apps.cinema.models import Actor, Director, Genre, Hall, Movie, Screening
 
 GENRE_NAMES = (
     "Action",
@@ -57,6 +58,12 @@ class Command(BaseCommand):
             default=20,
             help="Number of movies to seed (default 20).",
         )
+        parser.add_argument(
+            "--screenings",
+            type=int,
+            default=100,
+            help="Number of screenings to seed (default 100).",
+        )
 
     def handle(self, *args, **options):
         if not settings.DEBUG and not options["force"]:
@@ -97,11 +104,12 @@ class Command(BaseCommand):
             if options["flush"]:
                 User.objects.filter(is_superuser=False).delete()
             self._seed_genres()
-            self._seed_halls()
+            halls = self._seed_halls()
             actors = self._seed_actors(fake)
             directors = self._seed_directors(fake)
             genre_list = list(Genre.objects.all())
-            self._seed_movies(fake, options["movies"], genre_list, actors, directors)
+            movies = self._seed_movies(fake, options["movies"], genre_list, actors, directors)
+            self._seed_screenings(options["screenings"], movies, halls)
 
             for i in range(1, n + 1):
                 email = f"seed.user{i}@kinomania.local"
@@ -197,3 +205,17 @@ class Command(BaseCommand):
             movie.directors.set(random.sample(directors, k=random.randint(1, 2)))
             movies.append(movie)
         return movies
+
+    def _seed_screenings(self, n, movies, halls):
+        now = timezone.now()
+        for _ in range(n):
+            Screening.objects.create(
+                movie=random.choice(movies),
+                hall=random.choice(halls),
+                start_time=now
+                + timedelta(
+                    days=random.randint(-7, 30),
+                    hours=random.randint(0, 23),
+                ),
+                price=Decimal(f"{random.uniform(25, 55):.2f}"),
+            )

@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 from io import StringIO
 
 import pytest
@@ -6,8 +7,9 @@ from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import override_settings
+from django.utils import timezone
 
-from apps.cinema.models import Actor, Director, Genre, Hall, Movie
+from apps.cinema.models import Actor, Director, Genre, Hall, Movie, Screening
 
 User = get_user_model()
 
@@ -265,3 +267,40 @@ def test_seed_db_movie_m2m_counts_in_range():
         assert 1 <= movie.genres.count() <= 3
         assert 3 <= movie.actors.count() <= 8
         assert 1 <= movie.directors.count() <= 2
+
+
+@pytest.mark.django_db
+def test_seed_db_default_screening_count():
+    call_command("seed_db", stdout=StringIO(), stderr=StringIO())
+
+    assert Screening.objects.count() == 100
+
+
+@pytest.mark.django_db
+def test_seed_db_custom_screening_count():
+    call_command("seed_db", "--screenings=15", stdout=StringIO(), stderr=StringIO())
+
+    assert Screening.objects.count() == 15
+
+
+@pytest.mark.django_db
+def test_seed_db_screening_attributes_in_range():
+    call_command("seed_db", "--screenings=20", stdout=StringIO(), stderr=StringIO())
+
+    now = timezone.now()
+    window_start = now - datetime.timedelta(days=8)  # 1 day buffer
+    window_end = now + datetime.timedelta(days=31)
+    for screening in Screening.objects.all():
+        assert window_start <= screening.start_time <= window_end
+        assert Decimal("25.00") <= screening.price <= Decimal("55.00")
+
+
+@pytest.mark.django_db
+def test_seed_db_screenings_use_seeded_movies_and_halls():
+    call_command("seed_db", stdout=StringIO(), stderr=StringIO())
+
+    movie_ids = set(Movie.objects.values_list("id", flat=True))
+    hall_ids = set(Hall.objects.values_list("id", flat=True))
+    for screening in Screening.objects.all():
+        assert screening.movie_id in movie_ids
+        assert screening.hall_id in hall_ids
