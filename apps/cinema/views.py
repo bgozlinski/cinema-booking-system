@@ -1,5 +1,10 @@
-from django.views.generic import TemplateView
+from django.views.generic import ListView
+
+from apps.cinema.models import Movie
 
 
-class HomeView(TemplateView):
-    template_name = "cinema/home.html"
+class MovieListView(ListView):
+    model = Movie
+    template_name = "cinema/movie_list.html"
+    context_object_name = "movies"
+    paginate_by = 12
