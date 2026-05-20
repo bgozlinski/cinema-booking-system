@@ -5,7 +5,12 @@ from apps.cinema.models import Actor, Director, Genre, Hall, Movie
 
 @admin.register(Genre)
 class GenreAdmin(admin.ModelAdmin):
-    pass
+    list_display = ("name", "movies_count")
+    search_fields = ("name",)
+
+    @admin.display(description="movies")
+    def movies_count(self, obj):
+        return obj.movies.count()
 
 
 @admin.register(Hall)
