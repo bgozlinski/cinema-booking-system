@@ -252,3 +252,20 @@ class TestEmptyState:
         content = response.content.decode()
 
         assert "Aktualnie brak filmów" in content
+
+
+class TestQueryBudget:
+    def test_full_page_uses_bounded_queries(self, client, django_assert_max_num_queries):
+        """12 movies, each with 2 genres → without prefetch this would be 1 + 12 = 13 queries
+        for genres alone, blowing past the budget. The annotated queryset's prefetch_related
+        keeps it tight."""
+        now = timezone.now()
+        for i in range(12):
+            movie = MovieFactory()
+            movie.genres.add(GenreFactory(), GenreFactory())
+            ScreeningFactory(movie=movie, start_time=now + timedelta(days=i + 1))
+
+        # Budget: 1 paginator.count + 1 movies + 1 prefetched genres = 3 baseline.
+        # Cap at 4 to absorb any test-harness query (session etc.) without flaking.
+        with django_assert_max_num_queries(4):
+            client.get("/")
