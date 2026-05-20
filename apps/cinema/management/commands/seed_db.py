@@ -1,3 +1,4 @@
+import random
 from math import floor
 
 from django.conf import settings
@@ -6,7 +7,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from faker import Faker
 
-from apps.cinema.models import Genre
+from apps.cinema.models import Genre, Hall
 
 GENRE_NAMES = (
     "Action",
@@ -88,6 +89,7 @@ class Command(BaseCommand):
             if options["flush"]:
                 User.objects.filter(is_superuser=False).delete()
             self._seed_genres()
+            self._seed_halls()
             for i in range(1, n + 1):
                 email = f"seed.user{i}@kinomania.local"
                 if options["append"] and User.objects.filter(email=email).exists():
@@ -135,3 +137,14 @@ class Command(BaseCommand):
             if was_created:
                 created += 1
         return created
+
+    def _seed_halls(self):
+        count = random.randint(3, 5)
+        halls = []
+        for i in range(1, count + 1):
+            hall = Hall.objects.create(
+                name=f"Hall {i}",
+                capacity=random.randint(50, 200),
+            )
+            halls.append(hall)
+        return halls

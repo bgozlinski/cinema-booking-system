@@ -6,7 +6,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import override_settings
 
-from apps.cinema.models import Genre
+from apps.cinema.models import Genre, Hall
 
 User = get_user_model()
 
@@ -171,3 +171,27 @@ def test_seed_db_genre_seeding_is_idempotent_on_append():
 
     assert Genre.objects.count() == 9
     assert set(Genre.objects.values_list("name", flat=True)) == EXPECTED_GENRE_NAMES
+
+
+@pytest.mark.django_db
+def test_seed_db_creates_3_to_5_halls():
+    call_command("seed_db", stdout=StringIO(), stderr=StringIO())
+
+    count = Hall.objects.count()
+    assert 3 <= count <= 5
+
+
+@pytest.mark.django_db
+def test_seed_db_hall_capacities_in_range():
+    call_command("seed_db", stdout=StringIO(), stderr=StringIO())
+
+    for hall in Hall.objects.all():
+        assert 50 <= hall.capacity <= 200
+
+
+@pytest.mark.django_db
+def test_seed_db_hall_names_are_unique():
+    call_command("seed_db", stdout=StringIO(), stderr=StringIO())
+
+    names = list(Hall.objects.values_list("name", flat=True))
+    assert len(names) == len(set(names))
