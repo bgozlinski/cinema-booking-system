@@ -89,19 +89,33 @@ class Command(BaseCommand):
         password = settings.SEED_DB_DEFAULT_PASSWORD
 
         non_super_count = User.objects.filter(is_superuser=False).count()
+        cinema_count = (
+            Genre.objects.count()
+            + Hall.objects.count()
+            + Actor.objects.count()
+            + Director.objects.count()
+            + Movie.objects.count()
+            + Screening.objects.count()
+        )
 
         if options["flush"] or options["append"]:
             pass
-        elif non_super_count > 0:
+        elif non_super_count > 0 or cinema_count > 0:
             raise CommandError(
-                f"Database not empty (found {non_super_count} non-superuser user(s)). "
-                f"Use --flush to wipe non-superusers or --append to add only missing."
+                f"Database not empty (found {non_super_count} non-superuser user(s), "
+                f"{cinema_count} cinema row(s)). Use --flush to wipe or --append to add."
             )
 
         created_count = 0
         skipped_count = 0
         with transaction.atomic():
             if options["flush"]:
+                Screening.objects.all().delete()
+                Movie.objects.all().delete()
+                Hall.objects.all().delete()
+                Actor.objects.all().delete()
+                Director.objects.all().delete()
+                Genre.objects.all().delete()
                 User.objects.filter(is_superuser=False).delete()
             self._seed_genres()
             halls = self._seed_halls()

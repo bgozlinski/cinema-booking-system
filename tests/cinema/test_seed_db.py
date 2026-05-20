@@ -304,3 +304,73 @@ def test_seed_db_screenings_use_seeded_movies_and_halls():
     for screening in Screening.objects.all():
         assert screening.movie_id in movie_ids
         assert screening.hall_id in hall_ids
+
+
+@pytest.mark.django_db
+def test_seed_db_blocks_when_only_cinema_data_exists():
+    # No users; just one genre — guard should still trigger.
+    Genre.objects.create(name="Action")
+
+    with pytest.raises(CommandError, match="Database not empty"):
+        call_command("seed_db", stdout=StringIO(), stderr=StringIO())
+
+    assert Genre.objects.count() == 1  # untouched
+
+
+@pytest.mark.django_db
+def test_seed_db_flush_wipes_cinema_data():
+    # Pre-create one of each cinema entity.
+    g = Genre.objects.create(name="Action")
+    h = Hall.objects.create(name="Old Hall", capacity=80)
+    Actor.objects.create(full_name="Old Actor")
+    Director.objects.create(full_name="Old Director")
+    m = Movie.objects.create(
+        title="Old Movie",
+        description="x",
+        release_date=datetime.date(2020, 1, 1),
+        duration_minutes=90,
+    )
+    m.genres.add(g)
+    Screening.objects.create(
+        movie=m,
+        hall=h,
+        start_time=timezone.now() + datetime.timedelta(days=1),
+        price=Decimal("30.00"),
+    )
+
+    call_command("seed_db", "--flush", stdout=StringIO(), stderr=StringIO())
+
+    # Old rows are gone; fresh seed data is in place.
+    # "Action" was pre-created AND is in the fixed seed list — after flush there's exactly 1 (the new one).
+    assert Genre.objects.count() == 9
+    assert Genre.objects.filter(name="Action").count() == 1
+    assert not Hall.objects.filter(name="Old Hall").exists()
+    assert not Actor.objects.filter(full_name="Old Actor").exists()
+    assert not Director.objects.filter(full_name="Old Director").exists()
+    assert not Movie.objects.filter(title="Old Movie").exists()
+    # Screenings are all fresh.
+    assert Screening.objects.count() == 100
+
+
+@pytest.mark.django_db
+def test_seed_db_flush_respects_screening_hall_protect():
+    # Reproduce the FK constraint: PROTECT means Screening must die before Hall.
+    # If --flush order were wrong this would raise IntegrityError or ProtectedError.
+    h = Hall.objects.create(name="Protected Hall", capacity=100)
+    m = Movie.objects.create(
+        title="x",
+        description="x",
+        release_date=datetime.date(2024, 1, 1),
+        duration_minutes=100,
+    )
+    Screening.objects.create(
+        movie=m,
+        hall=h,
+        start_time=timezone.now() + datetime.timedelta(days=1),
+        price=Decimal("30.00"),
+    )
+
+    # Must NOT raise.
+    call_command("seed_db", "--flush", stdout=StringIO(), stderr=StringIO())
+
+    assert not Hall.objects.filter(name="Protected Hall").exists()
