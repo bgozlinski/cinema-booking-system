@@ -1,13 +1,15 @@
 import random
+from datetime import timedelta
 from math import floor
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from django.utils import timezone
 from faker import Faker
 
-from apps.cinema.models import Actor, Director, Genre, Hall
+from apps.cinema.models import Actor, Director, Genre, Hall, Movie
 
 GENRE_NAMES = (
     "Action",
@@ -48,6 +50,12 @@ class Command(BaseCommand):
             "--append",
             action="store_true",
             help="Create only missing seed users (skip existing by email).",
+        )
+        parser.add_argument(
+            "--movies",
+            type=int,
+            default=20,
+            help="Number of movies to seed (default 20).",
         )
 
     def handle(self, *args, **options):
@@ -90,8 +98,11 @@ class Command(BaseCommand):
                 User.objects.filter(is_superuser=False).delete()
             self._seed_genres()
             self._seed_halls()
-            self._seed_actors(fake)
-            self._seed_directors(fake)
+            actors = self._seed_actors(fake)
+            directors = self._seed_directors(fake)
+            genre_list = list(Genre.objects.all())
+            self._seed_movies(fake, options["movies"], genre_list, actors, directors)
+
             for i in range(1, n + 1):
                 email = f"seed.user{i}@kinomania.local"
                 if options["append"] and User.objects.filter(email=email).exists():
@@ -170,3 +181,19 @@ class Command(BaseCommand):
             )
             directors.append(director)
         return directors
+
+    def _seed_movies(self, fake, n, genres, actors, directors):
+        movies = []
+        today = timezone.now().date()
+        for _ in range(n):
+            movie = Movie.objects.create(
+                title=fake.catch_phrase(),
+                description=fake.paragraph(nb_sentences=5),
+                release_date=today - timedelta(days=random.randint(0, 730)),
+                duration_minutes=random.randint(80, 180),
+            )
+            movie.genres.set(random.sample(genres, k=random.randint(1, 3)))
+            movie.actors.set(random.sample(actors, k=random.randint(3, 8)))
+            movie.directors.set(random.sample(directors, k=random.randint(1, 2)))
+            movies.append(movie)
+        return movies

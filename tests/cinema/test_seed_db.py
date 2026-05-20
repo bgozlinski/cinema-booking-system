@@ -1,3 +1,4 @@
+import datetime
 from io import StringIO
 
 import pytest
@@ -6,7 +7,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import override_settings
 
-from apps.cinema.models import Actor, Director, Genre, Hall
+from apps.cinema.models import Actor, Director, Genre, Hall, Movie
 
 User = get_user_model()
 
@@ -227,3 +228,40 @@ def test_seed_db_directors_have_names_and_biographies():
     for director in Director.objects.all():
         assert director.full_name.strip() != ""
         assert director.biography.strip() != ""
+
+
+@pytest.mark.django_db
+def test_seed_db_default_movie_count():
+    call_command("seed_db", stdout=StringIO(), stderr=StringIO())
+
+    assert Movie.objects.count() == 20
+
+
+@pytest.mark.django_db
+def test_seed_db_custom_movie_count():
+    call_command("seed_db", "--movies=5", stdout=StringIO(), stderr=StringIO())
+
+    assert Movie.objects.count() == 5
+
+
+@pytest.mark.django_db
+def test_seed_db_movie_attributes_in_range():
+    call_command("seed_db", stdout=StringIO(), stderr=StringIO())
+
+    today = datetime.date.today()
+    two_years_ago = today - datetime.timedelta(days=730)
+    for movie in Movie.objects.all():
+        assert movie.title.strip() != ""
+        assert movie.description.strip() != ""
+        assert 80 <= movie.duration_minutes <= 180
+        assert two_years_ago <= movie.release_date <= today
+
+
+@pytest.mark.django_db
+def test_seed_db_movie_m2m_counts_in_range():
+    call_command("seed_db", stdout=StringIO(), stderr=StringIO())
+
+    for movie in Movie.objects.all():
+        assert 1 <= movie.genres.count() <= 3
+        assert 3 <= movie.actors.count() <= 8
+        assert 1 <= movie.directors.count() <= 2
