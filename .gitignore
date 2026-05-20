@@ -56,3 +56,7 @@ coverage.xml
 
 # Docker
 docker-compose.override.yml
+
+# User uploads (Actor/Director photos, Movie posters) — exclude content, keep .gitkeep
+media/*
+!media/.gitkeep
