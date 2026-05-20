@@ -156,10 +156,17 @@ class Command(BaseCommand):
             ]
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"Seeded {created_count} users ({active_count} active, "
+                    f"Seeded {Genre.objects.count()} genres, "
+                    f"{Hall.objects.count()} halls, "
+                    f"{Actor.objects.count()} actors, "
+                    f"{Director.objects.count()} directors, "
+                    f"{Movie.objects.count()} movies, "
+                    f"{Screening.objects.count()} screenings, "
+                    f"and {created_count} users ({active_count} active, "
                     f"{inactive_count} inactive). Default password: {password}."
                 )
             )
+
             if inactive_emails:
                 self.stdout.write("Inactive accounts:")
                 for email in inactive_emails:

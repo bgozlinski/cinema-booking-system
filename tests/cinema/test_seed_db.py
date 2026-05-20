@@ -374,3 +374,15 @@ def test_seed_db_flush_respects_screening_hall_protect():
     call_command("seed_db", "--flush", stdout=StringIO(), stderr=StringIO())
 
     assert not Hall.objects.filter(name="Protected Hall").exists()
+
+
+@pytest.mark.django_db
+def test_seed_db_success_output_mentions_cinema_counts():
+    stdout = StringIO()
+    call_command("seed_db", stdout=stdout, stderr=StringIO())
+
+    out = stdout.getvalue()
+    assert "9 genres" in out
+    assert "movies" in out
+    assert "screenings" in out
+    assert "users" in out
