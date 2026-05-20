@@ -15,7 +15,12 @@ class GenreAdmin(admin.ModelAdmin):
 
 @admin.register(Hall)
 class HallAdmin(admin.ModelAdmin):
-    pass
+    list_display = ("name", "capacity", "screenings_count")
+    search_fields = ("name",)
+
+    @admin.display(description="screenings")
+    def screenings_count(self, obj):
+        return obj.screening_set.count()
 
 
 @admin.register(Actor)

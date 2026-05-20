@@ -4,7 +4,12 @@ import pytest
 from django.contrib import admin
 
 from apps.cinema.models import Actor, Director, Genre, Hall, Movie
-from tests.cinema.factories import GenreFactory, MovieFactory
+from tests.cinema.factories import (
+    GenreFactory,
+    HallFactory,
+    MovieFactory,
+    ScreeningFactory,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -54,3 +59,28 @@ class TestGenreAdmin:
     def test_movies_count_has_short_description(self):
         ma = admin.site._registry[Genre]
         assert ma.movies_count.short_description == "movies"
+
+
+class TestHallAdmin:
+    def test_list_display_columns(self):
+        ma = admin.site._registry[Hall]
+        assert ma.list_display == ("name", "capacity", "screenings_count")
+
+    def test_search_fields(self):
+        ma = admin.site._registry[Hall]
+        assert ma.search_fields == ("name",)
+
+    def test_screenings_count_zero_when_no_screenings(self):
+        hall = HallFactory()
+        ma = admin.site._registry[Hall]
+        assert ma.screenings_count(hall) == 0
+
+    def test_screenings_count_returns_related_screening_count(self):
+        hall = HallFactory()
+        ScreeningFactory.create_batch(3, hall=hall)
+        ma = admin.site._registry[Hall]
+        assert ma.screenings_count(hall) == 3
+
+    def test_screenings_count_has_short_description(self):
+        ma = admin.site._registry[Hall]
+        assert ma.screenings_count.short_description == "screenings"
