@@ -17,7 +17,7 @@
         </button>
         <div class="collapse navbar-collapse" id="navMain">
             <ul class="navbar-nav me-auto">
-                <li class="nav-item"><a class="nav-link disabled" href="#">Repertuar</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'cinema:home' %}">Repertuar</a></li>
                 <li class="nav-item"><a class="nav-link disabled" href="#">Seanse</a></li>
             </ul>
             <ul class="navbar-nav">
@@ -30,10 +30,8 @@
                     </form>
                 </li>
                 {% else %}
-                <li class="nav-item"><a class="nav-link" href="{% url 'accounts:login'
-  %}">Zaloguj</a></li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'accounts:register'
-  %}">Zarejestruj</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'accounts:login'%}">Zaloguj</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'accounts:register'%}">Zarejestruj</a></li>
                 {% endif %}
             </ul>
         </div>
