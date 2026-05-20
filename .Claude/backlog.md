@@ -363,11 +363,11 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 | Status | US |
 |---|---|
 | **In Progress (WIP=1)** | _none_ |
-| **Ready (DoR ✅)** | **US-11** (MovieList view, FR-01) — next per `.Claude/m2_planning.md` |
-| **Backlog** | US-12..US-43 |
-| **Done** | **US-01..US-10, US-15, US-16** ✅✅✅✅✅✅✅✅✅✅✅✅ |
+| **Ready (DoR ✅)** | **US-13** (MovieDetail view + embedded trailer, FR-03) — next per `.Claude/m2_planning.md` |
+| **Backlog** | US-12, US-14, US-17..US-43 |
+| **Done** | **US-01..US-11, US-15, US-16** ✅✅✅✅✅✅✅✅✅✅✅✅✅ |
 
-**Bieżący milestone:** M2 — Catalog web (`v0.2.0`). 3/8 US zmergowanych. US-16 rozszerzyło `seed_db` o seed Genres/Halls/Actors/Directors/Movies/Screenings (defaults: 9/3-5/30/10/20/100), nowe flagi `--movies`/`--screenings`, non-empty guard wzbogacony o cinema entities, `--flush` w FK-safe order (Screening→Movie→Hall→Actor→Director→Genre→User). Bookings + StripeEvent seeding deferred do US-18+. Następny task: **US-11** (MovieList view, FR-01) per ordering w `.Claude/m2_planning.md`.
+**Bieżący milestone:** M2 — Catalog web (`v0.2.0`). 4/8 US zmergowanych. US-11 zastąpiło M1 `HomeView` przez `MovieListView(ListView)` (registered pod `/` alias `cinema:home` + `/movies/` canonical `cinema:movie_list`), z `next_screening_at` annotation (Min+filter=Q), prefetch genres, paginacją 12/strona, emoji 🎬 placeholderem dla blank posters, empty state, regression test na Min filter pitfall + assertNumQueries(4) budget. `HomeView`/`home.html`/`test_home.py` usunięte (M1 placeholder). Następny task: **US-13** (MovieDetail view + embedded trailer, FR-03) per ordering w `.Claude/m2_planning.md` — wymaga brainstorm sessions (iframe/CSP design call).
 
 ---
 
