@@ -362,12 +362,12 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 
 | Status | US |
 |---|---|
-| **In Progress (WIP=1)** | **US-16** (`seed_db` extension — FR-13 M2 scope) — plan: `docs/superpowers/plans/2026-05-20-seed-db-movies.md`; spec: `.Claude/KinoMania_wymagania_funkcjonalne.md` §FR-13 |
-| **Ready (DoR ✅)** | _none_ |
-| **Backlog** | US-11..US-43 |
-| **Done** | **US-01..US-10, US-15** ✅✅✅✅✅✅✅✅✅✅✅ |
+| **In Progress (WIP=1)** | _none_ |
+| **Ready (DoR ✅)** | **US-11** (MovieList view, FR-01) — next per `.Claude/m2_planning.md` |
+| **Backlog** | US-12..US-43 |
+| **Done** | **US-01..US-10, US-15, US-16** ✅✅✅✅✅✅✅✅✅✅✅✅ |
 
-**Bieżący milestone:** M2 — Catalog web (`v0.2.0`). 2/8 US zmergowanych, US-16 w toku. US-15 dostarczyło 5 ModelAdminów (Genre/Hall/Actor/Director/Movie) w `apps/cinema/admin.py` z custom display helperami + ~34 testów. US-16 rozszerza `seed_db` o seed Genres/Halls/Actors/Directors/Movies/Screenings (Bookings deferred do US-18+). Następny task po US-16: **US-11** (MovieList view) per ordering w `.Claude/m2_planning.md`.
+**Bieżący milestone:** M2 — Catalog web (`v0.2.0`). 3/8 US zmergowanych. US-16 rozszerzyło `seed_db` o seed Genres/Halls/Actors/Directors/Movies/Screenings (defaults: 9/3-5/30/10/20/100), nowe flagi `--movies`/`--screenings`, non-empty guard wzbogacony o cinema entities, `--flush` w FK-safe order (Screening→Movie→Hall→Actor→Director→Genre→User). Bookings + StripeEvent seeding deferred do US-18+. Następny task: **US-11** (MovieList view, FR-01) per ordering w `.Claude/m2_planning.md`.
 
 ---
 
