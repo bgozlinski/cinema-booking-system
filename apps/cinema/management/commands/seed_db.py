@@ -7,7 +7,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from faker import Faker
 
-from apps.cinema.models import Genre, Hall
+from apps.cinema.models import Actor, Director, Genre, Hall
 
 GENRE_NAMES = (
     "Action",
@@ -90,6 +90,8 @@ class Command(BaseCommand):
                 User.objects.filter(is_superuser=False).delete()
             self._seed_genres()
             self._seed_halls()
+            self._seed_actors(fake)
+            self._seed_directors(fake)
             for i in range(1, n + 1):
                 email = f"seed.user{i}@kinomania.local"
                 if options["append"] and User.objects.filter(email=email).exists():
@@ -148,3 +150,23 @@ class Command(BaseCommand):
             )
             halls.append(hall)
         return halls
+
+    def _seed_actors(self, fake):
+        actors = []
+        for _ in range(30):
+            actor = Actor.objects.create(
+                full_name=fake.name(),
+                biography=fake.paragraph(),
+            )
+            actors.append(actor)
+        return actors
+
+    def _seed_directors(self, fake):
+        directors = []
+        for _ in range(10):
+            director = Director.objects.create(
+                full_name=fake.name(),
+                biography=fake.paragraph(),
+            )
+            directors.append(director)
+        return directors

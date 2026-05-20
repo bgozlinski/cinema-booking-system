@@ -6,7 +6,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import override_settings
 
-from apps.cinema.models import Genre, Hall
+from apps.cinema.models import Actor, Director, Genre, Hall
 
 User = get_user_model()
 
@@ -195,3 +195,35 @@ def test_seed_db_hall_names_are_unique():
 
     names = list(Hall.objects.values_list("name", flat=True))
     assert len(names) == len(set(names))
+
+
+@pytest.mark.django_db
+def test_seed_db_creates_30_actors():
+    call_command("seed_db", stdout=StringIO(), stderr=StringIO())
+
+    assert Actor.objects.count() == 30
+
+
+@pytest.mark.django_db
+def test_seed_db_actors_have_names_and_biographies():
+    call_command("seed_db", stdout=StringIO(), stderr=StringIO())
+
+    for actor in Actor.objects.all():
+        assert actor.full_name.strip() != ""
+        assert actor.biography.strip() != ""
+
+
+@pytest.mark.django_db
+def test_seed_db_creates_10_directors():
+    call_command("seed_db", stdout=StringIO(), stderr=StringIO())
+
+    assert Director.objects.count() == 10
+
+
+@pytest.mark.django_db
+def test_seed_db_directors_have_names_and_biographies():
+    call_command("seed_db", stdout=StringIO(), stderr=StringIO())
+
+    for director in Director.objects.all():
+        assert director.full_name.strip() != ""
+        assert director.biography.strip() != ""
