@@ -2,9 +2,12 @@
 
 import pytest
 from django.contrib import admin
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.utils.safestring import SafeString
 
 from apps.cinema.models import Actor, Director, Genre, Hall, Movie
 from tests.cinema.factories import (
+    ActorFactory,
     GenreFactory,
     HallFactory,
     MovieFactory,
@@ -12,6 +15,15 @@ from tests.cinema.factories import (
 )
 
 pytestmark = pytest.mark.django_db
+
+
+# Smallest valid PNG (1x1 transparent) — paste-ready bytes for ImageField tests.
+PNG_1X1 = (
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
+    b"\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\rIDATx\x9cc\xfc"
+    b"\xff\xff?\x03\x00\x06\x00\x02\x00\x01\xa5\xc8\x7f\xb1\x00\x00\x00"
+    b"\x00IEND\xaeB`\x82"
+)
 
 
 class TestAdminRegistration:
@@ -84,3 +96,47 @@ class TestHallAdmin:
     def test_screenings_count_has_short_description(self):
         ma = admin.site._registry[Hall]
         assert ma.screenings_count.short_description == "screenings"
+
+
+class TestActorAdmin:
+    def test_list_display_columns(self):
+        ma = admin.site._registry[Actor]
+        assert ma.list_display == ("full_name", "photo_thumbnail", "movies_count")
+
+    def test_search_fields(self):
+        ma = admin.site._registry[Actor]
+        assert ma.search_fields == ("full_name",)
+
+    def test_photo_thumbnail_returns_dash_when_no_photo(self):
+        actor = ActorFactory(photo="")
+        ma = admin.site._registry[Actor]
+        assert ma.photo_thumbnail(actor) == "—"
+
+    def test_photo_thumbnail_returns_img_tag_when_photo_set(self):
+        actor = ActorFactory()
+        actor.photo = SimpleUploadedFile("a.png", PNG_1X1, content_type="image/png")
+        actor.save()
+        ma = admin.site._registry[Actor]
+        result = ma.photo_thumbnail(actor)
+        assert isinstance(result, SafeString)
+        assert "<img" in result
+        assert actor.photo.url in result
+
+    def test_movies_count_zero_when_no_movies(self):
+        actor = ActorFactory()
+        ma = admin.site._registry[Actor]
+        assert ma.movies_count(actor) == 0
+
+    def test_movies_count_returns_related_movie_count(self):
+        actor = ActorFactory()
+        m1 = MovieFactory()
+        m2 = MovieFactory()
+        m1.actors.add(actor)
+        m2.actors.add(actor)
+        ma = admin.site._registry[Actor]
+        assert ma.movies_count(actor) == 2
+
+    def test_thumbnail_and_count_have_short_descriptions(self):
+        ma = admin.site._registry[Actor]
+        assert ma.photo_thumbnail.short_description == "photo"
+        assert ma.movies_count.short_description == "movies"
