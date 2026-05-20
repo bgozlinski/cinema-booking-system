@@ -8,6 +8,7 @@ from django.utils.safestring import SafeString
 from apps.cinema.models import Actor, Director, Genre, Hall, Movie
 from tests.cinema.factories import (
     ActorFactory,
+    DirectorFactory,
     GenreFactory,
     HallFactory,
     MovieFactory,
@@ -140,3 +141,35 @@ class TestActorAdmin:
         ma = admin.site._registry[Actor]
         assert ma.photo_thumbnail.short_description == "photo"
         assert ma.movies_count.short_description == "movies"
+
+
+class TestDirectorAdmin:
+    def test_list_display_columns(self):
+        ma = admin.site._registry[Director]
+        assert ma.list_display == ("full_name", "photo_thumbnail", "movies_count")
+
+    def test_search_fields(self):
+        ma = admin.site._registry[Director]
+        assert ma.search_fields == ("full_name",)
+
+    def test_photo_thumbnail_returns_dash_when_no_photo(self):
+        director = DirectorFactory(photo="")
+        ma = admin.site._registry[Director]
+        assert ma.photo_thumbnail(director) == "—"
+
+    def test_photo_thumbnail_returns_img_tag_when_photo_set(self):
+        director = DirectorFactory()
+        director.photo = SimpleUploadedFile("d.png", PNG_1X1, content_type="image/png")
+        director.save()
+        ma = admin.site._registry[Director]
+        result = ma.photo_thumbnail(director)
+        assert isinstance(result, SafeString)
+        assert "<img" in result
+        assert director.photo.url in result
+
+    def test_movies_count_returns_related_movie_count(self):
+        director = DirectorFactory()
+        m = MovieFactory()
+        m.directors.add(director)
+        ma = admin.site._registry[Director]
+        assert ma.movies_count(director) == 1

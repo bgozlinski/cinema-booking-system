@@ -42,7 +42,18 @@ class ActorAdmin(admin.ModelAdmin):
 
 @admin.register(Director)
 class DirectorAdmin(admin.ModelAdmin):
-    pass
+    list_display = ("full_name", "photo_thumbnail", "movies_count")
+    search_fields = ("full_name",)
+
+    @admin.display(description="photo")
+    def photo_thumbnail(self, obj):
+        if not obj.photo:
+            return "—"
+        return format_html('<img src="{}" style="height:60px;" />', obj.photo.url)
+
+    @admin.display(description="movies")
+    def movies_count(self, obj):
+        return obj.movies.count()
 
 
 @admin.register(Movie)
