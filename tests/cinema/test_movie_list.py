@@ -178,3 +178,77 @@ class TestCardRendering:
 
         assert movie.poster.url in content
         assert "<img" in content
+
+
+class TestPagination:
+    def test_page_one_shows_12_cards_when_13_movies(self, client):
+        now = timezone.now()
+        for i in range(13):
+            movie = MovieFactory()
+            ScreeningFactory(movie=movie, start_time=now + timedelta(days=i + 1))
+
+        response = client.get("/")
+
+        assert len(response.context["movies"]) == 12
+
+    def test_page_two_shows_remaining_card_when_13_movies(self, client):
+        now = timezone.now()
+        for i in range(13):
+            movie = MovieFactory()
+            ScreeningFactory(movie=movie, start_time=now + timedelta(days=i + 1))
+
+        response = client.get("/?page=2")
+
+        assert len(response.context["movies"]) == 1
+
+    def test_page_out_of_range_returns_404(self, client):
+        now = timezone.now()
+        for i in range(13):
+            movie = MovieFactory()
+            ScreeningFactory(movie=movie, start_time=now + timedelta(days=i + 1))
+
+        response = client.get("/?page=3")
+
+        assert response.status_code == 404
+
+    def test_pagination_nav_hidden_when_one_page(self, client):
+        # 12 movies → exactly one page → no nav.
+        now = timezone.now()
+        for i in range(12):
+            movie = MovieFactory()
+            ScreeningFactory(movie=movie, start_time=now + timedelta(days=i + 1))
+
+        response = client.get("/")
+        content = response.content.decode()
+
+        assert 'class="pagination' not in content
+
+    def test_pagination_nav_visible_when_multiple_pages(self, client):
+        now = timezone.now()
+        for i in range(13):
+            movie = MovieFactory()
+            ScreeningFactory(movie=movie, start_time=now + timedelta(days=i + 1))
+
+        response = client.get("/")
+        content = response.content.decode()
+
+        assert 'class="pagination' in content
+
+
+class TestEmptyState:
+    def test_empty_state_shown_when_no_future_screenings(self, client):
+        # No movies at all.
+        response = client.get("/")
+        content = response.content.decode()
+
+        assert "Aktualnie brak filmów" in content
+        assert "row-cols-" not in content
+
+    def test_empty_state_shown_when_only_past_screenings(self, client):
+        movie = MovieFactory()
+        ScreeningFactory(movie=movie, start_time=timezone.now() - timedelta(days=1))
+
+        response = client.get("/")
+        content = response.content.decode()
+
+        assert "Aktualnie brak filmów" in content
