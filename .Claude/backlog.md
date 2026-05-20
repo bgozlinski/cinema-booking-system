@@ -362,12 +362,12 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 
 | Status | US |
 |---|---|
-| **In Progress (WIP=1)** | **US-09** (baseline templates extract + home view) |
-| **Ready (DoR ✅)** | _none_ |
+| **In Progress (WIP=1)** | _none_ |
+| **Ready (DoR ✅)** | _none_ (M2 planning po release `v0.1.0`) |
 | **Backlog** | US-10..US-43 |
-| **Done** | **US-01..US-08** ✅✅✅✅✅✅✅✅ |
+| **Done** | **US-01..US-09** ✅✅✅✅✅✅✅✅✅ |
 
-**Bieżący milestone:** M1 — Foundation (`v0.1.0`). 8/9 US zmergowanych, US-09 in progress (ostatni task M1). Po merge → `v0.1.0` tag + M2 planning.
+**Bieżący milestone:** M1 — Foundation (`v0.1.0`) **COMPLETE** ✅. Wszystkie 9 US zmergowane. US-09 dostarczyło globalny `templates/` katalog + `HomeView` przy `/` z hero + coming-soon cards. Następny krok: release tag `v0.1.0` + M2 planning (rozpisanie kart US-10..US-17).
 
 ---
 
