@@ -173,3 +173,78 @@ class TestDirectorAdmin:
         m.directors.add(director)
         ma = admin.site._registry[Director]
         assert ma.movies_count(director) == 1
+
+
+class TestMovieAdmin:
+    def test_list_display_columns(self):
+        ma = admin.site._registry[Movie]
+        assert ma.list_display == (
+            "title",
+            "release_date",
+            "poster_thumbnail",
+            "screenings_count",
+            "genres_list",
+        )
+
+    def test_search_fields(self):
+        ma = admin.site._registry[Movie]
+        assert ma.search_fields == ("title", "description", "directors__full_name")
+
+    def test_list_filter(self):
+        ma = admin.site._registry[Movie]
+        assert ma.list_filter == ("genres", "release_date")
+
+    def test_filter_horizontal(self):
+        ma = admin.site._registry[Movie]
+        assert ma.filter_horizontal == ("genres", "actors", "directors")
+
+    def test_date_hierarchy(self):
+        ma = admin.site._registry[Movie]
+        assert ma.date_hierarchy == "release_date"
+
+    def test_poster_thumbnail_returns_dash_when_no_poster(self):
+        movie = MovieFactory(poster="")
+        ma = admin.site._registry[Movie]
+        assert ma.poster_thumbnail(movie) == "—"
+
+    def test_poster_thumbnail_returns_img_tag_when_poster_set(self):
+        movie = MovieFactory()
+        movie.poster = SimpleUploadedFile("p.png", PNG_1X1, content_type="image/png")
+        movie.save()
+        ma = admin.site._registry[Movie]
+        result = ma.poster_thumbnail(movie)
+        assert isinstance(result, SafeString)
+        assert "<img" in result
+        assert movie.poster.url in result
+
+    def test_screenings_count_zero_when_no_screenings(self):
+        movie = MovieFactory()
+        ma = admin.site._registry[Movie]
+        assert ma.screenings_count(movie) == 0
+
+    def test_screenings_count_returns_related_screening_count(self):
+        movie = MovieFactory()
+        ScreeningFactory.create_batch(2, movie=movie)
+        ma = admin.site._registry[Movie]
+        assert ma.screenings_count(movie) == 2
+
+    def test_genres_list_returns_dash_when_no_genres(self):
+        movie = MovieFactory()
+        ma = admin.site._registry[Movie]
+        assert ma.genres_list(movie) == "—"
+
+    def test_genres_list_returns_comma_joined_names(self):
+        movie = MovieFactory()
+        g_action = GenreFactory(name="Action")
+        g_drama = GenreFactory(name="Drama")
+        movie.genres.add(g_action, g_drama)
+        ma = admin.site._registry[Movie]
+        result = ma.genres_list(movie)
+        # Genre default ordering is ("name",) so Action precedes Drama.
+        assert result == "Action, Drama"
+
+    def test_custom_displays_have_short_descriptions(self):
+        ma = admin.site._registry[Movie]
+        assert ma.poster_thumbnail.short_description == "poster"
+        assert ma.screenings_count.short_description == "screenings"
+        assert ma.genres_list.short_description == "genres"

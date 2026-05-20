@@ -58,4 +58,25 @@ class DirectorAdmin(admin.ModelAdmin):
 
 @admin.register(Movie)
 class MovieAdmin(admin.ModelAdmin):
-    pass
+    list_display = ("title", "release_date", "poster_thumbnail", "screenings_count", "genres_list")
+    search_fields = ("title", "description", "directors__full_name")
+    list_filter = ("genres", "release_date")
+    filter_horizontal = ("genres", "actors", "directors")
+    date_hierarchy = "release_date"
+
+    @admin.display(description="poster")
+    def poster_thumbnail(self, obj):
+        if not obj.poster:
+            return "—"
+        return format_html('<img src="{}" style="height:60px;" />', obj.poster.url)
+
+    @admin.display(description="screenings")
+    def screenings_count(self, obj):
+        return obj.screenings.count()
+
+    @admin.display(description="genres")
+    def genres_list(self, obj):
+        names = list(obj.genres.values_list("name", flat=True).order_by("name"))
+        if not names:
+            return "—"
+        return ", ".join(names)
