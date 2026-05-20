@@ -362,12 +362,12 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 
 | Status | US |
 |---|---|
-| **In Progress (WIP=1)** | _none_ |
-| **Ready (DoR ✅)** | _none_ (M2 planning po release `v0.1.0`) |
-| **Backlog** | US-10..US-43 |
+| **In Progress (WIP=1)** | **US-10** (cinema models: Genre/Actor/Director/Hall/Movie/Screening) |
+| **Ready (DoR ✅)** | _none_ |
+| **Backlog** | US-11..US-43 |
 | **Done** | **US-01..US-09** ✅✅✅✅✅✅✅✅✅ |
 
-**Bieżący milestone:** M1 — Foundation (`v0.1.0`) **COMPLETE** ✅. Wszystkie 9 US zmergowane. US-09 dostarczyło globalny `templates/` katalog + `HomeView` przy `/` z hero + coming-soon cards. Następny krok: release tag `v0.1.0` + M2 planning (rozpisanie kart US-10..US-17).
+**Bieżący milestone:** M2 — Catalog web (`v0.2.0`). 0/8 US zmergowanych, US-10 in progress. M1 (Foundation) closed → `v0.1.0`. Ordering za `.Claude/m2_planning.md`: US-10 → US-15 → US-16 → US-11 → US-13 → US-12 → US-14 → US-17.
 
 ---
 
