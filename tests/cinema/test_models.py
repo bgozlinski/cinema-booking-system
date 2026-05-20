@@ -1,0 +1,329 @@
+import datetime as dt
+from decimal import Decimal
+
+import pytest
+from django.db import IntegrityError
+from django.utils import timezone
+
+from apps.cinema.models import Genre
+from tests.cinema.factories import GenreFactory
+
+
+@pytest.mark.django_db
+def test_genre_str_returns_name():
+    genre = GenreFactory(name="Drama")
+    assert str(genre) == "Drama"
+
+
+@pytest.mark.django_db
+def test_genre_name_unique_constraint():
+    Genre.objects.create(name="Comedy")
+    with pytest.raises(IntegrityError):
+        Genre.objects.create(name="Comedy")
+
+
+@pytest.mark.django_db
+def test_genre_meta_ordering_by_name():
+    GenreFactory(name="Zombie")
+    GenreFactory(name="Action")
+    GenreFactory(name="Mystery")
+
+    names = list(Genre.objects.values_list("name", flat=True))
+    assert names == ["Action", "Mystery", "Zombie"]
+
+
+@pytest.mark.django_db
+def test_genre_name_max_length_50():
+    field = Genre._meta.get_field("name")
+    assert field.max_length == 50
+
+
+@pytest.mark.django_db
+def test_actor_str_returns_full_name():
+    from apps.cinema.models import Actor
+
+    actor = Actor.objects.create(full_name="Anna Kowalska")
+    assert str(actor) == "Anna Kowalska"
+
+
+@pytest.mark.django_db
+def test_actor_photo_blank_allowed():
+    from apps.cinema.models import Actor
+
+    actor = Actor.objects.create(full_name="Jan Nowak")
+    assert actor.photo.name == ""
+
+
+@pytest.mark.django_db
+def test_actor_biography_blank_allowed():
+    from apps.cinema.models import Actor
+
+    actor = Actor.objects.create(full_name="Piotr Wiśniewski")
+    assert actor.biography == ""
+
+
+@pytest.mark.django_db
+def test_director_str_returns_full_name():
+    from apps.cinema.models import Director
+
+    director = Director.objects.create(full_name="Andrzej Wajda")
+    assert str(director) == "Andrzej Wajda"
+
+
+@pytest.mark.django_db
+def test_hall_str_returns_name():
+    from apps.cinema.models import Hall
+
+    hall = Hall.objects.create(name="Sala A")
+    assert str(hall) == "Sala A"
+
+
+@pytest.mark.django_db
+def test_hall_name_unique_constraint():
+    from apps.cinema.models import Hall
+
+    Hall.objects.create(name="Sala B")
+    with pytest.raises(IntegrityError):
+        Hall.objects.create(name="Sala B")
+
+
+@pytest.mark.django_db
+def test_hall_capacity_default_100():
+    from apps.cinema.models import Hall
+
+    hall = Hall.objects.create(name="Sala C")
+    assert hall.capacity == 100
+
+
+@pytest.mark.django_db
+def test_hall_description_blank_allowed():
+    from apps.cinema.models import Hall
+
+    hall = Hall.objects.create(name="Sala E")
+    assert hall.description == ""
+
+
+@pytest.mark.django_db
+def test_hall_capacity_validator_rejects_zero():
+    from django.core.exceptions import ValidationError
+
+    from apps.cinema.models import Hall
+
+    hall = Hall(name="Sala D", capacity=0)
+    with pytest.raises(ValidationError):
+        hall.full_clean()
+
+
+@pytest.mark.django_db
+def test_movie_str_returns_title():
+    from apps.cinema.models import Movie
+
+    movie = Movie.objects.create(
+        title="Inception",
+        description="Dream within a dream.",
+        release_date=dt.date(2010, 7, 16),
+        duration_minutes=148,
+    )
+    assert str(movie) == "Inception"
+
+
+@pytest.mark.django_db
+def test_movie_duration_validator_rejects_zero():
+    from django.core.exceptions import ValidationError
+
+    from apps.cinema.models import Movie
+
+    movie = Movie(
+        title="Bad Movie",
+        description="x",
+        release_date=dt.date(2024, 1, 1),
+        duration_minutes=0,
+    )
+    with pytest.raises(ValidationError):
+        movie.full_clean()
+
+
+@pytest.mark.django_db
+def test_movie_poster_blank_allowed():
+    from apps.cinema.models import Movie
+
+    movie = Movie.objects.create(
+        title="No Poster",
+        description="x",
+        release_date=dt.date(2024, 1, 1),
+        duration_minutes=90,
+    )
+    assert movie.poster.name == ""
+
+
+@pytest.mark.django_db
+def test_movie_trailer_url_blank_allowed():
+    from apps.cinema.models import Movie
+
+    movie = Movie.objects.create(
+        title="No Trailer",
+        description="x",
+        release_date=dt.date(2024, 1, 1),
+        duration_minutes=90,
+    )
+    assert movie.trailer_url == ""
+
+
+@pytest.mark.django_db
+def test_movie_genres_m2m_works():
+    from tests.cinema.factories import MovieFactory
+
+    drama = GenreFactory(name="Drama")
+    comedy = GenreFactory(name="Comedy")
+    movie = MovieFactory(genres=[drama, comedy])
+
+    assert drama in movie.genres.all()
+    assert comedy in movie.genres.all()
+    assert movie in drama.movies.all()  # reverse related_name
+
+
+@pytest.mark.django_db
+def test_movie_actors_m2m_works():
+    from tests.cinema.factories import ActorFactory, MovieFactory
+
+    actor1 = ActorFactory(full_name="Actor One")
+    actor2 = ActorFactory(full_name="Actor Two")
+    movie = MovieFactory(actors=[actor1, actor2])
+
+    assert actor1 in movie.actors.all()
+    assert actor2 in movie.actors.all()
+
+
+@pytest.mark.django_db
+def test_movie_directors_m2m_works():
+    from tests.cinema.factories import DirectorFactory, MovieFactory
+
+    dir1 = DirectorFactory(full_name="Director One")
+    movie = MovieFactory(directors=[dir1])
+
+    assert dir1 in movie.directors.all()
+
+
+@pytest.mark.django_db
+def test_movie_meta_ordering_release_date_desc_then_title():
+    from apps.cinema.models import Movie
+    from tests.cinema.factories import MovieFactory
+
+    MovieFactory(title="Older", release_date=dt.date(2020, 1, 1))
+    MovieFactory(title="Newer A", release_date=dt.date(2024, 6, 1))
+    MovieFactory(title="Newer B", release_date=dt.date(2024, 6, 1))
+
+    titles = list(Movie.objects.values_list("title", flat=True))
+    # Same release_date → secondary sort by title ascending
+    assert titles == ["Newer A", "Newer B", "Older"]
+
+
+@pytest.mark.django_db
+def test_screening_str_format():
+    from apps.cinema.models import Screening
+    from tests.cinema.factories import HallFactory, MovieFactory
+
+    movie = MovieFactory(title="Test Film")
+    hall = HallFactory(name="Sala 1")
+    start = timezone.now() + dt.timedelta(days=3)
+    screening = Screening.objects.create(
+        movie=movie, hall=hall, start_time=start, price=Decimal("25.00")
+    )
+
+    expected_time = start.strftime("%Y-%m-%d %H:%M")
+    assert str(screening) == f"Test Film @ {expected_time}"
+
+
+@pytest.mark.django_db
+def test_screening_price_validator_rejects_zero():
+    from django.core.exceptions import ValidationError
+
+    from apps.cinema.models import Screening
+    from tests.cinema.factories import HallFactory, MovieFactory
+
+    screening = Screening(
+        movie=MovieFactory(),
+        hall=HallFactory(),
+        start_time=timezone.now() + dt.timedelta(days=1),
+        price=Decimal("0.00"),
+    )
+    with pytest.raises(ValidationError):
+        screening.full_clean()
+
+
+@pytest.mark.django_db
+def test_screening_movie_cascade_delete():
+    from apps.cinema.models import Screening
+    from tests.cinema.factories import ScreeningFactory
+
+    screening = ScreeningFactory()
+    movie = screening.movie
+    movie.delete()
+
+    assert Screening.objects.filter(pk=screening.pk).count() == 0
+
+
+@pytest.mark.django_db
+def test_screening_hall_protect_delete():
+    from django.db.models import ProtectedError
+
+    from tests.cinema.factories import ScreeningFactory
+
+    screening = ScreeningFactory()
+    hall = screening.hall
+
+    with pytest.raises(ProtectedError):
+        hall.delete()
+
+
+@pytest.mark.django_db
+def test_screening_booked_seats_count_stub_returns_zero():
+    from tests.cinema.factories import ScreeningFactory
+
+    screening = ScreeningFactory()
+    assert screening.booked_seats_count() == 0
+
+
+@pytest.mark.django_db
+def test_screening_available_seats_count_returns_hall_capacity():
+    from tests.cinema.factories import HallFactory, ScreeningFactory
+
+    hall = HallFactory(name="Sala 50", capacity=50)
+    screening = ScreeningFactory(hall=hall)
+    assert screening.available_seats_count() == 50
+
+
+@pytest.mark.django_db
+def test_screening_is_in_past_true_for_past_screening():
+    from tests.cinema.factories import ScreeningFactory
+
+    past_time = timezone.now() - dt.timedelta(days=1)
+    screening = ScreeningFactory(start_time=past_time)
+    assert screening.is_in_past() is True
+
+
+@pytest.mark.django_db
+def test_screening_is_in_past_false_for_future_screening():
+    from tests.cinema.factories import ScreeningFactory
+
+    future_time = timezone.now() + dt.timedelta(days=1)
+    screening = ScreeningFactory(start_time=future_time)
+    assert screening.is_in_past() is False
+
+
+@pytest.mark.django_db
+def test_screening_is_available_true_for_future_with_capacity():
+    from tests.cinema.factories import ScreeningFactory
+
+    future_time = timezone.now() + dt.timedelta(days=1)
+    screening = ScreeningFactory(start_time=future_time)
+    assert screening.is_available() is True
+
+
+@pytest.mark.django_db
+def test_screening_is_available_false_for_past_screening():
+    from tests.cinema.factories import ScreeningFactory
+
+    past_time = timezone.now() - dt.timedelta(days=1)
+    screening = ScreeningFactory(start_time=past_time)
+    assert screening.is_available() is False

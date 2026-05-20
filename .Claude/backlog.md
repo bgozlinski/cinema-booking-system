@@ -363,11 +363,11 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 | Status | US |
 |---|---|
 | **In Progress (WIP=1)** | _none_ |
-| **Ready (DoR ✅)** | _none_ (M2 planning po release `v0.1.0`) |
-| **Backlog** | US-10..US-43 |
-| **Done** | **US-01..US-09** ✅✅✅✅✅✅✅✅✅ |
+| **Ready (DoR ✅)** | **US-15** (cinema admin) — next per `.Claude/m2_planning.md` |
+| **Backlog** | US-11..US-43 |
+| **Done** | **US-01..US-10** ✅✅✅✅✅✅✅✅✅✅ |
 
-**Bieżący milestone:** M1 — Foundation (`v0.1.0`) **COMPLETE** ✅. Wszystkie 9 US zmergowane. US-09 dostarczyło globalny `templates/` katalog + `HomeView` przy `/` z hero + coming-soon cards. Następny krok: release tag `v0.1.0` + M2 planning (rozpisanie kart US-10..US-17).
+**Bieżący milestone:** M2 — Catalog web (`v0.2.0`). 1/8 US zmergowanych. US-10 dostarczyło 6 modeli (Genre/Actor/Director/Hall/Movie/Screening) + 6 migracji + Pillow + MEDIA config + 31 testów (100% coverage na `apps/cinema/models.py`). Następny task: **US-15** (cinema admin) per ordering w `.Claude/m2_planning.md`.
 
 ---
 

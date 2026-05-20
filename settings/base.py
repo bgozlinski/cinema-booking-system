@@ -84,9 +84,13 @@ TIME_ZONE = env("TIME_ZONE")
 USE_I18N = True
 USE_TZ = True
 
-# ─── Static / Media (placeholder — wypełnimy w US-09 i FR-15) ───────────────
+# ─── Static ─────────────────────────────────────────────────────────────────
 STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ─── Media (user uploads — Actor/Director photos, Movie posters) ────────────
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 # ─── Auth URLs ──────────────────────────────────────────────────────────────
 LOGIN_URL = "accounts:login"
