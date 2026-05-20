@@ -6,6 +6,20 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from faker import Faker
 
+from apps.cinema.models import Genre
+
+GENRE_NAMES = (
+    "Action",
+    "Comedy",
+    "Drama",
+    "Horror",
+    "Sci-Fi",
+    "Animation",
+    "Thriller",
+    "Romance",
+    "Documentary",
+)
+
 User = get_user_model()
 
 
@@ -73,6 +87,7 @@ class Command(BaseCommand):
         with transaction.atomic():
             if options["flush"]:
                 User.objects.filter(is_superuser=False).delete()
+            self._seed_genres()
             for i in range(1, n + 1):
                 email = f"seed.user{i}@kinomania.local"
                 if options["append"] and User.objects.filter(email=email).exists():
@@ -112,3 +127,11 @@ class Command(BaseCommand):
                 self.stdout.write("Inactive accounts:")
                 for email in inactive_emails:
                     self.stdout.write(f"  {email}")
+
+    def _seed_genres(self):
+        created = 0
+        for name in GENRE_NAMES:
+            _, was_created = Genre.objects.get_or_create(name=name)
+            if was_created:
+                created += 1
+        return created

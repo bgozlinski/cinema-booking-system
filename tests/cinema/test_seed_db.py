@@ -6,7 +6,21 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import override_settings
 
+from apps.cinema.models import Genre
+
 User = get_user_model()
+
+EXPECTED_GENRE_NAMES = {
+    "Action",
+    "Comedy",
+    "Drama",
+    "Horror",
+    "Sci-Fi",
+    "Animation",
+    "Thriller",
+    "Romance",
+    "Documentary",
+}
 
 
 @pytest.mark.django_db
@@ -132,3 +146,28 @@ def test_seed_db_flush_and_append_mutually_exclusive():
             stderr=StringIO(),
         )
     assert User.objects.count() == 0
+
+
+# ---------------------------------------------------------------------------
+# US-16 — Cinema entity seeding
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_seed_db_creates_nine_named_genres():
+    call_command("seed_db", stdout=StringIO(), stderr=StringIO())
+
+    assert Genre.objects.count() == 9
+    assert set(Genre.objects.values_list("name", flat=True)) == EXPECTED_GENRE_NAMES
+
+
+@pytest.mark.django_db
+def test_seed_db_genre_seeding_is_idempotent_on_append():
+    # Pre-create 2 of the 9 genres.
+    Genre.objects.create(name="Action")
+    Genre.objects.create(name="Drama")
+
+    call_command("seed_db", "--append", stdout=StringIO(), stderr=StringIO())
+
+    assert Genre.objects.count() == 9
+    assert set(Genre.objects.values_list("name", flat=True)) == EXPECTED_GENRE_NAMES
