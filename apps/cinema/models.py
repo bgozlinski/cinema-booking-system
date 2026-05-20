@@ -1,5 +1,8 @@
+from decimal import Decimal
+
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 
@@ -85,3 +88,45 @@ class Movie(models.Model):
 
     def __str__(self) -> str:
         return self.title
+
+
+class Screening(models.Model):
+    movie = models.ForeignKey(
+        Movie,
+        on_delete=models.CASCADE,
+        related_name="screenings",
+        verbose_name=_("movie"),
+    )
+    hall = models.ForeignKey(
+        Hall,
+        on_delete=models.PROTECT,
+        verbose_name=_("hall"),
+    )
+    start_time = models.DateTimeField(_("start time"))
+    price = models.DecimalField(
+        _("price"),
+        max_digits=6,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.01"))],
+    )
+
+    class Meta:
+        verbose_name = _("screening")
+        verbose_name_plural = _("screenings")
+        ordering = ("start_time",)
+
+    def __str__(self) -> str:
+        return f"{self.movie.title} @ {self.start_time:%Y-%m-%d %H:%M}"
+
+    def booked_seats_count(self) -> int:
+        # US-18 will sum seats_count from CONFIRMED bookings; until then no bookings exist.
+        return 0
+
+    def available_seats_count(self) -> int:
+        return self.hall.capacity - self.booked_seats_count()
+
+    def is_in_past(self) -> bool:
+        return self.start_time <= timezone.now()
+
+    def is_available(self) -> bool:
+        return not self.is_in_past() and self.available_seats_count() > 0

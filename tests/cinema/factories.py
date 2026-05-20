@@ -7,9 +7,13 @@ relationships on MovieFactory use post_generation hooks.
 
 from __future__ import annotations
 
+import datetime as dt
+from decimal import Decimal
+
 import factory
+from django.utils import timezone
 from factory import Faker as FactoryFaker
-from factory import Sequence, post_generation
+from factory import LazyFunction, Sequence, SubFactory, post_generation
 
 
 class GenreFactory(factory.django.DjangoModelFactory):
@@ -76,3 +80,13 @@ class MovieFactory(factory.django.DjangoModelFactory):
             return
         for director in extracted:
             self.directors.add(director)
+
+
+class ScreeningFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = "cinema.Screening"
+
+    movie = SubFactory(MovieFactory)
+    hall = SubFactory(HallFactory)
+    start_time = LazyFunction(lambda: timezone.now() + dt.timedelta(days=7))
+    price = Decimal("25.00")

@@ -1,7 +1,9 @@
 import datetime as dt
+from decimal import Decimal
 
 import pytest
 from django.db import IntegrityError
+from django.utils import timezone
 
 from apps.cinema.models import Genre
 from tests.cinema.factories import GenreFactory
@@ -214,3 +216,114 @@ def test_movie_meta_ordering_release_date_desc_then_title():
     titles = list(Movie.objects.values_list("title", flat=True))
     # Same release_date → secondary sort by title ascending
     assert titles == ["Newer A", "Newer B", "Older"]
+
+
+@pytest.mark.django_db
+def test_screening_str_format():
+    from apps.cinema.models import Screening
+    from tests.cinema.factories import HallFactory, MovieFactory
+
+    movie = MovieFactory(title="Test Film")
+    hall = HallFactory(name="Sala 1")
+    start = timezone.now() + dt.timedelta(days=3)
+    screening = Screening.objects.create(
+        movie=movie, hall=hall, start_time=start, price=Decimal("25.00")
+    )
+
+    expected_time = start.strftime("%Y-%m-%d %H:%M")
+    assert str(screening) == f"Test Film @ {expected_time}"
+
+
+@pytest.mark.django_db
+def test_screening_price_validator_rejects_zero():
+    from django.core.exceptions import ValidationError
+
+    from apps.cinema.models import Screening
+    from tests.cinema.factories import HallFactory, MovieFactory
+
+    screening = Screening(
+        movie=MovieFactory(),
+        hall=HallFactory(),
+        start_time=timezone.now() + dt.timedelta(days=1),
+        price=Decimal("0.00"),
+    )
+    with pytest.raises(ValidationError):
+        screening.full_clean()
+
+
+@pytest.mark.django_db
+def test_screening_movie_cascade_delete():
+    from apps.cinema.models import Screening
+    from tests.cinema.factories import ScreeningFactory
+
+    screening = ScreeningFactory()
+    movie = screening.movie
+    movie.delete()
+
+    assert Screening.objects.filter(pk=screening.pk).count() == 0
+
+
+@pytest.mark.django_db
+def test_screening_hall_protect_delete():
+    from django.db.models import ProtectedError
+
+    from tests.cinema.factories import ScreeningFactory
+
+    screening = ScreeningFactory()
+    hall = screening.hall
+
+    with pytest.raises(ProtectedError):
+        hall.delete()
+
+
+@pytest.mark.django_db
+def test_screening_booked_seats_count_stub_returns_zero():
+    from tests.cinema.factories import ScreeningFactory
+
+    screening = ScreeningFactory()
+    assert screening.booked_seats_count() == 0
+
+
+@pytest.mark.django_db
+def test_screening_available_seats_count_returns_hall_capacity():
+    from tests.cinema.factories import HallFactory, ScreeningFactory
+
+    hall = HallFactory(name="Sala 50", capacity=50)
+    screening = ScreeningFactory(hall=hall)
+    assert screening.available_seats_count() == 50
+
+
+@pytest.mark.django_db
+def test_screening_is_in_past_true_for_past_screening():
+    from tests.cinema.factories import ScreeningFactory
+
+    past_time = timezone.now() - dt.timedelta(days=1)
+    screening = ScreeningFactory(start_time=past_time)
+    assert screening.is_in_past() is True
+
+
+@pytest.mark.django_db
+def test_screening_is_in_past_false_for_future_screening():
+    from tests.cinema.factories import ScreeningFactory
+
+    future_time = timezone.now() + dt.timedelta(days=1)
+    screening = ScreeningFactory(start_time=future_time)
+    assert screening.is_in_past() is False
+
+
+@pytest.mark.django_db
+def test_screening_is_available_true_for_future_with_capacity():
+    from tests.cinema.factories import ScreeningFactory
+
+    future_time = timezone.now() + dt.timedelta(days=1)
+    screening = ScreeningFactory(start_time=future_time)
+    assert screening.is_available() is True
+
+
+@pytest.mark.django_db
+def test_screening_is_available_false_for_past_screening():
+    from tests.cinema.factories import ScreeningFactory
+
+    past_time = timezone.now() - dt.timedelta(days=1)
+    screening = ScreeningFactory(start_time=past_time)
+    assert screening.is_available() is False
