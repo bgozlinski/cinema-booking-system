@@ -362,12 +362,12 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 
 | Status | US |
 |---|---|
-| **In Progress (WIP=1)** | **US-15** (cinema admin, FR-11) — plan: `docs/superpowers/plans/2026-05-20-cinema-admin.md`; spec: `.Claude/KinoMania_wymagania_funkcjonalne.md` §FR-11 |
-| **Ready (DoR ✅)** | _none_ |
+| **In Progress (WIP=1)** | _none_ |
+| **Ready (DoR ✅)** | **US-16** (`seed_db` extension — Genres/Halls/Movies/Screenings) — next per `.Claude/m2_planning.md` |
 | **Backlog** | US-11..US-43 |
-| **Done** | **US-01..US-10** ✅✅✅✅✅✅✅✅✅✅ |
+| **Done** | **US-01..US-10, US-15** ✅✅✅✅✅✅✅✅✅✅✅ |
 
-**Bieżący milestone:** M2 — Catalog web (`v0.2.0`). 1/8 US zmergowanych, US-15 w toku. US-10 dostarczyło 6 modeli (Genre/Actor/Director/Hall/Movie/Screening) + 6 migracji + Pillow + MEDIA config + 31 testów (100% coverage na `apps/cinema/models.py`). US-15 dorzuca 5 ModelAdminów (Genre/Hall/Actor/Director/Movie) bez ScreeningAdmin/inlines (deferred do US-28).
+**Bieżący milestone:** M2 — Catalog web (`v0.2.0`). 2/8 US zmergowanych. US-15 dostarczyło 5 ModelAdminów (Genre/Hall/Actor/Director/Movie) w `apps/cinema/admin.py` z custom display helperami (poster_thumbnail, photo_thumbnail, screenings_count, movies_count, genres_list) + ~34 testów. ScreeningAdmin/BookingAdmin/inlines deferred do US-28 (M3). Następny task: **US-16** (rozbudowa `seed_db` o Genres/Halls/Movies/Screenings) per ordering w `.Claude/m2_planning.md`.
 
 ---
 
