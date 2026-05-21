@@ -55,15 +55,18 @@ class DirectorAdmin(admin.ModelAdmin):
     list_display = ("full_name", "photo_thumbnail", "movies_count")
     search_fields = ("full_name",)
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(_movies_count=Count("movies"))
+
     @admin.display(description="photo")
     def photo_thumbnail(self, obj):
         if not obj.photo:
             return "—"
         return format_html('<img src="{}" style="height:60px;" />', obj.photo.url)
 
-    @admin.display(description="movies")
+    @admin.display(description="movies", ordering="_movies_count")
     def movies_count(self, obj):
-        return obj.movies.count()
+        return obj._movies_count
 
 
 @admin.register(Movie)

@@ -17,6 +17,7 @@ from django.urls import reverse
 from tests.accounts.factories import UserFactory
 from tests.cinema.factories import (
     ActorFactory,
+    DirectorFactory,
     GenreFactory,
     HallFactory,
     MovieFactory,
@@ -80,6 +81,22 @@ class TestActorAdminQueryBudget:
                 movie.actors.add(actor)
 
         url = reverse("admin:cinema_actor_changelist")
+        # Cap 12 — admin baseline + 1 annotate + 1 buffer. Tighten after measurement.
+        with django_assert_max_num_queries(12):
+            response = admin_client.get(url)
+            assert response.status_code == 200
+
+
+class TestDirectorAdminQueryBudget:
+    def test_changelist_uses_bounded_queries(self, admin_client, django_assert_max_num_queries):
+        """12 directors x ~2 movies each. movies_count helper is N+1 per row."""
+        for _ in range(12):
+            director = DirectorFactory()
+            for _ in range(2):
+                movie = MovieFactory()
+                movie.directors.add(director)
+
+        url = reverse("admin:cinema_director_changelist")
         # Cap 12 — admin baseline + 1 annotate + 1 buffer. Tighten after measurement.
         with django_assert_max_num_queries(12):
             response = admin_client.get(url)

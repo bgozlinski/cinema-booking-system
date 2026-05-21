@@ -185,7 +185,9 @@ class TestDirectorAdmin:
         m = MovieFactory()
         m.directors.add(director)
         ma = admin.site._registry[Director]
-        assert ma.movies_count(director) == 1
+        request = RequestFactory().get("/admin/")
+        annotated = ma.get_queryset(request).get(pk=director.pk)
+        assert ma.movies_count(annotated) == 1
 
 
 class TestMovieAdmin:
