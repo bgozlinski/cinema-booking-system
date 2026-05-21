@@ -1,13 +1,21 @@
 """Tests for MovieDetailView (US-13 / FR-03)."""
 
 from datetime import timedelta
+from decimal import Decimal
 
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django.utils import timezone
 
-from tests.cinema.factories import GenreFactory, MovieFactory, ScreeningFactory
+from tests.cinema.factories import (
+    ActorFactory,
+    DirectorFactory,
+    GenreFactory,
+    HallFactory,
+    MovieFactory,
+    ScreeningFactory,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -173,4 +181,111 @@ class TestHeroAndTrailer:
         content = response.content.decode()
         # No iframe, no "Zwiastun" heading.
         assert "<iframe" not in content
+        assert "Zwiastun" not in content
+
+
+class TestDirectors:
+    def test_directors_section_shows_names(self, client):
+        movie = MovieFactory()
+        d1 = DirectorFactory(full_name="Director One")
+        d2 = DirectorFactory(full_name="Director Two")
+        movie.directors.add(d1, d2)
+        response = client.get(f"/movies/{movie.pk}/")
+        content = response.content.decode()
+        assert "Director One" in content
+        assert "Director Two" in content
+
+    def test_directors_section_hidden_when_empty(self, client):
+        movie = MovieFactory()
+        response = client.get(f"/movies/{movie.pk}/")
+        assert "Reżyseria" not in response.content.decode()
+
+    def test_director_photo_placeholder_when_blank(self, client):
+        movie = MovieFactory()
+        movie.directors.add(DirectorFactory(full_name="No-Photo Director", photo=""))
+        response = client.get(f"/movies/{movie.pk}/")
+        assert "👤" in response.content.decode()
+
+
+class TestActorsCarousel:
+    def test_actors_carousel_renders_data_attribute(self, client):
+        movie = MovieFactory()
+        movie.actors.add(ActorFactory(), ActorFactory())
+        response = client.get(f"/movies/{movie.pk}/")
+        content = response.content.decode()
+        assert 'data-bs-ride="false"' in content
+
+    def test_actors_carousel_has_one_item_per_actor(self, client):
+        movie = MovieFactory()
+        movie.actors.add(ActorFactory(), ActorFactory(), ActorFactory())
+        response = client.get(f"/movies/{movie.pk}/")
+        content = response.content.decode()
+        assert content.count('class="carousel-item') == 3
+
+    def test_actors_carousel_has_exactly_one_active_item(self, client):
+        movie = MovieFactory()
+        movie.actors.add(ActorFactory(), ActorFactory(), ActorFactory())
+        response = client.get(f"/movies/{movie.pk}/")
+        content = response.content.decode()
+        # Bootstrap requires exactly one `.active` slide on load.
+        assert content.count("carousel-item active") == 1
+
+    def test_actors_section_hidden_when_empty(self, client):
+        movie = MovieFactory()
+        response = client.get(f"/movies/{movie.pk}/")
+        assert "Obsada" not in response.content.decode()
+
+    def test_actor_photo_placeholder_when_blank(self, client):
+        movie = MovieFactory()
+        movie.actors.add(ActorFactory(full_name="No-Photo Actor", photo=""))
+        response = client.get(f"/movies/{movie.pk}/")
+        assert "👤" in response.content.decode()
+
+
+class TestUpcomingScreenings:
+    def test_screening_row_shows_hall_price_seats(self, client):
+        hall = HallFactory(name="Sala A", capacity=100)
+        movie = MovieFactory()
+        ScreeningFactory(
+            movie=movie,
+            hall=hall,
+            start_time=timezone.now() + timedelta(days=1),
+            price=Decimal("42.50"),
+        )
+        response = client.get(f"/movies/{movie.pk}/")
+        content = response.content.decode()
+        assert "Sala A" in content
+        # Django renders Decimal with locale-aware separator (pl_PL → comma).
+        assert ("42,50" in content) or ("42.50" in content)
+        assert "zł" in content
+        # available_seats_count stub returns hall.capacity (100) until US-18.
+        assert "100" in content
+
+    def test_screening_row_shows_disabled_reserve_button(self, client):
+        movie = MovieFactory()
+        ScreeningFactory(movie=movie, start_time=timezone.now() + timedelta(days=1))
+        response = client.get(f"/movies/{movie.pk}/")
+        content = response.content.decode()
+        assert "Zarezerwuj" in content
+        # US-20 will drop the disabled class.
+        assert "disabled" in content
+
+    def test_screening_empty_state_when_no_future(self, client):
+        movie = MovieFactory()
+        ScreeningFactory(movie=movie, start_time=timezone.now() - timedelta(days=1))
+        response = client.get(f"/movies/{movie.pk}/")
+        content = response.content.decode()
+        assert "Brak zaplanowanych seansów" in content
+        assert "<table" not in content
+
+    def test_orphan_movie_renders_with_only_hero_and_empty_alert(self, client):
+        movie = MovieFactory(trailer_url="")
+        response = client.get(f"/movies/{movie.pk}/")
+        content = response.content.decode()
+        assert response.status_code == 200
+        assert movie.title in content
+        assert "Brak zaplanowanych seansów" in content
+        # No optional sections.
+        assert "Reżyseria" not in content
+        assert "Obsada" not in content
         assert "Zwiastun" not in content
