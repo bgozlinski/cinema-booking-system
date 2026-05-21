@@ -307,3 +307,16 @@ class TestQueryBudget:
 
         with django_assert_max_num_queries(6):
             client.get(f"/movies/{movie.pk}/")
+
+    def test_orphan_movie_uses_bounded_queries(self, client, django_assert_max_num_queries):
+        """Movie bez screenings/actors/directors/trailer — prefetch'y dla M2M tabel
+        wciąż odpalają się jako fixed cost (zwracają 0 rows), więc cap nie spada
+        gwałtownie. Verification: brak N+1 dla emptys."""
+        movie = MovieFactory(trailer_url="")
+        # Bez add(*genres), bez ScreeningFactory(movie=movie), bez actors/directors.
+
+        # Budget: 1 movie + 3 prefetch (genres/actors/directors, każdy zwraca 0) + 1 screenings
+        # filter+select_related (zwraca 0) = 5. Cap 6 (zgodnie z base buffer).
+        with django_assert_max_num_queries(6):
+            response = client.get(f"/movies/{movie.pk}/")
+            assert response.status_code == 200
