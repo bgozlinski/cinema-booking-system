@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Seanse — {{ effective_date|date:"d.m.Y" }} — KinoMania{% endblock %}
+
+{% block content %}
+<h1 class="h2 mb-4">Seanse</h1>
+
+<form method="get" class="row g-2 mb-4 align-items-end" role="search">
+    <div class="col-auto">
+        <label for="date-input" class="form-label small mb-1">Data</label>
+        <input type="date" id="date-input" name="date" class="form-control"
+               min="{{ today|date:'Y-m-d' }}"
+               max="{{ max_date|date:'Y-m-d' }}"
+               value="{{ effective_date|date:'Y-m-d' }}">
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Pokaż</button>
+    </div>
+    {% if request.GET.date %}
+    <div class="col-auto">
+        <a href="{% url 'cinema:screening_list' %}" class="btn btn-outline-secondary"
+           title="Wróć do dzisiejszego dnia">Dzisiaj</a>
+    </div>
+    {% endif %}
+</form>
+
+{% if movie_groups %}
+{% for movie, screenings in movie_groups %}
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3 align-items-center mb-3">
+            <div class="col-auto">
+                {% if movie.poster %}
+                <img src="{{ movie.poster.url }}" alt="{{ movie.title }}"
+                     class="rounded"
+                     style="width:80px; height:120px; object-fit:cover;">
+                {% else %}
+                <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                     style="width:80px; height:120px; font-size:2rem;" aria-hidden="true">🎬
+                </div>
+                {% endif %}
+            </div>
+            <div class="col">
+                <h2 class="h5 mb-1">
+                    <a href="{{ movie.get_absolute_url }}" class="text-decoration-none">
+                        {{ movie.title }}
+                    </a>
+                </h2>
+                <p class="mb-0">
+                    {% for genre in movie.genres.all %}
+                    <span class="badge bg-secondary">{{ genre.name }}</span>
+                    {% endfor %}
+                </p>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                <tr>
+                    <th>Godzina</th>
+                    <th>Sala</th>
+                    <th>Cena</th>
+                    <th>Dostępne miejsca</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for s in screenings %}
+                <tr>
+                    <td>{{ s.start_time|date:"H:i" }}</td>
+                    <td>{{ s.hall.name }}</td>
+                    <td>{{ s.price }} zł</td>
+                    <td>{{ s.available_seats_count }}</td>
+                    <td>
+                        <a href="#" class="btn btn-primary btn-sm disabled">Zarezerwuj</a>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="alert alert-info">
+    Brak seansów na dzień {{ effective_date|date:"d.m.Y" }}.
+</div>
+{% endif %}
+{% endblock %}

@@ -363,11 +363,11 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 | Status | US |
 |---|---|
 | **In Progress (WIP=1)** | _none_ |
-| **Ready (DoR ✅)** | **US-14** (daily screenings list `/screenings/?date=...`, FR-04) — next per `.Claude/m2_planning.md` |
-| **Backlog** | US-17..US-43 |
-| **Done** | **US-01..US-13, US-15, US-16** ✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅ |
+| **Ready (DoR ✅)** | **US-17** (performance pass / `prefetch_related` audit, NFR) — **last M2 task**, zamyka milestone `v0.2.0` |
+| **Backlog** | US-18..US-43 (M3..M5) |
+| **Done** | **US-01..US-16** ✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅ |
 
-**Bieżący milestone:** M2 — Catalog web (`v0.2.0`). 6/8 US zmergowanych. US-12 dodało `MovieFilterForm(forms.Form)` z `q`/`genre`/`date` (wszystkie optional) + rozszerzyło `MovieListView.get_queryset()` o trzy filtry intersekcyjne + filter bar template + empty-state branching + querystring-preserving paginację (Django 5.1+ `{% querystring %}` tag). `?date=` używa `timezone.make_aware()` dla DST-safe day window (Europe/Warsaw, inkluzywne 00:00, ekskluzywne 24:00 następnego dnia). N+1 budget cap bumped 4→5 (Genre dropdown queryset eval). Następny task: **US-14** (daily screenings list `/screenings/?date=...`, FR-04) per `.Claude/m2_planning.md` — wymaga brainstorm (date selection UX, timezone handling near midnight, grouping by movie).
+**Bieżący milestone:** M2 — Catalog web (`v0.2.0`). 7/8 US zmergowanych. US-14 dodało `ScreeningListView(TemplateView)` pod `/screenings/?date=YYYY-MM-DD` z `_resolve_date()` clamping out-of-range dat do `today..today+30` (past → today, far-future → today+30, malformed → today) + `messages.warning("Data poza zakresem; pokazano dla <YYYY-MM-DD>.")`. Screenings grouped by movie (`OrderedDict`, sorted by earliest screening time per group), card-per-movie template z poster thumb + title link + mini-table godziny/sala/cena/miejsca/"Zarezerwuj" disabled (US-20 wires). Navbar "Seanse" link odblokowany (M1 `disabled` removed). Day-window math identical do US-12. N+1 budget cap 3 (`select_related("movie", "hall") + prefetch_related("movie__genres")`). 26 nowych testów. Następny task: **US-17** (performance pass, NFR) — last M2 task. Plan: profile US-11..US-14 with `django-debug-toolbar` lub `assertNumQueries`, add brakujące `prefetch_related`/`select_related`. Po US-17: cut `v0.2.0` tag + GitHub release.
 
 ---
 
