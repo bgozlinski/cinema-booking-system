@@ -362,12 +362,12 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 
 | Status | US |
 |---|---|
-| **In Progress (WIP=1)** | _none_ |
-| **Ready (DoR ✅)** | **US-14** (daily screenings list `/screenings/?date=...`, FR-04) — next per `.Claude/m2_planning.md` |
+| **In Progress (WIP=1)** | **US-14** (daily screenings list `/screenings/?date=...`, FR-04) — spec: `docs/superpowers/specs/2026-05-21-screening-list-design.md`; plan: `docs/superpowers/plans/2026-05-21-screening-list.md` |
+| **Ready (DoR ✅)** | _none_ |
 | **Backlog** | US-17..US-43 |
 | **Done** | **US-01..US-13, US-15, US-16** ✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅ |
 
-**Bieżący milestone:** M2 — Catalog web (`v0.2.0`). 6/8 US zmergowanych. US-12 dodało `MovieFilterForm(forms.Form)` z `q`/`genre`/`date` (wszystkie optional) + rozszerzyło `MovieListView.get_queryset()` o trzy filtry intersekcyjne + filter bar template + empty-state branching + querystring-preserving paginację (Django 5.1+ `{% querystring %}` tag). `?date=` używa `timezone.make_aware()` dla DST-safe day window (Europe/Warsaw, inkluzywne 00:00, ekskluzywne 24:00 następnego dnia). N+1 budget cap bumped 4→5 (Genre dropdown queryset eval). Następny task: **US-14** (daily screenings list `/screenings/?date=...`, FR-04) per `.Claude/m2_planning.md` — wymaga brainstorm (date selection UX, timezone handling near midnight, grouping by movie).
+**Bieżący milestone:** M2 — Catalog web (`v0.2.0`). 6/8 US zmergowanych, US-14 w toku. US-14 dodaje `ScreeningListView(TemplateView)` pod `/screenings/?date=YYYY-MM-DD` (default: dziś) z `_resolve_date()` clamp'ującym out-of-range daty do `today..today+30` + `messages.warning("Data poza zakresem; pokazano dla <YYYY-MM-DD>.")`. Wyniki pogrupowane po filmie (card per movie + embedded mini-table), kolejność grup wg najwcześniejszego seansu tego dnia. Wpina navbar "Seanse" link odblokowując M1 `disabled`. Day-window math identical do US-12. Następny task po US-14: **US-17** (performance pass / `prefetch_related` audit, NFR) — last M2 task, zamyka milestone `v0.2.0`.
 
 ---
 
