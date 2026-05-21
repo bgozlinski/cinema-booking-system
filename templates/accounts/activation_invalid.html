@@ -1,18 +1,16 @@
-{% extends "base.html" %}
+{% extends "accounts/_auth_base.html" %}
+
 {% block title %}Link nieprawidłowy — KinoMania{% endblock %}
-{% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="text-center">
-            <div class="display-1 mb-3">⚠️</div>
-            <h1 class="h3 mb-3">Link aktywacyjny jest nieprawidłowy lub wygasł</h1>
-            <p class="text-muted">Możliwe przyczyny: link został już użyty, hasło zostało w międzyczasie
-                zmienione, albo link jest starszy niż 3 dni.</p>
-            <p class="mt-4">
-                <a href="{% url 'accounts:activation_resend' %}" class="btn btn-primary">Wyślij link
-                    ponownie</a>
-            </p>
-        </div>
+{% block auth_tagline %}Link nieprawidłowy lub wygasł{% endblock %}
+
+{% block auth_body %}
+<div class="auth-card__message">
+    <div class="auth-card__message-emoji" aria-hidden="true">⚠️</div>
+    <p class="auth-card__message-text">Link aktywacyjny jest nieprawidłowy lub wygasł.</p>
+    <p class="auth-card__message-hint">Możliwe przyczyny: link został już użyty, hasło zostało w międzyczasie
+        zmienione, albo link jest starszy niż 3 dni.</p>
+    <div class="mt-4">
+        <a href="{% url 'accounts:activation_resend' %}" class="btn btn-primary">Wyślij link ponownie</a>
     </div>
 </div>
 {% endblock %}
