@@ -101,3 +101,22 @@ class TestDirectorAdminQueryBudget:
         with django_assert_max_num_queries(12):
             response = admin_client.get(url)
             assert response.status_code == 200
+
+
+class TestMovieAdminQueryBudget:
+    def test_changelist_uses_bounded_queries(self, admin_client, django_assert_max_num_queries):
+        """12 movies x ~3 genres x ~2 screenings. Two N+1 helpers (screenings_count
+        + genres_list) without get_queryset = 24 extra queries on top of admin
+        baseline. After refactor: 1 annotate + 1 prefetch + admin baseline."""
+        for _ in range(12):
+            movie = MovieFactory()
+            for _ in range(3):
+                movie.genres.add(GenreFactory())
+            ScreeningFactory.create_batch(2, movie=movie)
+
+        url = reverse("admin:cinema_movie_changelist")
+        # Cap 15: admin baseline (~10) + 1 annotate + 1 prefetch + 1 list_filter dropdown
+        # + 2 buffer. Tighten after measurement.
+        with django_assert_max_num_queries(15):
+            response = admin_client.get(url)
+            assert response.status_code == 200

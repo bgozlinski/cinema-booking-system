@@ -235,18 +235,24 @@ class TestMovieAdmin:
     def test_screenings_count_zero_when_no_screenings(self):
         movie = MovieFactory()
         ma = admin.site._registry[Movie]
-        assert ma.screenings_count(movie) == 0
+        request = RequestFactory().get("/admin/")
+        annotated = ma.get_queryset(request).get(pk=movie.pk)
+        assert ma.screenings_count(annotated) == 0
 
     def test_screenings_count_returns_related_screening_count(self):
         movie = MovieFactory()
         ScreeningFactory.create_batch(2, movie=movie)
         ma = admin.site._registry[Movie]
-        assert ma.screenings_count(movie) == 2
+        request = RequestFactory().get("/admin/")
+        annotated = ma.get_queryset(request).get(pk=movie.pk)
+        assert ma.screenings_count(annotated) == 2
 
     def test_genres_list_returns_dash_when_no_genres(self):
         movie = MovieFactory()
         ma = admin.site._registry[Movie]
-        assert ma.genres_list(movie) == "—"
+        request = RequestFactory().get("/admin/")
+        annotated = ma.get_queryset(request).get(pk=movie.pk)
+        assert ma.genres_list(annotated) == "—"
 
     def test_genres_list_returns_comma_joined_names(self):
         movie = MovieFactory()
@@ -254,9 +260,11 @@ class TestMovieAdmin:
         g_drama = GenreFactory(name="Drama")
         movie.genres.add(g_action, g_drama)
         ma = admin.site._registry[Movie]
-        result = ma.genres_list(movie)
-        # Genre default ordering is ("name",) so Action precedes Drama.
-        assert result == "Action, Drama"
+        request = RequestFactory().get("/admin/")
+        annotated = ma.get_queryset(request).get(pk=movie.pk)
+        # New impl sorts alphabetically (sorted(g.name for g in obj.genres.all())) —
+        # same result as the old values_list("name").order_by("name") path.
+        assert ma.genres_list(annotated) == "Action, Drama"
 
     def test_custom_displays_have_short_descriptions(self):
         ma = admin.site._registry[Movie]

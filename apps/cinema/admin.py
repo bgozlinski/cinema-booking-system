@@ -77,19 +77,25 @@ class MovieAdmin(admin.ModelAdmin):
     filter_horizontal = ("genres", "actors", "directors")
     date_hierarchy = "release_date"
 
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .annotate(_screenings_count=Count("screenings", distinct=True))
+            .prefetch_related("genres")
+        )
+
     @admin.display(description="poster")
     def poster_thumbnail(self, obj):
         if not obj.poster:
             return "—"
         return format_html('<img src="{}" style="height:60px;" />', obj.poster.url)
 
-    @admin.display(description="screenings")
+    @admin.display(description="screenings", ordering="_screenings_count")
     def screenings_count(self, obj):
-        return obj.screenings.count()
+        return obj._screenings_count
 
     @admin.display(description="genres")
     def genres_list(self, obj):
-        names = list(obj.genres.values_list("name", flat=True).order_by("name"))
-        if not names:
-            return "—"
-        return ", ".join(names)
+        names = sorted(g.name for g in obj.genres.all())
+        return ", ".join(names) if names else "—"
