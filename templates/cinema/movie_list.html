@@ -29,7 +29,7 @@
                 <p class="text-muted small mb-3">
                     Najbliższy seans: {{ movie.next_screening_at|date:"d.m.Y H:i" }}
                 </p>
-                <a href="#" class="btn btn-primary btn-sm mt-auto disabled">Szczegóły</a>
+                <a href="{{ movie.get_absolute_url }}" class="btn btn-primary btn-sm mt-auto">Szczegóły</a>
             </div>
         </div>
     </div>
