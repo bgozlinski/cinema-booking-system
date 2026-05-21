@@ -3,12 +3,22 @@
 from datetime import timedelta
 
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django.utils import timezone
 
-from tests.cinema.factories import MovieFactory, ScreeningFactory
+from tests.cinema.factories import GenreFactory, MovieFactory, ScreeningFactory
 
 pytestmark = pytest.mark.django_db
+
+
+# Smallest valid PNG (1x1) — reused from tests/cinema/test_movie_list.py
+PNG_1X1 = (
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
+    b"\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\rIDATx\x9cc\xfc"
+    b"\xff\xff?\x03\x00\x06\x00\x02\x00\x01\xa5\xc8\x7f\xb1\x00\x00\x00"
+    b"\x00IEND\xaeB`\x82"
+)
 
 
 class TestRouting:
@@ -97,3 +107,70 @@ class TestContext:
         movie = MovieFactory()  # no screenings
         response = client.get(f"/movies/{movie.pk}/")
         assert list(response.context["upcoming_screenings"]) == []
+
+
+class TestHeroAndTrailer:
+    def test_hero_shows_title(self, client):
+        movie = MovieFactory(title="Unique Hero Title")
+        response = client.get(f"/movies/{movie.pk}/")
+        assert "Unique Hero Title" in response.content.decode()
+
+    def test_hero_shows_release_date_and_duration(self, client):
+        movie = MovieFactory(duration_minutes=137)
+        response = client.get(f"/movies/{movie.pk}/")
+        content = response.content.decode()
+        assert "137" in content
+        assert "min" in content
+        assert movie.release_date.strftime("%d.%m.%Y") in content
+
+    def test_hero_shows_description(self, client):
+        movie = MovieFactory(description="A peculiar plot about cinema.")
+        response = client.get(f"/movies/{movie.pk}/")
+        assert "A peculiar plot about cinema." in response.content.decode()
+
+    def test_hero_shows_genre_badges(self, client):
+        movie = MovieFactory()
+        movie.genres.add(GenreFactory(name="Sci-Fi"), GenreFactory(name="Drama"))
+        response = client.get(f"/movies/{movie.pk}/")
+        content = response.content.decode()
+        assert "Sci-Fi" in content
+        assert "Drama" in content
+        assert content.count('class="badge bg-secondary"') >= 2
+
+    def test_hero_uses_emoji_placeholder_when_poster_blank(self, client):
+        movie = MovieFactory(poster="")
+        response = client.get(f"/movies/{movie.pk}/")
+        content = response.content.decode()
+        assert "🎬" in content
+        assert 'src=""' not in content
+
+    def test_hero_uses_real_poster_when_set(self, client):
+        movie = MovieFactory()
+        movie.poster = SimpleUploadedFile("p.png", PNG_1X1, content_type="image/png")
+        movie.save()
+        response = client.get(f"/movies/{movie.pk}/")
+        assert movie.poster.url in response.content.decode()
+
+    def test_trailer_iframe_for_youtube_url(self, client):
+        movie = MovieFactory(trailer_url="https://youtu.be/dQw4w9WgXcQ")
+        response = client.get(f"/movies/{movie.pk}/")
+        content = response.content.decode()
+        assert "<iframe" in content
+        assert "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" in content
+        assert 'sandbox="allow-scripts allow-same-origin allow-presentation"' in content
+
+    def test_trailer_fallback_link_for_non_youtube(self, client):
+        movie = MovieFactory(trailer_url="https://example.com/clip.mp4")
+        response = client.get(f"/movies/{movie.pk}/")
+        content = response.content.decode()
+        assert "<iframe" not in content
+        assert 'href="https://example.com/clip.mp4"' in content
+        assert 'rel="noopener noreferrer"' in content
+
+    def test_trailer_section_hidden_when_url_blank(self, client):
+        movie = MovieFactory(trailer_url="")
+        response = client.get(f"/movies/{movie.pk}/")
+        content = response.content.decode()
+        # No iframe, no "Zwiastun" heading.
+        assert "<iframe" not in content
+        assert "Zwiastun" not in content

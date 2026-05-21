@@ -1,9 +1,57 @@
-{% extends "base.html" %}
+  {% extends "base.html" %}
 
-{% block title %}{{ movie.title }} — KinoMania{% endblock %}
+  {% block title %}{{ movie.title }} — KinoMania{% endblock %}
 
-{% block content %}
-<article>
-    <h1>{{ movie.title }}</h1>
-</article>
-{% endblock %}
+  {% block content %}
+  <article>
+    {# Hero — poster + meta #}
+    <div class="row g-4 mb-5">
+      <div class="col-md-4">
+        {% if movie.poster %}
+          <img src="{{ movie.poster.url }}" alt="{{ movie.title }}"
+               class="img-fluid rounded shadow-sm"
+               style="aspect-ratio: 2/3; object-fit: cover; width: 100%;">
+        {% else %}
+          <div class="bg-light rounded d-flex align-items-center justify-content-center"
+               style="aspect-ratio: 2/3; font-size: 5rem;" aria-hidden="true">🎬</div>
+        {% endif %}
+      </div>
+      <div class="col-md-8">
+        <h1 class="mb-3">{{ movie.title }}</h1>
+        <p class="mb-3">
+          {% for genre in movie.genres.all %}
+            <span class="badge bg-secondary">{{ genre.name }}</span>
+          {% endfor %}
+        </p>
+        <dl class="row small text-muted mb-3">
+          <dt class="col-sm-4">Premiera</dt>
+          <dd class="col-sm-8">{{ movie.release_date|date:"d.m.Y" }}</dd>
+          <dt class="col-sm-4">Czas trwania</dt>
+          <dd class="col-sm-8">{{ movie.duration_minutes }} min</dd>
+        </dl>
+        <p>{{ movie.description|linebreaksbr }}</p>
+      </div>
+    </div>
+
+    {# Trailer — only if we have a URL #}
+    {% if trailer_embed_url %}
+      <section class="mb-5">
+        <h2 class="h4 mb-3">Zwiastun</h2>
+        <iframe src="{{ trailer_embed_url }}"
+                title="Zwiastun: {{ movie.title }}"
+                width="100%" style="aspect-ratio: 16/9;"
+                frameborder="0"
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                referrerpolicy="strict-origin-when-cross-origin"
+                sandbox="allow-scripts allow-same-origin allow-presentation"
+                allowfullscreen></iframe>
+      </section>
+    {% elif movie.trailer_url %}
+      <section class="mb-5">
+        <h2 class="h4 mb-3">Zwiastun</h2>
+        <a href="{{ movie.trailer_url }}" class="btn btn-outline-secondary"
+           target="_blank" rel="noopener noreferrer">Zobacz zwiastun (link zewnętrzny)</a>
+      </section>
+    {% endif %}
+  </article>
+  {% endblock %}
