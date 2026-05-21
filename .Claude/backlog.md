@@ -362,12 +362,12 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 
 | Status | US |
 |---|---|
-| **In Progress (WIP=1)** | _none_ |
-| **Ready (DoR ✅)** | **US-12** (filtering + search na MovieList, FR-02) — next per `.Claude/m2_planning.md` |
+| **In Progress (WIP=1)** | **US-12** (filtering + search na MovieList, FR-02) — spec: `docs/superpowers/specs/2026-05-21-movie-list-filtering-design.md`; plan: `docs/superpowers/plans/2026-05-21-movie-list-filtering.md` |
+| **Ready (DoR ✅)** | _none_ |
 | **Backlog** | US-14, US-17..US-43 |
 | **Done** | **US-01..US-11, US-13, US-15, US-16** ✅✅✅✅✅✅✅✅✅✅✅✅✅✅ |
 
-**Bieżący milestone:** M2 — Catalog web (`v0.2.0`). 5/8 US zmergowanych. US-13 dodało `MovieDetailView(DetailView)` pod `/movies/<int:pk>/` z helperem `youtube_embed_url` (privacy-first `youtube-nocookie.com`, sandbox `allow-scripts allow-same-origin allow-presentation`), hero z poster/title/badges/meta/description, conditional trailer iframe/fallback link, directors grid, actors Bootstrap Carousel (`data-bs-ride="false"`), tabelę najbliższych seansów (future-only z `select_related("hall")`), N+1 budget cap 6. `Movie.get_absolute_url` (deferred z US-10) odblokował "Szczegóły" button z US-11. Następny task: **US-12** (filtering + search na MovieList, FR-02) per `.Claude/m2_planning.md` — wymaga brainstorm (form vs htmx, query-param design).
+**Bieżący milestone:** M2 — Catalog web (`v0.2.0`). 5/8 US zmergowanych, US-12 w toku. US-12 dodaje `MovieFilterForm(forms.Form)` z `q`/`genre`/`date` (wszystkie optional) + rozszerza `MovieListView.get_queryset()` o trzy filtry intersekcyjne + filter bar template + empty-state branching + querystring-preserving paginacja. `?date=` używa `timezone.make_aware()` dla DST-safe day window (Europe/Warsaw, inkluzywne 00:00, ekskluzywne 24:00). Następny task po US-12: **US-14** (daily screenings list `/screenings/?date=...`, FR-04) per `.Claude/m2_planning.md`.
 
 ---
 
