@@ -252,3 +252,19 @@ class TestRendering:
         max_iso = (timezone.localdate() + timedelta(days=30)).isoformat()
         assert f'min="{today_iso}"' in content
         assert f'max="{max_iso}"' in content
+
+
+class TestQueryBudget:
+    def test_full_day_uses_bounded_queries(self, client, django_assert_max_num_queries):
+        """5 movies x 3 screenings each = 15 rows. select_related("movie", "hall")
+        joins on the screenings query; prefetch_related("movie__genres") loads genres
+        in a single batched query. Budget cap 3 absorbs harness overhead."""
+        tomorrow = timezone.localdate() + timedelta(days=1)
+        for _ in range(5):
+            movie = MovieFactory()
+            movie.genres.add(GenreFactory(), GenreFactory())
+            for hour in (12, 16, 20):
+                ScreeningFactory(movie=movie, start_time=_make_local_dt(tomorrow, hour))
+
+        with django_assert_max_num_queries(3):
+            client.get(f"/screenings/?date={tomorrow.isoformat()}")
