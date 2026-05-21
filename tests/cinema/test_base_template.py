@@ -22,6 +22,18 @@ def test_navbar_repertuar_links_to_home(client):
 
 
 @pytest.mark.django_db
+def test_navbar_seanse_links_to_screening_list(client):
+    response = client.get("/")
+    content = response.content.decode()
+
+    match = re.search(r"<a[^>]*>\s*Seanse\s*</a>", content)
+    assert match is not None, "Seanse nav anchor not found"
+    anchor = match.group(0)
+    assert 'href="/screenings/"' in anchor, f"Seanse should link to /screenings/, got: {anchor}"
+    assert "disabled" not in anchor, f"Seanse should not be disabled, got: {anchor}"
+
+
+@pytest.mark.django_db
 def test_base_template_includes_navbar(client):
     response = client.get("/")
     content = response.content.decode()
