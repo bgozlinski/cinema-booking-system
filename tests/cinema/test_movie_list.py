@@ -260,16 +260,20 @@ class TestQueryBudget:
     def test_full_page_uses_bounded_queries(self, client, django_assert_max_num_queries):
         """12 movies, each with 2 genres → without prefetch this would be 1 + 12 = 13 queries
         for genres alone, blowing past the budget. The annotated queryset's prefetch_related
-        keeps it tight."""
+        keeps it tight.
+
+        US-12 adds 1 query for the Genre filter dropdown (queryset eval in form rendering),
+        so the cap bumps from 4 → 5.
+        """
         now = timezone.now()
         for i in range(12):
             movie = MovieFactory()
             movie.genres.add(GenreFactory(), GenreFactory())
             ScreeningFactory(movie=movie, start_time=now + timedelta(days=i + 1))
 
-        # Budget: 1 paginator.count + 1 movies + 1 prefetched genres = 3 baseline.
-        # Cap at 4 to absorb any test-harness query (session etc.) without flaking.
-        with django_assert_max_num_queries(4):
+        # Budget: 1 paginator.count + 1 movies + 1 prefetched genres + 1 form genre dropdown = 4.
+        # Cap at 5 to absorb any test-harness query without flaking.
+        with django_assert_max_num_queries(5):
             client.get("/")
 
 
@@ -441,3 +445,82 @@ class TestFilters:
     def test_filter_form_in_context(self, client):
         response = client.get("/")
         assert isinstance(response.context["filter_form"], MovieFilterForm)
+
+
+class TestFilterFormRendering:
+    def test_filter_form_q_field_renders(self, client):
+        response = client.get("/")
+        content = response.content.decode()
+        assert 'name="q"' in content
+        assert 'placeholder="Tytuł filmu..."' in content
+
+    def test_filter_form_genre_dropdown_includes_empty_label(self, client):
+        GenreFactory(name="Drama")
+        response = client.get("/")
+        content = response.content.decode()
+        assert "Wszystkie gatunki" in content
+        assert 'name="genre"' in content
+
+    def test_filter_form_date_input_uses_html5_type(self, client):
+        response = client.get("/")
+        content = response.content.decode()
+        assert 'type="date"' in content
+        assert 'name="date"' in content
+
+    def test_filter_form_preserves_submitted_values(self, client):
+        response = client.get("/?q=star&date=2026-05-23")
+        content = response.content.decode()
+        assert 'value="star"' in content
+        assert 'value="2026-05-23"' in content
+
+
+class TestResetLink:
+    def test_reset_link_hidden_when_no_filters_active(self, client):
+        response = client.get("/")
+        content = response.content.decode()
+        assert "Wyczyść filtry" not in content
+        assert 'title="Wyczyść filtry"' not in content
+
+    def test_reset_link_visible_when_filters_active(self, client):
+        response = client.get("/?q=xyz")
+        content = response.content.decode()
+        assert 'title="Wyczyść filtry"' in content
+        assert 'href="/movies/"' in content
+
+
+class TestEmptyStateVariants:
+    def test_filter_empty_state_when_no_match(self, client):
+        movie = MovieFactory(title="Inception")
+        ScreeningFactory(movie=movie, start_time=timezone.now() + timedelta(days=1))
+
+        response = client.get("/?q=zzzzzz")
+        content = response.content.decode()
+
+        assert "Brak filmów pasujących" in content
+        assert "Wyczyść filtry" in content
+        # The "no future screenings anywhere" copy must NOT appear here.
+        assert "Wróć wkrótce" not in content
+
+    def test_no_screenings_empty_state_copy_when_no_filters_no_movies(self, client):
+        response = client.get("/")
+        content = response.content.decode()
+
+        assert "Aktualnie brak filmów" in content
+        assert "Wróć wkrótce" in content
+        # Filter-empty copy must NOT appear here.
+        assert "Brak filmów pasujących" not in content
+
+
+class TestPaginationFilterPreservation:
+    def test_filter_pagination_preserves_query_params(self, client):
+        now = timezone.now()
+        for i in range(13):
+            movie = MovieFactory(title=f"Common Movie {i}")
+            ScreeningFactory(movie=movie, start_time=now + timedelta(days=i + 1))
+
+        response = client.get("/?q=Common")
+        content = response.content.decode()
+
+        # Pagination block must contain both q=Common and page=2.
+        assert "q=Common" in content
+        assert "page=2" in content
