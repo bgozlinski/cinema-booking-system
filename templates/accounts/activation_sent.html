@@ -1,18 +1,20 @@
-{% extends "base.html" %}
+{% extends "accounts/_auth_base.html" %}
+
 {% block title %}Sprawdź skrzynkę — KinoMania{% endblock %}
-{% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="text-center">
-            <div class="display-1 mb-3">📬</div>
-            <h1 class="h3 mb-3">Sprawdź swoją skrzynkę email</h1>
-            <p class="text-muted">Wysłaliśmy link aktywacyjny na podany adres. Kliknij w niego, aby aktywować
-                konto.</p>
-            <p class="text-muted small">Link jest ważny przez 3 dni. Nie widzisz emaila? Sprawdź folder
-                spam.</p>
-            <p class="mt-4"><a href="{% url 'accounts:activation_resend' %}" class="btn btn-outline-secondary
-  btn-sm">Wyślij link ponownie</a></p>
-        </div>
-    </div>
+{% block auth_tagline %}Email wysłany{% endblock %}
+
+{% block auth_body %}
+<div class="auth-card__message">
+    <div class="auth-card__message-emoji" aria-hidden="true">📬</div>
+    <p class="auth-card__message-text">Wysłaliśmy link aktywacyjny na podany adres. Kliknij w niego, aby
+        aktywować konto.</p>
+    <p class="auth-card__message-hint">Link jest ważny przez 3 dni. Nie widzisz emaila? Sprawdź folder
+        spam.</p>
+</div>
+{% endblock %}
+
+{% block auth_footer %}
+<div class="auth-footer-link">
+    <a href="{% url 'accounts:activation_resend' %}">Wyślij link ponownie</a>
 </div>
 {% endblock %}
