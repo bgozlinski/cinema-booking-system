@@ -122,7 +122,7 @@ class TestCardRendering:
 
         assert "Unique Card Title" in response.content.decode()
 
-    def test_card_shows_all_genre_badges(self, client):
+    def test_card_shows_all_genres_in_meta(self, client):
         movie = MovieFactory()
         ScreeningFactory(movie=movie, start_time=timezone.now() + timedelta(days=1))
         movie.genres.add(GenreFactory(name="Drama"), GenreFactory(name="Sci-Fi"))
@@ -132,31 +132,40 @@ class TestCardRendering:
 
         assert "Drama" in content
         assert "Sci-Fi" in content
-        assert content.count('class="badge bg-secondary"') >= 2
+        # New design renders genres as plain text inside .movie-card__meta separated by " · ",
+        # no Bootstrap badge classes.
+        assert 'class="movie-card__meta"' in content
+        assert "Drama · Sci-Fi" in content or "Sci-Fi · Drama" in content
 
-    def test_card_shows_next_screening_date(self, client):
+    def test_card_does_not_show_next_screening_date(self, client):
+        """Wariant C movie-card: poster + title overlay only. next_screening_at stays
+        in queryset for sorting but is no longer rendered on the card."""
         movie = MovieFactory()
         future = timezone.now().replace(hour=18, minute=30) + timedelta(days=2)
         ScreeningFactory(movie=movie, start_time=future)
 
         response = client.get("/")
+        content = response.content.decode()
 
-        # Django's |date filter converts UTC → active TZ (Europe/Warsaw); mirror that
-        # locally so the comparison string matches the rendered HTML.
         local_future = timezone.localtime(future)
-        assert local_future.strftime("%d.%m.%Y %H:%M") in response.content.decode()
+        assert local_future.strftime("%d.%m.%Y %H:%M") not in content
+        # Sorting still works — annotation present in queryset
+        assert movie.title in content
 
-    def test_card_links_details_button_to_movie_detail(self, client):
+    def test_card_links_whole_poster_to_movie_detail(self, client):
+        """Wariant C: cały plakat jest klikalnym linkiem (.movie-card),
+        bez osobnego przycisku 'Szczegóły'."""
         movie = MovieFactory()
         ScreeningFactory(movie=movie, start_time=timezone.now() + timedelta(days=1))
 
         response = client.get("/")
         content = response.content.decode()
 
-        assert "Szczegóły" in content
         assert f'href="/movies/{movie.pk}/"' in content
-        # The disabled stub from US-11 is gone now.
+        assert 'class="movie-card' in content
+        # The disabled stub from US-11 is gone now; new design has no "Szczegóły" button.
         assert "btn-primary btn-sm mt-auto disabled" not in content
+        assert "Szczegóły" not in content
 
     def test_card_uses_emoji_placeholder_when_poster_blank(self, client):
         movie = MovieFactory(poster="")

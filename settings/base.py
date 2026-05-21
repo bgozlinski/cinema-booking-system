@@ -86,6 +86,7 @@ USE_TZ = True
 
 # ─── Static ─────────────────────────────────────────────────────────────────
 STATIC_URL = "static/"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ─── Media (user uploads — Actor/Director photos, Movie posters) ────────────

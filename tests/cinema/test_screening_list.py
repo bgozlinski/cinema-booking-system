@@ -180,7 +180,9 @@ class TestRendering:
         assert "Linked Movie" in content
         assert f'href="/movies/{movie.pk}/"' in content
 
-    def test_screening_row_shows_hour_hall_price_seats(self, client):
+    def test_screening_pill_shows_hour_grouped_by_hall(self, client):
+        """Redesign: pigułka godziny + label sali. Cena/miejsca/Zarezerwuj zniknęły
+        z tej strony (przeniesione na przyszły screening_detail, US-21)."""
         tomorrow = timezone.localdate() + timedelta(days=1)
         hall = HallFactory(name="Sala A", capacity=100)
         movie = MovieFactory()
@@ -195,16 +197,20 @@ class TestRendering:
         content = response.content.decode()
 
         assert "18:00" in content
+        # Hall name appears as a label above its pills group
         assert "Sala A" in content
-        # Polish locale renders Decimal with comma; accept either form.
-        assert ("42,50" in content) or ("42.50" in content)
-        assert "zł" in content
-        # available_seats_count stub returns hall.capacity (100) until US-18.
-        assert "100" in content
-        assert "Zarezerwuj" in content
-        assert "disabled" in content
+        assert 'class="time-pill-hall-label"' in content
+        # The hour is rendered inside a .time-pill anchor
+        assert 'class="time-pill' in content
+        # Out-of-scope info no longer rendered on the list
+        assert "Zarezerwuj" not in content
+        assert "42,50" not in content
+        assert "42.50" not in content
+        assert "zł" not in content
 
-    def test_genre_badges_render_on_card_header(self, client):
+    def test_genres_render_on_screening_card_meta(self, client):
+        """Redesign: gatunki jako plain text w .screening-card__meta,
+        bez Bootstrap badge classes."""
         tomorrow = timezone.localdate() + timedelta(days=1)
         movie = MovieFactory()
         movie.genres.add(GenreFactory(name="Drama"), GenreFactory(name="Sci-Fi"))
@@ -215,7 +221,8 @@ class TestRendering:
 
         assert "Drama" in content
         assert "Sci-Fi" in content
-        assert content.count('class="badge bg-secondary"') >= 2
+        assert 'class="screening-card__meta"' in content
+        assert "Drama · Sci-Fi" in content or "Sci-Fi · Drama" in content
 
     def test_empty_state_when_no_screenings_for_day(self, client):
         # No screenings anywhere → empty state for today.

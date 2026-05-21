@@ -143,7 +143,9 @@ class TestHeroAndTrailer:
         content = response.content.decode()
         assert "Sci-Fi" in content
         assert "Drama" in content
-        assert content.count('class="badge bg-secondary"') >= 2
+        # Redesign: badges use the .movie-hero__genre-badge component class,
+        # not Bootstrap's badge bg-secondary.
+        assert content.count('class="movie-hero__genre-badge"') >= 2
 
     def test_hero_uses_emoji_placeholder_when_poster_blank(self, client):
         movie = MovieFactory(poster="")
@@ -243,32 +245,32 @@ class TestActorsCarousel:
 
 
 class TestUpcomingScreenings:
-    def test_screening_row_shows_hall_price_seats(self, client):
+    def test_screening_pill_shows_hour_and_hall(self, client):
+        """Redesign: seanse jako .time-pill z godziną pod labelem sali.
+        Cena, dostępne miejsca i Zarezerwuj wycofane na przyszły screening_detail (US-21)."""
         hall = HallFactory(name="Sala A", capacity=100)
         movie = MovieFactory()
+        future = timezone.now() + timedelta(days=1)
         ScreeningFactory(
             movie=movie,
             hall=hall,
-            start_time=timezone.now() + timedelta(days=1),
+            start_time=future,
             price=Decimal("42.50"),
         )
         response = client.get(f"/movies/{movie.pk}/")
         content = response.content.decode()
+        # Hall name appears as label above its pills group
         assert "Sala A" in content
-        # Django renders Decimal with locale-aware separator (pl_PL → comma).
-        assert ("42,50" in content) or ("42.50" in content)
-        assert "zł" in content
-        # available_seats_count stub returns hall.capacity (100) until US-18.
-        assert "100" in content
-
-    def test_screening_row_shows_disabled_reserve_button(self, client):
-        movie = MovieFactory()
-        ScreeningFactory(movie=movie, start_time=timezone.now() + timedelta(days=1))
-        response = client.get(f"/movies/{movie.pk}/")
-        content = response.content.decode()
-        assert "Zarezerwuj" in content
-        # US-20 will drop the disabled class.
-        assert "disabled" in content
+        assert 'class="time-pill-hall-label"' in content
+        # Pill itself uses .time-pill
+        assert 'class="time-pill' in content
+        # Hour rendered inside the pill (HH:MM format)
+        assert timezone.localtime(future).strftime("%H:%M") in content
+        # Out-of-scope info no longer rendered here
+        assert "42,50" not in content
+        assert "42.50" not in content
+        assert "zł" not in content
+        assert "Zarezerwuj" not in content
 
     def test_screening_empty_state_when_no_future(self, client):
         movie = MovieFactory()

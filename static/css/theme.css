@@ -1,0 +1,135 @@
+:root {
+    /* Paleta */
+    --bg: #0f1115;
+    --bg-elev: #181a20;
+    --border: #2a2d34;
+    --text: #ffffff;
+    --text-muted: #b3b6bf;
+
+    --accent: #8B5CF6;
+    --accent-hover: #7C3AED;
+    --accent-bg: rgba(139, 92, 246, 0.15);
+
+    --success: #10b981;
+    --danger: #ef4444;
+
+    /* Spacing (skala 4px) */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-10: 40px;
+    --space-12: 48px;
+
+    /* Radius */
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 12px;
+
+    /* Bootstrap variable override */
+    --bs-body-bg: var(--bg);
+    --bs-body-color: var(--text);
+    --bs-primary: var(--accent);
+    --bs-primary-rgb: 139, 92, 246;
+    --bs-tertiary-bg: var(--bg-elev);
+    --bs-border-color: var(--border);
+    --bs-link-color: var(--accent);
+    --bs-link-hover-color: var(--accent-hover);
+    --bs-secondary-bg: var(--bg-elev);
+    --bs-emphasis-color: var(--text);
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
+
+/* Typografia */
+h1, .h1 {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+h2, .h2 {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+h3, .h3 {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.label-uppercase {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+}
+
+/* Active nav link */
+.navbar .nav-link.active {
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: calc(0.5rem - 2px);
+}
+
+@media (max-width: 991.98px) {
+    .navbar .nav-link.active {
+        border-bottom: 0;
+        border-left: 3px solid var(--accent);
+        padding-left: calc(1rem - 3px);
+    }
+}
+
+/* Bootstrap form-control override (dark inputs) */
+.form-control,
+.form-select {
+    background-color: var(--bg);
+    border-color: var(--border);
+    color: var(--text);
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: var(--bg);
+    border-color: var(--accent);
+    color: var(--text);
+    box-shadow: 0 0 0 0.25rem rgba(139, 92, 246, 0.25);
+}
+
+.form-control::placeholder {
+    color: var(--text-muted);
+    opacity: 0.6;
+}
+
+/* Alert override — lekko ciemniej */
+.alert {
+    background-color: var(--bg-elev);
+    border-color: var(--border);
+    color: var(--text);
+}
+
+/* Pagination */
+.page-link {
+    background-color: var(--bg-elev);
+    border-color: var(--border);
+    color: var(--text);
+}
+
+.page-link:hover {
+    background-color: var(--accent-bg);
+    border-color: var(--accent);
+    color: var(--text);
+}
+
+.page-item.active .page-link {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}

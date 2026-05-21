@@ -1,80 +1,85 @@
 {% extends "base.html" %}
 
-  {% block title %}Repertuar — KinoMania{% endblock %}
+{% block title %}Repertuar — KinoMania{% endblock %}
 
-  {% block content %}
-  <h1 class="h2 mb-4">Repertuar</h1>
+{% block content %}
+<h1 class="mb-1">Repertuar</h1>
+<p class="text-muted small mb-4">Wszystkie filmy z zaplanowanymi seansami</p>
 
-  <form method="get" class="row g-2 mb-4" role="search">
-    <div class="col-md-5">{{ filter_form.q }}</div>
-    <div class="col-md-3">{{ filter_form.genre }}</div>
-    <div class="col-md-2">{{ filter_form.date }}</div>
-    <div class="col-md-2 d-flex gap-2">
-      <button type="submit" class="btn btn-primary flex-grow-1">Filtruj</button>
-      {% if request.GET %}
-        <a href="{% url 'cinema:movie_list' %}" class="btn btn-outline-secondary"
-           title="Wyczyść filtry">×</a>
-      {% endif %}
+<form method="get" class="filter-bar" role="search">
+    <div style="flex:2; min-width:200px;">
+        <label for="id_q">Szukaj</label>
+        {{ filter_form.q }}
     </div>
-  </form>
-
-  {% if movies %}
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4">
-      {% for movie in movies %}
-        <div class="col">
-          <div class="card h-100">
-            {% if movie.poster %}
-              <img src="{{ movie.poster.url }}" class="card-img-top"
-                   alt="{{ movie.title }}"
-                   style="aspect-ratio: 2/3; object-fit: cover;">
-            {% else %}
-              <div class="card-img-top bg-light d-flex align-items-center justify-content-center"
-                   style="aspect-ratio: 2/3; font-size: 3rem;" aria-hidden="true">🎬</div>
-            {% endif %}
-            <div class="card-body d-flex flex-column">
-              <h5 class="card-title">{{ movie.title }}</h5>
-              <p class="mb-2">
-                {% for genre in movie.genres.all %}
-                  <span class="badge bg-secondary">{{ genre.name }}</span>
-                {% endfor %}
-              </p>
-              <p class="text-muted small mb-3">
-                Najbliższy seans: {{ movie.next_screening_at|date:"d.m.Y H:i" }}
-              </p>
-              <a href="{{ movie.get_absolute_url }}" class="btn btn-primary btn-sm mt-auto">Szczegóły</a>
-            </div>
-          </div>
-        </div>
-      {% endfor %}
+    <div style="flex:1; min-width:140px;">
+        <label for="id_genre">Gatunek</label>
+        {{ filter_form.genre }}
     </div>
-
-    {% if is_paginated %}
-      <nav aria-label="Paginacja" class="mt-4">
-        <ul class="pagination justify-content-center">
-          {% if page_obj.has_previous %}
-            <li class="page-item">
-              <a class="page-link" href="?{% querystring page=page_obj.previous_page_number %}">&laquo;</a>
-            </li>
-          {% endif %}
-          <li class="page-item active">
-            <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
-          </li>
-          {% if page_obj.has_next %}
-            <li class="page-item">
-              <a class="page-link" href="?{% querystring page=page_obj.next_page_number %}">&raquo;</a>
-            </li>
-          {% endif %}
-        </ul>
-      </nav>
+    <div style="flex:1; min-width:140px;">
+        <label for="id_date">Data</label>
+        {{ filter_form.date }}
+    </div>
+    <button type="submit" class="btn btn-primary">Filtruj</button>
+    {% if request.GET %}
+    <a href="{% url 'cinema:movie_list' %}"
+       class="btn btn-outline-light"
+       title="Wyczyść filtry"
+       aria-label="Wyczyść filtry">×</a>
     {% endif %}
-  {% else %}
-    <div class="alert alert-info">
-      {% if request.GET %}
-        Brak filmów pasujących do wybranych kryteriów.
-        <a href="{% url 'cinema:movie_list' %}">Wyczyść filtry</a> żeby zobaczyć wszystkie.
-      {% else %}
-        Aktualnie brak filmów z zaplanowanymi seansami. Wróć wkrótce!
-      {% endif %}
+</form>
+
+{% if movies %}
+<div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-xl-5 g-3">
+    {% for movie in movies %}
+    <div class="col">
+        <a href="{{ movie.get_absolute_url }}" class="movie-card">
+            {% if movie.poster %}
+            <img src="{{ movie.poster.url }}" alt="{{ movie.title }}" class="movie-card__img">
+            {% else %}
+            <div class="movie-card__placeholder" aria-hidden="true">🎬</div>
+            {% endif %}
+            <div class="movie-card__overlay">
+                <div class="movie-card__title">{{ movie.title }}</div>
+                <div class="movie-card__meta">
+                    {% for genre in movie.genres.all %}{{ genre.name }}{% if not forloop.last %} · {% endif %}{% endfor %}
+                </div>
+            </div>
+        </a>
     </div>
-  {% endif %}
-  {% endblock %}
+    {% endfor %}
+</div>
+
+{% if is_paginated %}
+<nav aria-label="Paginacja" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link"
+               href="?{% querystring page=page_obj.previous_page_number %}"
+               aria-label="Poprzednia strona">«</a>
+        </li>
+        {% endif %}
+        <li class="page-item active" aria-current="page">
+            <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        </li>
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link"
+               href="?{% querystring page=page_obj.next_page_number %}"
+               aria-label="Następna strona">»</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% else %}
+<div class="alert alert-info">
+    {% if request.GET %}
+    Brak filmów pasujących do wybranych kryteriów.
+    <a href="{% url 'cinema:movie_list' %}">Wyczyść filtry</a> żeby zobaczyć wszystkie.
+    {% else %}
+    Aktualnie brak filmów z zaplanowanymi seansami. Wróć wkrótce!
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
