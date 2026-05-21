@@ -1,0 +1,380 @@
+/* ============================================================
+ Time-pill — godzina seansu jako klikalna pigułka
+ ============================================================ */
+.time-pill {
+    display: inline-block;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 13px;
+    text-decoration: none;
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.time-pill:hover {
+    border-color: var(--accent);
+    background: var(--accent-bg);
+    color: var(--text);
+}
+
+.time-pill.is-soldout {
+    opacity: 0.5;
+    text-decoration: line-through;
+    pointer-events: none;
+}
+
+.time-pill-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.time-pill-hall-label {
+    color: var(--text-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+/* ============================================================
+ Movie-card — karta filmu w gridzie repertuaru (poster + overlay)
+ ============================================================ */
+.movie-card {
+    position: relative;
+    display: block;
+    aspect-ratio: 2/3;
+    background: linear-gradient(135deg, #4a4d54 0%, #2a2d34 100%);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.15s;
+    color: inherit;
+    text-decoration: none;
+}
+
+.movie-card:hover {
+    transform: translateY(-2px);
+    color: inherit;
+}
+
+.movie-card__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.movie-card__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    font-size: 48px;
+    opacity: 0.6;
+}
+
+.movie-card__overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 14px 12px 10px;
+    background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.92));
+}
+
+.movie-card__title {
+    color: var(--text);
+    font-weight: 700;
+    font-size: 13px;
+    line-height: 1.2;
+}
+
+.movie-card__meta {
+    color: var(--text-muted);
+    font-size: 10px;
+    margin-top: 3px;
+}
+
+/* ============================================================
+ Screening-card — film z pigułkami na liście /seanse
+ ============================================================ */
+.screening-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 18px;
+}
+
+.screening-card__poster {
+    width: 90px;
+    flex-shrink: 0;
+    aspect-ratio: 2/3;
+    border-radius: 4px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #4a4d54 0%, #2a2d34 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.screening-card__poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.screening-card__poster-placeholder {
+    font-size: 28px;
+    opacity: 0.6;
+}
+
+.screening-card__body {
+    flex: 1;
+    min-width: 0;
+}
+
+.screening-card__title {
+    color: var(--text);
+    font-weight: 700;
+    font-size: 18px;
+    text-decoration: none;
+}
+
+.screening-card__title:hover {
+    color: var(--accent);
+}
+
+.screening-card__meta {
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* Mobile: column layout */
+@media (max-width: 575.98px) {
+    .screening-card {
+        flex-direction: column;
+    }
+
+    .screening-card__poster {
+        width: 100%;
+        max-width: 200px;
+    }
+}
+
+/* ============================================================
+ Screening-day — blok dnia na movie_detail (bez plakatu)
+ ============================================================ */
+.screening-day {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 18px;
+    margin-bottom: 12px;
+}
+
+.screening-day__date {
+    color: var(--text);
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 14px;
+}
+
+/* ============================================================
+ Movie-hero — hero na movie_detail (poster + opis + rozmyte tło)
+ ============================================================ */
+.movie-hero {
+    position: relative;
+    padding: 48px 0;
+    margin-bottom: 32px;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+}
+
+.movie-hero__bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    filter: blur(40px);
+    opacity: 0.4;
+    transform: scale(1.2);
+    z-index: 0;
+}
+
+.movie-hero__bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 17, 21, 0.7);
+}
+
+.movie-hero__inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 32px;
+    padding: 0 24px;
+}
+
+.movie-hero__poster {
+    width: 220px;
+    flex-shrink: 0;
+    aspect-ratio: 2/3;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(135deg, #4a4d54 0%, #2a2d34 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.movie-hero__poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.movie-hero__poster-placeholder {
+    font-size: 64px;
+    opacity: 0.7;
+}
+
+.movie-hero__body {
+    flex: 1;
+    min-width: 0;
+    padding-top: 8px;
+}
+
+.movie-hero__breadcrumb {
+    color: var(--text-muted);
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.movie-hero__breadcrumb:hover {
+    color: var(--accent);
+}
+
+.movie-hero__title {
+    color: var(--text);
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 8px 0 4px;
+}
+
+.movie-hero__meta {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 14px;
+}
+
+.movie-hero__genre-badge {
+    background: var(--accent-bg);
+    color: var(--accent);
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    margin-right: 6px;
+}
+
+.movie-hero__description {
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.7;
+    max-width: 680px;
+}
+
+.movie-hero__cast {
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-top: 14px;
+}
+
+.movie-hero__cast strong {
+    color: var(--text);
+}
+
+/* Mobile: column layout */
+@media (max-width: 767.98px) {
+    .movie-hero__inner {
+        flex-direction: column;
+    }
+
+    .movie-hero__poster {
+        width: 100%;
+        max-width: 280px;
+        margin: 0 auto;
+    }
+
+    .movie-hero__title {
+        font-size: 28px;
+    }
+}
+
+/* ============================================================
+ Filter-bar — pasek filtrów (movie_list, screening_list)
+ ============================================================ */
+.filter-bar {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    margin-bottom: 24px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.filter-bar > div {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-bar input,
+.filter-bar select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    width: 100%;
+}
+
+.filter-bar input:focus,
+.filter-bar select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.filter-bar label {
+    color: var(--text-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    display: block;
+    font-weight: 600;
+}
+
+/* ============================================================
+ Bootstrap Carousel restyle (movie_detail — Obsada)
+ ============================================================ */
+.carousel.bg-elev-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
