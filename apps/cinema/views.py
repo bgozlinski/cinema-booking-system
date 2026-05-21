@@ -1,6 +1,6 @@
 from django.db.models import Min, Q
 from django.utils import timezone
-from django.views.generic import ListView
+from django.views.generic import DetailView, ListView
 
 from apps.cinema.models import Movie
 
@@ -24,3 +24,9 @@ class MovieListView(ListView):
             .prefetch_related("genres")
             .order_by("next_screening_at")
         )
+
+
+class MovieDetailView(DetailView):
+    model = Movie
+    template_name = "cinema/movie_detail.html"
+    context_object_name = "movie"
