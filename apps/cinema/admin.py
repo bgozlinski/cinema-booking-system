@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import Count
 from django.utils.html import format_html
 
 from apps.cinema.models import Actor, Director, Genre, Hall, Movie
@@ -9,9 +10,12 @@ class GenreAdmin(admin.ModelAdmin):
     list_display = ("name", "movies_count")
     search_fields = ("name",)
 
-    @admin.display(description="movies")
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(_movies_count=Count("movies"))
+
+    @admin.display(description="movies", ordering="_movies_count")
     def movies_count(self, obj):
-        return obj.movies.count()
+        return obj._movies_count
 
 
 @admin.register(Hall)
@@ -19,9 +23,12 @@ class HallAdmin(admin.ModelAdmin):
     list_display = ("name", "capacity", "screenings_count")
     search_fields = ("name",)
 
-    @admin.display(description="screenings")
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(_screenings_count=Count("screening"))
+
+    @admin.display(description="screenings", ordering="_screenings_count")
     def screenings_count(self, obj):
-        return obj.screening_set.count()
+        return obj._screenings_count
 
 
 @admin.register(Actor)
@@ -29,15 +36,18 @@ class ActorAdmin(admin.ModelAdmin):
     list_display = ("full_name", "photo_thumbnail", "movies_count")
     search_fields = ("full_name",)
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(_movies_count=Count("movies"))
+
     @admin.display(description="photo")
     def photo_thumbnail(self, obj):
         if not obj.photo:
             return "—"
         return format_html('<img src="{}" style="height:60px;" />', obj.photo.url)
 
-    @admin.display(description="movies")
+    @admin.display(description="movies", ordering="_movies_count")
     def movies_count(self, obj):
-        return obj.movies.count()
+        return obj._movies_count
 
 
 @admin.register(Director)
@@ -45,15 +55,18 @@ class DirectorAdmin(admin.ModelAdmin):
     list_display = ("full_name", "photo_thumbnail", "movies_count")
     search_fields = ("full_name",)
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(_movies_count=Count("movies"))
+
     @admin.display(description="photo")
     def photo_thumbnail(self, obj):
         if not obj.photo:
             return "—"
         return format_html('<img src="{}" style="height:60px;" />', obj.photo.url)
 
-    @admin.display(description="movies")
+    @admin.display(description="movies", ordering="_movies_count")
     def movies_count(self, obj):
-        return obj.movies.count()
+        return obj._movies_count
 
 
 @admin.register(Movie)
@@ -64,19 +77,25 @@ class MovieAdmin(admin.ModelAdmin):
     filter_horizontal = ("genres", "actors", "directors")
     date_hierarchy = "release_date"
 
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .annotate(_screenings_count=Count("screenings", distinct=True))
+            .prefetch_related("genres")
+        )
+
     @admin.display(description="poster")
     def poster_thumbnail(self, obj):
         if not obj.poster:
             return "—"
         return format_html('<img src="{}" style="height:60px;" />', obj.poster.url)
 
-    @admin.display(description="screenings")
+    @admin.display(description="screenings", ordering="_screenings_count")
     def screenings_count(self, obj):
-        return obj.screenings.count()
+        return obj._screenings_count
 
     @admin.display(description="genres")
     def genres_list(self, obj):
-        names = list(obj.genres.values_list("name", flat=True).order_by("name"))
-        if not names:
-            return "—"
-        return ", ".join(names)
+        names = sorted(g.name for g in obj.genres.all())
+        return ", ".join(names) if names else "—"

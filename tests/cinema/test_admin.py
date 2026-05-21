@@ -3,6 +3,7 @@
 import pytest
 from django.contrib import admin
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import RequestFactory
 from django.utils.safestring import SafeString
 
 from apps.cinema.models import Actor, Director, Genre, Hall, Movie
@@ -58,7 +59,9 @@ class TestGenreAdmin:
     def test_movies_count_zero_when_no_movies(self):
         genre = GenreFactory()
         ma = admin.site._registry[Genre]
-        assert ma.movies_count(genre) == 0
+        request = RequestFactory().get("/admin/")
+        annotated = ma.get_queryset(request).get(pk=genre.pk)
+        assert ma.movies_count(annotated) == 0
 
     def test_movies_count_returns_related_movie_count(self):
         genre = GenreFactory()
@@ -67,7 +70,9 @@ class TestGenreAdmin:
         m1.genres.add(genre)
         m2.genres.add(genre)
         ma = admin.site._registry[Genre]
-        assert ma.movies_count(genre) == 2
+        request = RequestFactory().get("/admin/")
+        annotated = ma.get_queryset(request).get(pk=genre.pk)
+        assert ma.movies_count(annotated) == 2
 
     def test_movies_count_has_short_description(self):
         ma = admin.site._registry[Genre]
@@ -86,13 +91,17 @@ class TestHallAdmin:
     def test_screenings_count_zero_when_no_screenings(self):
         hall = HallFactory()
         ma = admin.site._registry[Hall]
-        assert ma.screenings_count(hall) == 0
+        request = RequestFactory().get("/admin/")
+        annotated = ma.get_queryset(request).get(pk=hall.pk)
+        assert ma.screenings_count(annotated) == 0
 
     def test_screenings_count_returns_related_screening_count(self):
         hall = HallFactory()
         ScreeningFactory.create_batch(3, hall=hall)
         ma = admin.site._registry[Hall]
-        assert ma.screenings_count(hall) == 3
+        request = RequestFactory().get("/admin/")
+        annotated = ma.get_queryset(request).get(pk=hall.pk)
+        assert ma.screenings_count(annotated) == 3
 
     def test_screenings_count_has_short_description(self):
         ma = admin.site._registry[Hall]
@@ -126,7 +135,9 @@ class TestActorAdmin:
     def test_movies_count_zero_when_no_movies(self):
         actor = ActorFactory()
         ma = admin.site._registry[Actor]
-        assert ma.movies_count(actor) == 0
+        request = RequestFactory().get("/admin/")
+        annotated = ma.get_queryset(request).get(pk=actor.pk)
+        assert ma.movies_count(annotated) == 0
 
     def test_movies_count_returns_related_movie_count(self):
         actor = ActorFactory()
@@ -135,7 +146,9 @@ class TestActorAdmin:
         m1.actors.add(actor)
         m2.actors.add(actor)
         ma = admin.site._registry[Actor]
-        assert ma.movies_count(actor) == 2
+        request = RequestFactory().get("/admin/")
+        annotated = ma.get_queryset(request).get(pk=actor.pk)
+        assert ma.movies_count(annotated) == 2
 
     def test_thumbnail_and_count_have_short_descriptions(self):
         ma = admin.site._registry[Actor]
@@ -172,7 +185,9 @@ class TestDirectorAdmin:
         m = MovieFactory()
         m.directors.add(director)
         ma = admin.site._registry[Director]
-        assert ma.movies_count(director) == 1
+        request = RequestFactory().get("/admin/")
+        annotated = ma.get_queryset(request).get(pk=director.pk)
+        assert ma.movies_count(annotated) == 1
 
 
 class TestMovieAdmin:
@@ -220,18 +235,24 @@ class TestMovieAdmin:
     def test_screenings_count_zero_when_no_screenings(self):
         movie = MovieFactory()
         ma = admin.site._registry[Movie]
-        assert ma.screenings_count(movie) == 0
+        request = RequestFactory().get("/admin/")
+        annotated = ma.get_queryset(request).get(pk=movie.pk)
+        assert ma.screenings_count(annotated) == 0
 
     def test_screenings_count_returns_related_screening_count(self):
         movie = MovieFactory()
         ScreeningFactory.create_batch(2, movie=movie)
         ma = admin.site._registry[Movie]
-        assert ma.screenings_count(movie) == 2
+        request = RequestFactory().get("/admin/")
+        annotated = ma.get_queryset(request).get(pk=movie.pk)
+        assert ma.screenings_count(annotated) == 2
 
     def test_genres_list_returns_dash_when_no_genres(self):
         movie = MovieFactory()
         ma = admin.site._registry[Movie]
-        assert ma.genres_list(movie) == "—"
+        request = RequestFactory().get("/admin/")
+        annotated = ma.get_queryset(request).get(pk=movie.pk)
+        assert ma.genres_list(annotated) == "—"
 
     def test_genres_list_returns_comma_joined_names(self):
         movie = MovieFactory()
@@ -239,9 +260,11 @@ class TestMovieAdmin:
         g_drama = GenreFactory(name="Drama")
         movie.genres.add(g_action, g_drama)
         ma = admin.site._registry[Movie]
-        result = ma.genres_list(movie)
-        # Genre default ordering is ("name",) so Action precedes Drama.
-        assert result == "Action, Drama"
+        request = RequestFactory().get("/admin/")
+        annotated = ma.get_queryset(request).get(pk=movie.pk)
+        # New impl sorts alphabetically (sorted(g.name for g in obj.genres.all())) —
+        # same result as the old values_list("name").order_by("name") path.
+        assert ma.genres_list(annotated) == "Action, Drama"
 
     def test_custom_displays_have_short_descriptions(self):
         ma = admin.site._registry[Movie]

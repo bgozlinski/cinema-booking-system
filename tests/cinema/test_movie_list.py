@@ -1,6 +1,6 @@
 """Tests for MovieListView (US-11 / FR-01)."""
 
-from datetime import timedelta
+from datetime import datetime, time, timedelta
 
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -285,6 +285,52 @@ class TestQueryBudget:
         with django_assert_max_num_queries(5):
             client.get("/")
 
+    def test_with_genre_filter_uses_bounded_queries(self, client, django_assert_max_num_queries):
+        """Filter ?genre=<id> dodaje WHERE na M2M, ale prefetch_related("genres")
+        trzyma genre data — query count nie skaluje się z liczbą filmów."""
+        now = timezone.now()
+        drama = GenreFactory(name="Drama")
+        for _ in range(8):
+            movie = MovieFactory()
+            movie.genres.add(drama)
+            ScreeningFactory(movie=movie, start_time=now + timedelta(days=1))
+        for _ in range(4):
+            movie = MovieFactory()
+            ScreeningFactory(movie=movie, start_time=now + timedelta(days=1))
+
+        # Budget: 1 paginator + 1 movies (filtered) + 1 prefetched genres + 1 form dropdown
+        # + 1 ModelChoiceField clean (Genre.objects.get(pk=...) gdy ?genre= jest wypełnione) = 5.
+        # Cap at 6 (zgodnie z date filter buffer).
+        with django_assert_max_num_queries(6):
+            client.get(f"/?genre={drama.pk}")
+
+    def test_with_date_filter_uses_bounded_queries(self, client, django_assert_max_num_queries):
+        """Filter ?date=YYYY-MM-DD dodaje JOIN na screenings + .distinct() — paginator
+        count distinct może wprowadzić extra query."""
+        tomorrow = timezone.localdate() + timedelta(days=1)
+        tomorrow_evening = timezone.make_aware(datetime.combine(tomorrow, time(20, 0)))
+        for _ in range(6):
+            movie = MovieFactory()
+            ScreeningFactory(movie=movie, start_time=tomorrow_evening)
+
+        # Budget: 1 paginator (distinct) + 1 movies + 1 prefetched genres + 1 form dropdown
+        # + ewentualnie 1 extra dla distinct count = 5-6. Cap at 6.
+        with django_assert_max_num_queries(6):
+            client.get(f"/?date={tomorrow.isoformat()}")
+
+    def test_pagination_second_page_uses_bounded_queries(
+        self, client, django_assert_max_num_queries
+    ):
+        """Paginacja nie zmienia query count — paginator robi LIMIT/OFFSET, prefetch trzyma."""
+        now = timezone.now()
+        for i in range(20):
+            movie = MovieFactory()
+            ScreeningFactory(movie=movie, start_time=now + timedelta(days=i + 1))
+
+        # Budget: ten sam co base — 5.
+        with django_assert_max_num_queries(5):
+            client.get("/?page=2")
+
 
 class TestFilters:
     def test_q_filter_matches_icontains(self, client):
@@ -374,7 +420,9 @@ class TestFilters:
     def test_date_filter_boundary_inclusive_at_midnight(self, client):
         import datetime as dt
 
-        target_date = (timezone.now() + timedelta(days=1)).date()
+        # Use localdate (not UTC) so target_date aligns with make_aware's local-TZ
+        # midnight. Mixing UTC date + local-TZ midnight breaks near UTC day boundary.
+        target_date = timezone.localdate() + timedelta(days=1)
         midnight_local = timezone.make_aware(dt.datetime.combine(target_date, dt.time(0, 0)))
         movie = MovieFactory()
         ScreeningFactory(movie=movie, start_time=midnight_local)
@@ -386,7 +434,7 @@ class TestFilters:
     def test_date_filter_boundary_inclusive_at_end_of_day(self, client):
         import datetime as dt
 
-        target_date = (timezone.now() + timedelta(days=1)).date()
+        target_date = timezone.localdate() + timedelta(days=1)
         almost_midnight = timezone.make_aware(dt.datetime.combine(target_date, dt.time(23, 59, 59)))
         movie = MovieFactory()
         ScreeningFactory(movie=movie, start_time=almost_midnight)
@@ -398,7 +446,7 @@ class TestFilters:
     def test_date_filter_excludes_next_day(self, client):
         import datetime as dt
 
-        target_date = (timezone.now() + timedelta(days=1)).date()
+        target_date = timezone.localdate() + timedelta(days=1)
         next_day_midnight = timezone.make_aware(
             dt.datetime.combine(target_date + timedelta(days=1), dt.time(0, 0))
         )
