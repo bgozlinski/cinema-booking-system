@@ -362,12 +362,12 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 
 | Status | US |
 |---|---|
-| **In Progress (WIP=1)** | **US-12** (filtering + search na MovieList, FR-02) — spec: `docs/superpowers/specs/2026-05-21-movie-list-filtering-design.md`; plan: `docs/superpowers/plans/2026-05-21-movie-list-filtering.md` |
-| **Ready (DoR ✅)** | _none_ |
-| **Backlog** | US-14, US-17..US-43 |
-| **Done** | **US-01..US-11, US-13, US-15, US-16** ✅✅✅✅✅✅✅✅✅✅✅✅✅✅ |
+| **In Progress (WIP=1)** | _none_ |
+| **Ready (DoR ✅)** | **US-14** (daily screenings list `/screenings/?date=...`, FR-04) — next per `.Claude/m2_planning.md` |
+| **Backlog** | US-17..US-43 |
+| **Done** | **US-01..US-13, US-15, US-16** ✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅ |
 
-**Bieżący milestone:** M2 — Catalog web (`v0.2.0`). 5/8 US zmergowanych, US-12 w toku. US-12 dodaje `MovieFilterForm(forms.Form)` z `q`/`genre`/`date` (wszystkie optional) + rozszerza `MovieListView.get_queryset()` o trzy filtry intersekcyjne + filter bar template + empty-state branching + querystring-preserving paginacja. `?date=` używa `timezone.make_aware()` dla DST-safe day window (Europe/Warsaw, inkluzywne 00:00, ekskluzywne 24:00). Następny task po US-12: **US-14** (daily screenings list `/screenings/?date=...`, FR-04) per `.Claude/m2_planning.md`.
+**Bieżący milestone:** M2 — Catalog web (`v0.2.0`). 6/8 US zmergowanych. US-12 dodało `MovieFilterForm(forms.Form)` z `q`/`genre`/`date` (wszystkie optional) + rozszerzyło `MovieListView.get_queryset()` o trzy filtry intersekcyjne + filter bar template + empty-state branching + querystring-preserving paginację (Django 5.1+ `{% querystring %}` tag). `?date=` używa `timezone.make_aware()` dla DST-safe day window (Europe/Warsaw, inkluzywne 00:00, ekskluzywne 24:00 następnego dnia). N+1 budget cap bumped 4→5 (Genre dropdown queryset eval). Następny task: **US-14** (daily screenings list `/screenings/?date=...`, FR-04) per `.Claude/m2_planning.md` — wymaga brainstorm (date selection UX, timezone handling near midnight, grouping by movie).
 
 ---
 
