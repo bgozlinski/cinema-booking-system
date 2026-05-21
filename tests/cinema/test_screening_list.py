@@ -2,13 +2,14 @@
 
 import datetime as dt
 from datetime import timedelta
+from decimal import Decimal
 
 import pytest
 from django.contrib.messages import get_messages
 from django.urls import reverse
 from django.utils import timezone
 
-from tests.cinema.factories import MovieFactory, ScreeningFactory
+from tests.cinema.factories import GenreFactory, HallFactory, MovieFactory, ScreeningFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -165,3 +166,89 @@ class TestDayWindowBoundary:
 
         response = client.get(f"/screenings/?date={target.isoformat()}")
         assert not any(g[0] == movie for g in response.context["movie_groups"])
+
+
+class TestRendering:
+    def test_movie_title_links_to_detail_page(self, client):
+        tomorrow = timezone.localdate() + timedelta(days=1)
+        movie = MovieFactory(title="Linked Movie")
+        ScreeningFactory(movie=movie, start_time=_make_local_dt(tomorrow, 18))
+
+        response = client.get(f"/screenings/?date={tomorrow.isoformat()}")
+        content = response.content.decode()
+
+        assert "Linked Movie" in content
+        assert f'href="/movies/{movie.pk}/"' in content
+
+    def test_screening_row_shows_hour_hall_price_seats(self, client):
+        tomorrow = timezone.localdate() + timedelta(days=1)
+        hall = HallFactory(name="Sala A", capacity=100)
+        movie = MovieFactory()
+        ScreeningFactory(
+            movie=movie,
+            hall=hall,
+            start_time=_make_local_dt(tomorrow, 18),
+            price=Decimal("42.50"),
+        )
+
+        response = client.get(f"/screenings/?date={tomorrow.isoformat()}")
+        content = response.content.decode()
+
+        assert "18:00" in content
+        assert "Sala A" in content
+        # Polish locale renders Decimal with comma; accept either form.
+        assert ("42,50" in content) or ("42.50" in content)
+        assert "zł" in content
+        # available_seats_count stub returns hall.capacity (100) until US-18.
+        assert "100" in content
+        assert "Zarezerwuj" in content
+        assert "disabled" in content
+
+    def test_genre_badges_render_on_card_header(self, client):
+        tomorrow = timezone.localdate() + timedelta(days=1)
+        movie = MovieFactory()
+        movie.genres.add(GenreFactory(name="Drama"), GenreFactory(name="Sci-Fi"))
+        ScreeningFactory(movie=movie, start_time=_make_local_dt(tomorrow, 18))
+
+        response = client.get(f"/screenings/?date={tomorrow.isoformat()}")
+        content = response.content.decode()
+
+        assert "Drama" in content
+        assert "Sci-Fi" in content
+        assert content.count('class="badge bg-secondary"') >= 2
+
+    def test_empty_state_when_no_screenings_for_day(self, client):
+        # No screenings anywhere → empty state for today.
+        response = client.get("/screenings/")
+        content = response.content.decode()
+
+        assert "Brak seansów na dzień" in content
+        assert "<table" not in content
+
+    def test_dzisiaj_link_visible_when_date_param_present(self, client):
+        tomorrow = timezone.localdate() + timedelta(days=1)
+        response = client.get(f"/screenings/?date={tomorrow.isoformat()}")
+        content = response.content.decode()
+
+        assert ">Dzisiaj<" in content
+        assert 'href="/screenings/"' in content
+
+    def test_dzisiaj_link_hidden_without_date_param(self, client):
+        response = client.get("/screenings/")
+        content = response.content.decode()
+
+        assert ">Dzisiaj<" not in content
+
+    def test_clamp_warning_shows_in_messages_block(self, client):
+        past = (timezone.localdate() - timedelta(days=5)).isoformat()
+        response = client.get(f"/screenings/?date={past}", follow=True)
+        content = response.content.decode()
+        assert "Data poza zakresem" in content
+
+    def test_date_input_min_max_set_for_browser_picker(self, client):
+        response = client.get("/screenings/")
+        content = response.content.decode()
+        today_iso = timezone.localdate().isoformat()
+        max_iso = (timezone.localdate() + timedelta(days=30)).isoformat()
+        assert f'min="{today_iso}"' in content
+        assert f'max="{max_iso}"' in content
