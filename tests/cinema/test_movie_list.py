@@ -307,7 +307,7 @@ class TestQueryBudget:
     def test_with_date_filter_uses_bounded_queries(self, client, django_assert_max_num_queries):
         """Filter ?date=YYYY-MM-DD dodaje JOIN na screenings + .distinct() — paginator
         count distinct może wprowadzić extra query."""
-        tomorrow = (timezone.now() + timedelta(days=1)).date()
+        tomorrow = timezone.localdate() + timedelta(days=1)
         tomorrow_evening = timezone.make_aware(datetime.combine(tomorrow, time(20, 0)))
         for _ in range(6):
             movie = MovieFactory()
@@ -420,7 +420,9 @@ class TestFilters:
     def test_date_filter_boundary_inclusive_at_midnight(self, client):
         import datetime as dt
 
-        target_date = (timezone.now() + timedelta(days=1)).date()
+        # Use localdate (not UTC) so target_date aligns with make_aware's local-TZ
+        # midnight. Mixing UTC date + local-TZ midnight breaks near UTC day boundary.
+        target_date = timezone.localdate() + timedelta(days=1)
         midnight_local = timezone.make_aware(dt.datetime.combine(target_date, dt.time(0, 0)))
         movie = MovieFactory()
         ScreeningFactory(movie=movie, start_time=midnight_local)
@@ -432,7 +434,7 @@ class TestFilters:
     def test_date_filter_boundary_inclusive_at_end_of_day(self, client):
         import datetime as dt
 
-        target_date = (timezone.now() + timedelta(days=1)).date()
+        target_date = timezone.localdate() + timedelta(days=1)
         almost_midnight = timezone.make_aware(dt.datetime.combine(target_date, dt.time(23, 59, 59)))
         movie = MovieFactory()
         ScreeningFactory(movie=movie, start_time=almost_midnight)
@@ -444,7 +446,7 @@ class TestFilters:
     def test_date_filter_excludes_next_day(self, client):
         import datetime as dt
 
-        target_date = (timezone.now() + timedelta(days=1)).date()
+        target_date = timezone.localdate() + timedelta(days=1)
         next_day_midnight = timezone.make_aware(
             dt.datetime.combine(target_date + timedelta(days=1), dt.time(0, 0))
         )
