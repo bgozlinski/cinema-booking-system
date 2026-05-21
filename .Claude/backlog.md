@@ -363,11 +363,11 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 | Status | US |
 |---|---|
 | **In Progress (WIP=1)** | _none_ |
-| **Ready (DoR ✅)** | **US-17** (performance pass / `prefetch_related` audit, NFR) — **last M2 task**, zamyka milestone `v0.2.0` |
-| **Backlog** | US-18..US-43 (M3..M5) |
-| **Done** | **US-01..US-16** ✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅ |
+| **Ready (DoR ✅)** | **US-18** (M3 kickoff — Booking model + reservation flow) |
+| **Backlog** | US-19..US-43 (M3..M5) |
+| **Done** | **US-01..US-17** ✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅ — **M2 (`v0.2.0`) COMPLETE** |
 
-**Bieżący milestone:** M2 — Catalog web (`v0.2.0`). 7/8 US zmergowanych. US-14 dodało `ScreeningListView(TemplateView)` pod `/screenings/?date=YYYY-MM-DD` z `_resolve_date()` clamping out-of-range dat do `today..today+30` (past → today, far-future → today+30, malformed → today) + `messages.warning("Data poza zakresem; pokazano dla <YYYY-MM-DD>.")`. Screenings grouped by movie (`OrderedDict`, sorted by earliest screening time per group), card-per-movie template z poster thumb + title link + mini-table godziny/sala/cena/miejsca/"Zarezerwuj" disabled (US-20 wires). Navbar "Seanse" link odblokowany (M1 `disabled` removed). Day-window math identical do US-12. N+1 budget cap 3 (`select_related("movie", "hall") + prefetch_related("movie__genres")`). 26 nowych testów. Następny task: **US-17** (performance pass, NFR) — last M2 task. Plan: profile US-11..US-14 with `django-debug-toolbar` lub `assertNumQueries`, add brakujące `prefetch_related`/`select_related`. Po US-17: cut `v0.2.0` tag + GitHub release.
+**Bieżący milestone:** **M2 — Catalog web (`v0.2.0`) COMPLETE.** Wszystkie 8 US (US-10..US-17) zmergowane. **US-17 (performance pass)** wyeliminowało N+1 w admin (US-15) przez `get_queryset` override z `annotate(Count(...))` we wszystkich 5 ModelAdmin (`GenreAdmin`/`HallAdmin`/`ActorAdmin`/`DirectorAdmin` po 1 N+1 helper każdy + `MovieAdmin` z 2 N+1 helperami + `prefetch_related("genres")`). Bonus: sortable count columns via `@admin.display(ordering="_<field>")`. 11 nowych budget testów (5 admin w `tests/cinema/test_admin_query_budgets.py` + 6 public extensions). ~11 istniejących `test_admin.py` helper testów zaktualizowanych do nowego access pattern przez `ma.get_queryset(RequestFactory().get("/admin/"))`. Plus visual redesign poza M2 backlogiem: PR #18 (cinema-city style) + PR #19 (auth pages). Post-merge: cut `v0.1.0` (outstanding M1) + `v0.2.0` tagi + GitHub releases. Następny milestone: **M3 — Booking web + Stripe (`v0.3.0`)** — 11 US (US-18..US-28), Booking model + reservation flow + Stripe sandbox payments.
 
 ---
 
