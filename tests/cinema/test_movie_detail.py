@@ -289,3 +289,19 @@ class TestUpcomingScreenings:
         assert "Reżyseria" not in content
         assert "Obsada" not in content
         assert "Zwiastun" not in content
+
+
+class TestQueryBudget:
+    def test_full_page_uses_bounded_queries(self, client, django_assert_max_num_queries):
+        """Populated detail page: movie + 3 M2M prefetches + screenings + hall select_related.
+        Budget cap 6 absorbs harness overhead; regression triggers when prefetch_related drops
+        a relation or someone adds an unprefetched iterator in the template."""
+        movie = MovieFactory()
+        movie.genres.add(GenreFactory(), GenreFactory())
+        movie.actors.add(ActorFactory(), ActorFactory(), ActorFactory())
+        movie.directors.add(DirectorFactory(), DirectorFactory())
+        ScreeningFactory(movie=movie, start_time=timezone.now() + timedelta(days=1))
+        ScreeningFactory(movie=movie, start_time=timezone.now() + timedelta(days=2))
+
+        with django_assert_max_num_queries(6):
+            client.get(f"/movies/{movie.pk}/")
