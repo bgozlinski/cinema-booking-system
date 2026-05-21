@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -88,6 +89,9 @@ class Movie(models.Model):
 
     def __str__(self) -> str:
         return self.title
+
+    def get_absolute_url(self) -> str:
+        return reverse("cinema:movie_detail", kwargs={"pk": self.pk})
 
 
 class Screening(models.Model):

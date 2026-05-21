@@ -145,7 +145,7 @@ class TestCardRendering:
         local_future = timezone.localtime(future)
         assert local_future.strftime("%d.%m.%Y %H:%M") in response.content.decode()
 
-    def test_card_shows_disabled_details_button(self, client):
+    def test_card_links_details_button_to_movie_detail(self, client):
         movie = MovieFactory()
         ScreeningFactory(movie=movie, start_time=timezone.now() + timedelta(days=1))
 
@@ -153,8 +153,9 @@ class TestCardRendering:
         content = response.content.decode()
 
         assert "Szczegóły" in content
-        # US-13 will drop the `disabled` class + wire href.
-        assert "disabled" in content
+        assert f'href="/movies/{movie.pk}/"' in content
+        # The disabled stub from US-11 is gone now.
+        assert "btn-primary btn-sm mt-auto disabled" not in content
 
     def test_card_uses_emoji_placeholder_when_poster_blank(self, client):
         movie = MovieFactory(poster="")
