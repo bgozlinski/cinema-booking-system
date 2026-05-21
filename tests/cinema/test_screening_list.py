@@ -275,3 +275,31 @@ class TestQueryBudget:
 
         with django_assert_max_num_queries(3):
             client.get(f"/screenings/?date={tomorrow.isoformat()}")
+
+    def test_empty_day_uses_bounded_queries(self, client, django_assert_max_num_queries):
+        """Empty day = 0 screenings. Brak prefetch needed (empty queryset),
+        tylko Screening fetch + (optional) messages/session baseline."""
+        # Tworzę screening DZIŚ, ale pytam o tomorrow (empty result for tomorrow).
+        today = timezone.localdate()
+        tomorrow = (today + timedelta(days=1)).isoformat()
+        ScreeningFactory(start_time=_make_local_dt(today, hour=12))
+
+        # Budget: 1 screenings fetch (zwraca 0) + ewentualne messages/session = 2.
+        with django_assert_max_num_queries(2):
+            response = client.get(f"/screenings/?date={tomorrow}")
+            assert response.status_code == 200
+
+    def test_big_dataset_uses_bounded_queries(self, client, django_assert_max_num_queries):
+        """20 movies x 5 screenings = 100 rows. Prefetch nie skaluje się z N —
+        budget pozostaje stały."""
+        tomorrow = timezone.localdate() + timedelta(days=1)
+        for _ in range(20):
+            movie = MovieFactory()
+            for hour in (10, 13, 16, 19, 22):
+                ScreeningFactory(movie=movie, start_time=_make_local_dt(tomorrow, hour))
+
+        # Budget: 1 screenings (z select_related + prefetch) + ewentualne messages = 2-3.
+        # Cap 3 (zgodnie z base buffer).
+        with django_assert_max_num_queries(3):
+            response = client.get(f"/screenings/?date={tomorrow.isoformat()}")
+            assert response.status_code == 200
