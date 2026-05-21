@@ -362,12 +362,12 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 
 | Status | US |
 |---|---|
-| **In Progress (WIP=1)** | **US-13** (MovieDetail view + embedded trailer, FR-03) — spec: `docs/superpowers/specs/2026-05-21-movie-detail-design.md`; plan: `docs/superpowers/plans/2026-05-21-movie-detail.md` |
-| **Ready (DoR ✅)** | _none_ |
-| **Backlog** | US-12, US-14, US-17..US-43 |
-| **Done** | **US-01..US-11, US-15, US-16** ✅✅✅✅✅✅✅✅✅✅✅✅✅ |
+| **In Progress (WIP=1)** | _none_ |
+| **Ready (DoR ✅)** | **US-12** (filtering + search na MovieList, FR-02) — next per `.Claude/m2_planning.md` |
+| **Backlog** | US-14, US-17..US-43 |
+| **Done** | **US-01..US-11, US-13, US-15, US-16** ✅✅✅✅✅✅✅✅✅✅✅✅✅✅ |
 
-**Bieżący milestone:** M2 — Catalog web (`v0.2.0`). 4/8 US zmergowanych, US-13 w toku. US-13 dodaje `MovieDetailView(DetailView)` pod `/movies/<int:pk>/` z helperem `youtube_embed_url` (privacy-first `youtube-nocookie.com`, sandbox `allow-scripts allow-same-origin allow-presentation`), hero z poster/title/badges/meta/description, conditional trailer iframe/fallback link, directors grid, actors Bootstrap Carousel (`data-bs-ride="false"`), tabela najbliższych seansów. `Movie.get_absolute_url` (deferred z US-10) odblokowuje "Szczegóły" button z US-11. Następny task po US-13: **US-12** (filtering + search na MovieList, FR-02) per `.Claude/m2_planning.md`.
+**Bieżący milestone:** M2 — Catalog web (`v0.2.0`). 5/8 US zmergowanych. US-13 dodało `MovieDetailView(DetailView)` pod `/movies/<int:pk>/` z helperem `youtube_embed_url` (privacy-first `youtube-nocookie.com`, sandbox `allow-scripts allow-same-origin allow-presentation`), hero z poster/title/badges/meta/description, conditional trailer iframe/fallback link, directors grid, actors Bootstrap Carousel (`data-bs-ride="false"`), tabelę najbliższych seansów (future-only z `select_related("hall")`), N+1 budget cap 6. `Movie.get_absolute_url` (deferred z US-10) odblokował "Szczegóły" button z US-11. Następny task: **US-12** (filtering + search na MovieList, FR-02) per `.Claude/m2_planning.md` — wymaga brainstorm (form vs htmx, query-param design).
 
 ---
 
