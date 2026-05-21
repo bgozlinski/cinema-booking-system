@@ -7,6 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django.utils import timezone
 
+from apps.cinema.forms import MovieFilterForm
 from tests.cinema.factories import GenreFactory, MovieFactory, ScreeningFactory
 
 pytestmark = pytest.mark.django_db
@@ -270,3 +271,173 @@ class TestQueryBudget:
         # Cap at 4 to absorb any test-harness query (session etc.) without flaking.
         with django_assert_max_num_queries(4):
             client.get("/")
+
+
+class TestFilters:
+    def test_q_filter_matches_icontains(self, client):
+        now = timezone.now()
+        wanted = MovieFactory(title="The Matrix")
+        other = MovieFactory(title="Other Movie")
+        ScreeningFactory(movie=wanted, start_time=now + timedelta(days=1))
+        ScreeningFactory(movie=other, start_time=now + timedelta(days=1))
+
+        response = client.get("/?q=matrix")
+
+        listed = list(response.context["movies"])
+        assert wanted in listed
+        assert other not in listed
+
+    def test_q_filter_is_case_insensitive(self, client):
+        movie = MovieFactory(title="Inception")
+        ScreeningFactory(movie=movie, start_time=timezone.now() + timedelta(days=1))
+
+        response = client.get("/?q=INCEPTION")
+
+        assert movie in list(response.context["movies"])
+
+    def test_q_filter_empty_string_returns_all(self, client):
+        now = timezone.now()
+        m1 = MovieFactory()
+        m2 = MovieFactory()
+        ScreeningFactory(movie=m1, start_time=now + timedelta(days=1))
+        ScreeningFactory(movie=m2, start_time=now + timedelta(days=1))
+
+        response = client.get("/?q=")
+
+        listed = list(response.context["movies"])
+        assert m1 in listed
+        assert m2 in listed
+
+    def test_genre_filter_narrows_results(self, client):
+        now = timezone.now()
+        drama = GenreFactory(name="Drama")
+        action = GenreFactory(name="Action")
+        movie_drama = MovieFactory()
+        movie_action = MovieFactory()
+        movie_drama.genres.add(drama)
+        movie_action.genres.add(action)
+        ScreeningFactory(movie=movie_drama, start_time=now + timedelta(days=1))
+        ScreeningFactory(movie=movie_action, start_time=now + timedelta(days=1))
+
+        response = client.get(f"/?genre={drama.pk}")
+
+        listed = list(response.context["movies"])
+        assert movie_drama in listed
+        assert movie_action not in listed
+
+    def test_genre_filter_invalid_pk_returns_all(self, client):
+        now = timezone.now()
+        m1 = MovieFactory()
+        m2 = MovieFactory()
+        ScreeningFactory(movie=m1, start_time=now + timedelta(days=1))
+        ScreeningFactory(movie=m2, start_time=now + timedelta(days=1))
+
+        response = client.get("/?genre=99999")
+
+        listed = list(response.context["movies"])
+        assert m1 in listed
+        assert m2 in listed
+
+    def test_date_filter_matches_screening_on_that_day(self, client):
+        now = timezone.now()
+        tomorrow = (now + timedelta(days=1)).date()
+        movie_match = MovieFactory()
+        movie_other = MovieFactory()
+        ScreeningFactory(
+            movie=movie_match,
+            start_time=now.replace(hour=18, minute=0) + timedelta(days=1),
+        )
+        ScreeningFactory(
+            movie=movie_other,
+            start_time=now.replace(hour=18, minute=0) + timedelta(days=2),
+        )
+
+        response = client.get(f"/?date={tomorrow.isoformat()}")
+
+        listed = list(response.context["movies"])
+        assert movie_match in listed
+        assert movie_other not in listed
+
+    def test_date_filter_boundary_inclusive_at_midnight(self, client):
+        import datetime as dt
+
+        target_date = (timezone.now() + timedelta(days=1)).date()
+        midnight_local = timezone.make_aware(dt.datetime.combine(target_date, dt.time(0, 0)))
+        movie = MovieFactory()
+        ScreeningFactory(movie=movie, start_time=midnight_local)
+
+        response = client.get(f"/?date={target_date.isoformat()}")
+
+        assert movie in list(response.context["movies"])
+
+    def test_date_filter_boundary_inclusive_at_end_of_day(self, client):
+        import datetime as dt
+
+        target_date = (timezone.now() + timedelta(days=1)).date()
+        almost_midnight = timezone.make_aware(dt.datetime.combine(target_date, dt.time(23, 59, 59)))
+        movie = MovieFactory()
+        ScreeningFactory(movie=movie, start_time=almost_midnight)
+
+        response = client.get(f"/?date={target_date.isoformat()}")
+
+        assert movie in list(response.context["movies"])
+
+    def test_date_filter_excludes_next_day(self, client):
+        import datetime as dt
+
+        target_date = (timezone.now() + timedelta(days=1)).date()
+        next_day_midnight = timezone.make_aware(
+            dt.datetime.combine(target_date + timedelta(days=1), dt.time(0, 0))
+        )
+        movie = MovieFactory()
+        ScreeningFactory(movie=movie, start_time=next_day_midnight)
+
+        response = client.get(f"/?date={target_date.isoformat()}")
+
+        assert movie not in list(response.context["movies"])
+
+    def test_combined_filters_intersect(self, client):
+        now = timezone.now()
+        drama = GenreFactory(name="Drama")
+        target_date = (now + timedelta(days=1)).date()
+
+        match = MovieFactory(title="Star Drama")
+        match.genres.add(drama)
+        ScreeningFactory(
+            movie=match,
+            start_time=now.replace(hour=18, minute=0) + timedelta(days=1),
+        )
+
+        wrong_title = MovieFactory(title="Other")
+        wrong_title.genres.add(drama)
+        ScreeningFactory(
+            movie=wrong_title,
+            start_time=now.replace(hour=18, minute=0) + timedelta(days=1),
+        )
+
+        action = GenreFactory(name="Action")
+        wrong_genre = MovieFactory(title="Star Action")
+        wrong_genre.genres.add(action)
+        ScreeningFactory(
+            movie=wrong_genre,
+            start_time=now.replace(hour=18, minute=0) + timedelta(days=1),
+        )
+
+        wrong_date = MovieFactory(title="Star Future")
+        wrong_date.genres.add(drama)
+        ScreeningFactory(
+            movie=wrong_date,
+            start_time=now.replace(hour=18, minute=0) + timedelta(days=5),
+        )
+
+        response = client.get(f"/?q=star&genre={drama.pk}&date={target_date.isoformat()}")
+
+        listed = list(response.context["movies"])
+        assert match in listed
+        assert wrong_title not in listed
+        assert wrong_genre not in listed
+        assert wrong_date not in listed
+
+    def test_filter_form_in_context(self, client):
+        response = client.get("/")
+        assert isinstance(response.context["filter_form"], MovieFilterForm)
