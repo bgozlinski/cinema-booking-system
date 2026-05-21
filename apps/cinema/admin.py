@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import Count
 from django.utils.html import format_html
 
 from apps.cinema.models import Actor, Director, Genre, Hall, Movie
@@ -9,9 +10,12 @@ class GenreAdmin(admin.ModelAdmin):
     list_display = ("name", "movies_count")
     search_fields = ("name",)
 
-    @admin.display(description="movies")
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(_movies_count=Count("movies"))
+
+    @admin.display(description="movies", ordering="_movies_count")
     def movies_count(self, obj):
-        return obj.movies.count()
+        return obj._movies_count
 
 
 @admin.register(Hall)
@@ -19,9 +23,12 @@ class HallAdmin(admin.ModelAdmin):
     list_display = ("name", "capacity", "screenings_count")
     search_fields = ("name",)
 
-    @admin.display(description="screenings")
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(_screenings_count=Count("screening"))
+
+    @admin.display(description="screenings", ordering="_screenings_count")
     def screenings_count(self, obj):
-        return obj.screening_set.count()
+        return obj._screenings_count
 
 
 @admin.register(Actor)

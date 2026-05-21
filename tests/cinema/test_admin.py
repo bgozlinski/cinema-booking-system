@@ -3,6 +3,7 @@
 import pytest
 from django.contrib import admin
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import RequestFactory
 from django.utils.safestring import SafeString
 
 from apps.cinema.models import Actor, Director, Genre, Hall, Movie
@@ -58,7 +59,9 @@ class TestGenreAdmin:
     def test_movies_count_zero_when_no_movies(self):
         genre = GenreFactory()
         ma = admin.site._registry[Genre]
-        assert ma.movies_count(genre) == 0
+        request = RequestFactory().get("/admin/")
+        annotated = ma.get_queryset(request).get(pk=genre.pk)
+        assert ma.movies_count(annotated) == 0
 
     def test_movies_count_returns_related_movie_count(self):
         genre = GenreFactory()
@@ -67,7 +70,9 @@ class TestGenreAdmin:
         m1.genres.add(genre)
         m2.genres.add(genre)
         ma = admin.site._registry[Genre]
-        assert ma.movies_count(genre) == 2
+        request = RequestFactory().get("/admin/")
+        annotated = ma.get_queryset(request).get(pk=genre.pk)
+        assert ma.movies_count(annotated) == 2
 
     def test_movies_count_has_short_description(self):
         ma = admin.site._registry[Genre]
@@ -86,13 +91,17 @@ class TestHallAdmin:
     def test_screenings_count_zero_when_no_screenings(self):
         hall = HallFactory()
         ma = admin.site._registry[Hall]
-        assert ma.screenings_count(hall) == 0
+        request = RequestFactory().get("/admin/")
+        annotated = ma.get_queryset(request).get(pk=hall.pk)
+        assert ma.screenings_count(annotated) == 0
 
     def test_screenings_count_returns_related_screening_count(self):
         hall = HallFactory()
         ScreeningFactory.create_batch(3, hall=hall)
         ma = admin.site._registry[Hall]
-        assert ma.screenings_count(hall) == 3
+        request = RequestFactory().get("/admin/")
+        annotated = ma.get_queryset(request).get(pk=hall.pk)
+        assert ma.screenings_count(annotated) == 3
 
     def test_screenings_count_has_short_description(self):
         ma = admin.site._registry[Hall]
