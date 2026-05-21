@@ -362,12 +362,12 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 
 | Status | US |
 |---|---|
-| **In Progress (WIP=1)** | **US-14** (daily screenings list `/screenings/?date=...`, FR-04) — spec: `docs/superpowers/specs/2026-05-21-screening-list-design.md`; plan: `docs/superpowers/plans/2026-05-21-screening-list.md` |
-| **Ready (DoR ✅)** | _none_ |
-| **Backlog** | US-17..US-43 |
-| **Done** | **US-01..US-13, US-15, US-16** ✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅ |
+| **In Progress (WIP=1)** | _none_ |
+| **Ready (DoR ✅)** | **US-17** (performance pass / `prefetch_related` audit, NFR) — **last M2 task**, zamyka milestone `v0.2.0` |
+| **Backlog** | US-18..US-43 (M3..M5) |
+| **Done** | **US-01..US-16** ✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅ |
 
-**Bieżący milestone:** M2 — Catalog web (`v0.2.0`). 6/8 US zmergowanych, US-14 w toku. US-14 dodaje `ScreeningListView(TemplateView)` pod `/screenings/?date=YYYY-MM-DD` (default: dziś) z `_resolve_date()` clamp'ującym out-of-range daty do `today..today+30` + `messages.warning("Data poza zakresem; pokazano dla <YYYY-MM-DD>.")`. Wyniki pogrupowane po filmie (card per movie + embedded mini-table), kolejność grup wg najwcześniejszego seansu tego dnia. Wpina navbar "Seanse" link odblokowując M1 `disabled`. Day-window math identical do US-12. Następny task po US-14: **US-17** (performance pass / `prefetch_related` audit, NFR) — last M2 task, zamyka milestone `v0.2.0`.
+**Bieżący milestone:** M2 — Catalog web (`v0.2.0`). 7/8 US zmergowanych. US-14 dodało `ScreeningListView(TemplateView)` pod `/screenings/?date=YYYY-MM-DD` z `_resolve_date()` clamping out-of-range dat do `today..today+30` (past → today, far-future → today+30, malformed → today) + `messages.warning("Data poza zakresem; pokazano dla <YYYY-MM-DD>.")`. Screenings grouped by movie (`OrderedDict`, sorted by earliest screening time per group), card-per-movie template z poster thumb + title link + mini-table godziny/sala/cena/miejsca/"Zarezerwuj" disabled (US-20 wires). Navbar "Seanse" link odblokowany (M1 `disabled` removed). Day-window math identical do US-12. N+1 budget cap 3 (`select_related("movie", "hall") + prefetch_related("movie__genres")`). 26 nowych testów. Następny task: **US-17** (performance pass, NFR) — last M2 task. Plan: profile US-11..US-14 with `django-debug-toolbar` lub `assertNumQueries`, add brakujące `prefetch_related`/`select_related`. Po US-17: cut `v0.2.0` tag + GitHub release.
 
 ---
 
