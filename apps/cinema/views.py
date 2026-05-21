@@ -1,12 +1,14 @@
 import datetime
+from collections import OrderedDict
 from datetime import time, timedelta
 
+from django.contrib import messages
 from django.db.models import Min, Q
 from django.utils import timezone
-from django.views.generic import DetailView, ListView
+from django.views.generic import DetailView, ListView, TemplateView
 
 from apps.cinema.forms import MovieFilterForm
-from apps.cinema.models import Movie
+from apps.cinema.models import Movie, Screening
 from apps.cinema.utils import youtube_embed_url
 
 
@@ -67,4 +69,54 @@ class MovieDetailView(DetailView):
             .select_related("hall")
             .order_by("start_time")
         )
+        return ctx
+
+
+class ScreeningListView(TemplateView):
+    template_name = "cinema/screening_list.html"
+
+    def _resolve_date(self):
+        """Parse ?date= and clamp to today..today+30. Returns (effective_date, was_clamped, raw_input)."""
+        today = timezone.localdate()
+        max_date = today + timedelta(days=30)
+        raw = self.request.GET.get("date", "")
+        if not raw:
+            return today, False, ""
+        try:
+            requested = datetime.date.fromisoformat(raw)
+        except ValueError:
+            return today, True, raw
+        if requested < today:
+            return today, True, raw
+        if requested > max_date:
+            return max_date, True, raw
+        return requested, False, raw
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        effective, clamped, _raw = self._resolve_date()
+        if clamped:
+            messages.warning(
+                self.request,
+                f"Data poza zakresem; pokazano dla {effective.isoformat()}.",
+            )
+        day_start = timezone.make_aware(datetime.datetime.combine(effective, time.min))
+        day_end = day_start + timedelta(days=1)
+
+        screenings = (
+            Screening.objects.filter(start_time__gte=day_start, start_time__lt=day_end)
+            .select_related("movie", "hall")
+            .prefetch_related("movie__genres")
+            .order_by("movie__title", "start_time")
+        )
+
+        grouped: OrderedDict = OrderedDict()
+        for s in screenings:
+            grouped.setdefault(s.movie, []).append(s)
+        movie_groups = sorted(grouped.items(), key=lambda item: item[1][0].start_time)
+
+        ctx["effective_date"] = effective
+        ctx["today"] = timezone.localdate()
+        ctx["max_date"] = timezone.localdate() + timedelta(days=30)
+        ctx["movie_groups"] = movie_groups
         return ctx
