@@ -135,7 +135,9 @@ class TestActorAdmin:
     def test_movies_count_zero_when_no_movies(self):
         actor = ActorFactory()
         ma = admin.site._registry[Actor]
-        assert ma.movies_count(actor) == 0
+        request = RequestFactory().get("/admin/")
+        annotated = ma.get_queryset(request).get(pk=actor.pk)
+        assert ma.movies_count(annotated) == 0
 
     def test_movies_count_returns_related_movie_count(self):
         actor = ActorFactory()
@@ -144,7 +146,9 @@ class TestActorAdmin:
         m1.actors.add(actor)
         m2.actors.add(actor)
         ma = admin.site._registry[Actor]
-        assert ma.movies_count(actor) == 2
+        request = RequestFactory().get("/admin/")
+        annotated = ma.get_queryset(request).get(pk=actor.pk)
+        assert ma.movies_count(annotated) == 2
 
     def test_thumbnail_and_count_have_short_descriptions(self):
         ma = admin.site._registry[Actor]
