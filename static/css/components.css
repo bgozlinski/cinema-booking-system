@@ -378,3 +378,165 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
 }
+
+/* ============================================================
+ Auth pages (login / register / activation / resend)
+ ============================================================ */
+.auth-shell {
+    max-width: 420px;
+    margin: 48px auto;
+    text-align: center;
+}
+
+.auth-brand {
+    margin-bottom: 24px;
+}
+
+.auth-brand__emoji {
+    font-size: 40px;
+    line-height: 1;
+    margin-bottom: 8px;
+}
+
+.auth-brand__title {
+    color: var(--text);
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0 0 4px;
+}
+
+.auth-brand__tagline {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin: 0;
+}
+
+.auth-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 28px 24px;
+    text-align: left;
+}
+
+.auth-card__title {
+    color: var(--text);
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 6px;
+}
+
+.auth-card__hint {
+    color: var(--text-muted);
+    font-size: 12px;
+    margin: 0 0 18px;
+}
+
+.auth-card__field {
+    margin-bottom: 14px;
+}
+
+.auth-card__field-label {
+    display: block;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.auth-card__field input,
+.auth-card__field select,
+.auth-card__field textarea {
+    background-color: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 100%;
+    font-family: inherit;
+}
+
+.auth-card__field input:focus,
+.auth-card__field select:focus,
+.auth-card__field textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 0.25rem rgba(139, 92, 246, 0.25);
+}
+
+.auth-card__field-error {
+    color: var(--danger);
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.auth-card__field-help {
+    color: var(--text-muted);
+    font-size: 11px;
+    margin-top: 4px;
+}
+
+.auth-card__submit {
+    width: 100%;
+    margin-top: 6px;
+}
+
+/* No-form variant: emoji + message (activation_sent, activation_invalid, resend_done) */
+.auth-card__message {
+    text-align: center;
+    padding: 8px 0;
+}
+
+.auth-card__message-emoji {
+    font-size: 56px;
+    line-height: 1;
+    margin-bottom: 12px;
+}
+
+.auth-card__message-text {
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.auth-card__message-hint {
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-top: 8px;
+}
+
+.auth-footer-link {
+    text-align: center;
+    margin-top: 18px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.auth-footer-link a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.auth-footer-link a:hover {
+    color: var(--accent-hover);
+    text-decoration: underline;
+}
+
+.auth-footer-link__divider {
+    margin: 4px 0;
+}
+
+/* Mobile: padding tweaks */
+@media (max-width: 575.98px) {
+    .auth-shell {
+        margin: 24px 16px;
+    }
+
+    .auth-card {
+        padding: 20px 16px;
+    }
+}
