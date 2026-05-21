@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-shell">
+    <div class="auth-brand">
+        <div class="auth-brand__emoji" aria-hidden="true">🎬</div>
+        <h1 class="auth-brand__title">KinoMania</h1>
+        <p class="auth-brand__tagline">{% block auth_tagline %}{% endblock %}</p>
+    </div>
+
+    <div class="auth-card">
+        {% block auth_body %}{% endblock %}
+    </div>
+
+    {% block auth_footer %}{% endblock %}
+</div>
+{% endblock %}
