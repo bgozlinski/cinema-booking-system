@@ -123,8 +123,29 @@ class Screening(models.Model):
         return f"{self.movie.title} @ {self.start_time:%Y-%m-%d %H:%M}"
 
     def booked_seats_count(self) -> int:
-        # US-18 will sum seats_count from CONFIRMED bookings; until then no bookings exist.
-        return 0
+        """Sum of seats_count from CONFIRMED + active-PENDING bookings.
+
+        Active-PENDING = status=PENDING AND expires_at > now(). Expired PENDING
+        bookings (expires_at <= now()) are NOT counted — they're effectively
+        cancelled (waiting for expire_pending_bookings command to flip status).
+        PENDING with expires_at IS NULL is also excluded (defensive — broken state).
+
+        Honors `_annotated_booked_count` if set by queryset annotation (used by
+        list/detail views to avoid N+1 from template loops calling is_available).
+        """
+        if hasattr(self, "_annotated_booked_count"):
+            return self._annotated_booked_count
+
+        from apps.booking.models import BookingStatus  # lazy: avoid circular
+
+        now = timezone.now()
+        return (
+            self.bookings.filter(
+                models.Q(status=BookingStatus.CONFIRMED)
+                | models.Q(status=BookingStatus.PENDING, expires_at__gt=now)
+            ).aggregate(total=models.Sum("seats_count"))["total"]
+            or 0
+        )
 
     def available_seats_count(self) -> int:
         return self.hall.capacity - self.booked_seats_count()

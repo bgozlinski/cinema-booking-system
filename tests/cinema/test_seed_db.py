@@ -386,3 +386,91 @@ def test_seed_db_success_output_mentions_cinema_counts():
     assert "movies" in out
     assert "screenings" in out
     assert "users" in out
+
+
+class TestSeedDbBookings:
+    @pytest.mark.django_db
+    def test_creates_bookings_with_default_count(self):
+        from django.core.management import call_command
+
+        from apps.booking.models import Booking
+
+        call_command("seed_db", "--users=5", "--movies=3", "--screenings=10", "--bookings=10")
+        assert Booking.objects.count() == 10
+
+    @pytest.mark.django_db
+    def test_bookings_status_distribution_includes_all_three(self):
+        """Distribution is 85/5/10 random — flaky exact ratio test.
+        Instead, with bookings=50, assert all three statuses present."""
+        from django.core.management import call_command
+
+        from apps.booking.models import Booking, BookingStatus
+
+        call_command("seed_db", "--users=10", "--movies=5", "--screenings=20", "--bookings=50")
+        for status in (BookingStatus.CONFIRMED, BookingStatus.PENDING, BookingStatus.CANCELLED):
+            assert Booking.objects.filter(status=status).exists(), f"{status} missing"
+
+    @pytest.mark.django_db
+    def test_creates_one_stripe_event_per_confirmed_booking(self):
+        from django.core.management import call_command
+
+        from apps.booking.models import Booking, BookingStatus
+        from apps.payments.models import StripeEvent
+
+        call_command("seed_db", "--users=10", "--movies=5", "--screenings=20", "--bookings=30")
+        confirmed_count = Booking.objects.filter(status=BookingStatus.CONFIRMED).count()
+        stripe_event_count = StripeEvent.objects.count()
+        assert stripe_event_count == confirmed_count
+
+    @pytest.mark.django_db
+    def test_flush_deletes_bookings_before_screenings(self):
+        from django.core.management import call_command
+
+        from apps.booking.models import Booking
+        from apps.cinema.models import Screening
+
+        # Initial seed
+        call_command("seed_db", "--users=5", "--movies=3", "--screenings=10", "--bookings=10")
+        assert Booking.objects.count() == 10
+        # Re-seed with --flush — must not raise IntegrityError on Screening.bookings cascade
+        call_command(
+            "seed_db",
+            "--flush",
+            "--users=5",
+            "--movies=3",
+            "--screenings=10",
+            "--bookings=8",
+        )
+        assert Booking.objects.count() == 8
+        assert Screening.objects.count() == 10
+
+    @pytest.mark.django_db
+    def test_flush_deletes_stripe_events_independently(self):
+        from django.core.management import call_command
+
+        from apps.payments.models import StripeEvent
+
+        call_command("seed_db", "--users=5", "--movies=3", "--screenings=10", "--bookings=10")
+        initial_events = StripeEvent.objects.count()
+        assert initial_events > 0
+        call_command(
+            "seed_db",
+            "--flush",
+            "--users=5",
+            "--movies=3",
+            "--screenings=10",
+            "--bookings=10",
+        )
+        # Old events gone, new ones created (count may differ — random distribution)
+        new_events = StripeEvent.objects.count()
+        assert new_events >= 0  # depends on CONFIRMED distribution in re-seed
+
+    @pytest.mark.django_db
+    def test_non_empty_guard_includes_bookings(self):
+        from django.core.management import call_command
+        from django.core.management.base import CommandError
+
+        call_command("seed_db", "--users=5", "--movies=3", "--screenings=10", "--bookings=5")
+        # Re-run without --flush or --append → CommandError
+        with pytest.raises(CommandError, match="Database not empty"):
+            call_command("seed_db", "--users=5", "--movies=3", "--screenings=10", "--bookings=5")

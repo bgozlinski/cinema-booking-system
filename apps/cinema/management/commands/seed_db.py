@@ -1,4 +1,5 @@
 import random
+import uuid
 from datetime import timedelta
 from decimal import Decimal
 from math import floor
@@ -10,7 +11,9 @@ from django.db import transaction
 from django.utils import timezone
 from faker import Faker
 
+from apps.booking.models import Booking, BookingStatus
 from apps.cinema.models import Actor, Director, Genre, Hall, Movie, Screening
+from apps.payments.models import StripeEvent
 
 GENRE_NAMES = (
     "Action",
@@ -64,6 +67,12 @@ class Command(BaseCommand):
             default=100,
             help="Number of screenings to seed (default 100).",
         )
+        parser.add_argument(
+            "--bookings",
+            type=int,
+            default=30,
+            help="Number of bookings to seed (default 30).",
+        )
 
     def handle(self, *args, **options):
         if not settings.DEBUG and not options["force"]:
@@ -96,6 +105,8 @@ class Command(BaseCommand):
             + Director.objects.count()
             + Movie.objects.count()
             + Screening.objects.count()
+            + Booking.objects.count()
+            + StripeEvent.objects.count()
         )
 
         if options["flush"] or options["append"]:
@@ -110,6 +121,8 @@ class Command(BaseCommand):
         skipped_count = 0
         with transaction.atomic():
             if options["flush"]:
+                StripeEvent.objects.all().delete()
+                Booking.objects.all().delete()
                 Screening.objects.all().delete()
                 Movie.objects.all().delete()
                 Hall.objects.all().delete()
@@ -143,6 +156,16 @@ class Command(BaseCommand):
                 user.save()
                 created_count += 1
 
+            # Bookings + StripeEvents (US-18 / FR-3.8 + FR-3.9)
+            if options["bookings"] > 0:
+                seed_users = list(User.objects.filter(is_superuser=False))
+                seed_screenings = list(Screening.objects.all())
+                if seed_users and seed_screenings:
+                    confirmed_bookings = self._seed_bookings(
+                        options["bookings"], seed_screenings, seed_users
+                    )
+                    self._seed_stripe_events(confirmed_bookings)
+
         if options["append"]:
             self.stdout.write(
                 self.style.SUCCESS(
@@ -162,6 +185,8 @@ class Command(BaseCommand):
                     f"{Director.objects.count()} directors, "
                     f"{Movie.objects.count()} movies, "
                     f"{Screening.objects.count()} screenings, "
+                    f"{Booking.objects.count()} bookings, "
+                    f"{StripeEvent.objects.count()} stripe events, "
                     f"and {created_count} users ({active_count} active, "
                     f"{inactive_count} inactive). Default password: {password}."
                 )
@@ -239,4 +264,68 @@ class Command(BaseCommand):
                     hours=random.randint(0, 23),
                 ),
                 price=Decimal(f"{random.uniform(25, 55):.2f}"),
+            )
+
+    def _seed_bookings(self, count, screenings, users):
+        """Generate bookings with status distribution ~85% CONFIRMED / ~5% PENDING /
+        ~10% CANCELLED. Guarantees >=1 of each status when count >= 3 — gives dev DB
+        deterministic coverage of all states for manual testing. Returns list of
+        CONFIRMED bookings for _seed_stripe_events."""
+        guaranteed = (
+            [BookingStatus.CONFIRMED, BookingStatus.PENDING, BookingStatus.CANCELLED]
+            if count >= 3
+            else []
+        )
+        remaining = count - len(guaranteed)
+        statuses = guaranteed + random.choices(
+            [BookingStatus.CONFIRMED, BookingStatus.PENDING, BookingStatus.CANCELLED],
+            weights=[85, 5, 10],
+            k=remaining,
+        )
+        random.shuffle(statuses)
+        confirmed = []
+        for status in statuses:
+            user = random.choice(users)
+            screening = random.choice(screenings)
+            seats = random.randint(1, 10)
+
+            booking_kwargs = {
+                "user": user,
+                "screening": screening,
+                "seats_count": seats,
+                "status": status,
+            }
+            if status == BookingStatus.PENDING:
+                # 50/50 past/future expires_at — for testing expire_pending_bookings (US-26)
+                offset = random.choice([-1, 1]) * timedelta(minutes=random.randint(5, 60))
+                booking_kwargs["expires_at"] = timezone.now() + offset
+            elif status == BookingStatus.CONFIRMED:
+                booking_kwargs["stripe_session_id"] = f"cs_seed_{uuid.uuid4().hex[:16]}"
+                booking_kwargs["stripe_payment_intent_id"] = f"pi_seed_{uuid.uuid4().hex[:16]}"
+
+            booking = Booking.objects.create(**booking_kwargs)
+            if status == BookingStatus.CONFIRMED:
+                confirmed.append(booking)
+        return confirmed
+
+    def _seed_stripe_events(self, confirmed_bookings):
+        """One StripeEvent per CONFIRMED booking — checkout.session.completed event
+        with payload referencing booking via client_reference_id."""
+        for booking in confirmed_bookings:
+            event_id = f"evt_seed_{uuid.uuid4().hex[:16]}"
+            StripeEvent.objects.create(
+                event_id=event_id,
+                event_type="checkout.session.completed",
+                payload={
+                    "id": event_id,
+                    "type": "checkout.session.completed",
+                    "data": {
+                        "object": {
+                            "id": booking.stripe_session_id,
+                            "client_reference_id": str(booking.id),
+                            "payment_intent": booking.stripe_payment_intent_id,
+                        }
+                    },
+                },
+                processed_at=timezone.now(),
             )

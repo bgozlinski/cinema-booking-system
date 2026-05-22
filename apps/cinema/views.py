@@ -3,13 +3,39 @@ from collections import OrderedDict
 from datetime import time, timedelta
 
 from django.contrib import messages
-from django.db.models import Min, Q
+from django.db.models import Min, Q, Sum
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.views.generic import DetailView, ListView, TemplateView
 
+from apps.booking.models import BookingStatus
 from apps.cinema.forms import MovieFilterForm
 from apps.cinema.models import Movie, Screening
 from apps.cinema.utils import youtube_embed_url
+
+
+def _annotate_booked_count(qs):
+    """Annotates _annotated_booked_count on Screening queryset.
+
+    Eliminates N+1 from is_available() / available_seats_count() calls in
+    templates iterating screenings (US-18 perf concern).
+    """
+    now = timezone.now()
+    return qs.annotate(
+        _annotated_booked_count=Coalesce(
+            Sum(
+                "bookings__seats_count",
+                filter=(
+                    Q(bookings__status=BookingStatus.CONFIRMED)
+                    | Q(
+                        bookings__status=BookingStatus.PENDING,
+                        bookings__expires_at__gt=now,
+                    )
+                ),
+            ),
+            0,
+        )
+    )
 
 
 class MovieListView(ListView):
@@ -64,7 +90,7 @@ class MovieDetailView(DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["trailer_embed_url"] = youtube_embed_url(self.object.trailer_url)
-        ctx["upcoming_screenings"] = (
+        ctx["upcoming_screenings"] = _annotate_booked_count(
             self.object.screenings.filter(start_time__gte=timezone.now())
             .select_related("hall")
             .order_by("start_time")
@@ -103,7 +129,7 @@ class ScreeningListView(TemplateView):
         day_start = timezone.make_aware(datetime.datetime.combine(effective, time.min))
         day_end = day_start + timedelta(days=1)
 
-        screenings = (
+        screenings = _annotate_booked_count(
             Screening.objects.filter(start_time__gte=day_start, start_time__lt=day_end)
             .select_related("movie", "hall")
             .prefetch_related("movie__genres")
