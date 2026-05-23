@@ -27,16 +27,11 @@ class ScreeningInPastError(BookingError):
         super().__init__("Seans już się rozpoczął — nie można zarezerwować miejsc.")
 
 
-def create_booking(*, user, screening: Screening, seats_count: int) -> tuple[Booking, str]:
-    """Create a PENDING booking race-safely and return (booking, checkout_url).
+def create_booking(*, user, screening: Screening, seats_count: int) -> Booking:
+    """Create a PENDING booking race-safely (FR-07). Returns the booking.
 
-    Locks the Screening row, re-checks availability + start time under the lock
-    (authoritative — the form check in US-19 is a pre-check), creates the PENDING
-    booking with a 15-minute expiry, commits, then (outside the lock) creates the
-    Stripe checkout session (stubbed until US-24).
-
-    Caller (BookingForm / API serializer) owns seats_count range [1, 10]; this
-    service enforces only the lock-dependent rules.
+    The Stripe checkout session is created separately by start_checkout (US-24).
+    Caller owns seats_count range [1, 10].
     """
     with transaction.atomic():
         locked = Screening.objects.select_for_update().get(pk=screening.pk)
@@ -45,7 +40,7 @@ def create_booking(*, user, screening: Screening, seats_count: int) -> tuple[Boo
         available = locked.available_seats_count()
         if seats_count > available:
             raise NotEnoughSeatsError(available=available)
-        booking = Booking.objects.create(
+        return Booking.objects.create(
             user=user,
             screening=locked,
             seats_count=seats_count,
@@ -53,12 +48,17 @@ def create_booking(*, user, screening: Screening, seats_count: int) -> tuple[Boo
             expires_at=timezone.now() + timedelta(minutes=15),
         )
 
-    checkout_url, session_id = create_checkout_session(booking)
-    if session_id:
-        booking.stripe_session_id = session_id
-        booking.save(update_fields=["stripe_session_id"])
 
-    return booking, checkout_url
+def start_checkout(*, booking: Booking) -> str:
+    """Create a Stripe Checkout session for a PENDING booking; return its URL.
+
+    Persists the returned stripe_session_id. Lets stripe.StripeError propagate to
+    the view. Shared by create + retry flows.
+    """
+    checkout_url, session_id = create_checkout_session(booking)
+    booking.stripe_session_id = session_id
+    booking.save(update_fields=["stripe_session_id"])
+    return checkout_url
 
 
 class BookingNotCancellableError(BookingError):

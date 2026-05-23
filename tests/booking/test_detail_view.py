@@ -75,3 +75,23 @@ class TestBookingDetailBudget:
         client.force_login(booking.user)
         with django_assert_max_num_queries(5):
             client.get(_detail_url(booking))
+
+
+class TestBookingDetailStripeReturn:
+    def test_stripe_success_shows_info_message(self, client):
+        booking = BookingFactory()
+        client.force_login(booking.user)
+        resp = client.get(_detail_url(booking) + "?stripe=success")
+        assert any("potwierdzenie" in str(m).lower() for m in resp.context["messages"])
+
+    def test_stripe_cancelled_shows_warning(self, client):
+        booking = BookingFactory()
+        client.force_login(booking.user)
+        resp = client.get(_detail_url(booking) + "?stripe=cancelled")
+        assert any("anulowana" in str(m).lower() for m in resp.context["messages"])
+
+    def test_pay_button_shown_for_pending(self, client):
+        booking = BookingFactory()
+        client.force_login(booking.user)
+        content = client.get(_detail_url(booking)).content.decode()
+        assert reverse("booking:checkout", kwargs={"pk": booking.pk}) in content

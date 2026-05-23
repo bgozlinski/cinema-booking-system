@@ -3,7 +3,7 @@
 from datetime import timedelta
 
 import pytest
-from django.urls import reverse
+import stripe
 from django.utils import timezone
 
 from apps.booking.models import Booking, BookingStatus
@@ -13,6 +13,7 @@ from apps.booking.services import (
     ScreeningInPastError,
     cancel_booking,
     create_booking,
+    start_checkout,
 )
 from tests.accounts.factories import UserFactory
 from tests.booking.factories import (
@@ -30,11 +31,11 @@ def _future_screening(capacity: int = 100):
 
 
 class TestCreateBookingSuccess:
-    def test_creates_pending_with_expiry(self):
+    def test_creates_pending_returns_booking(self):
         user = UserFactory()
         screening = _future_screening(capacity=50)
         before = timezone.now()
-        booking, _url = create_booking(user=user, screening=screening, seats_count=3)
+        booking = create_booking(user=user, screening=screening, seats_count=3)
         assert booking.status == BookingStatus.PENDING
         assert booking.seats_count == 3
         assert booking.user == user
@@ -42,16 +43,6 @@ class TestCreateBookingSuccess:
         assert booking.expires_at is not None
         delta = booking.expires_at - before
         assert timedelta(minutes=14) <= delta <= timedelta(minutes=16)
-
-    def test_returns_movie_detail_checkout_url(self):
-        screening = _future_screening()
-        _booking, url = create_booking(user=UserFactory(), screening=screening, seats_count=1)
-        assert url == reverse("cinema:movie_detail", kwargs={"pk": screening.movie_id})
-
-    def test_does_not_set_session_id_with_stub(self):
-        screening = _future_screening()
-        booking, _url = create_booking(user=UserFactory(), screening=screening, seats_count=1)
-        assert booking.stripe_session_id == ""
 
 
 class TestCreateBookingErrors:
@@ -108,3 +99,18 @@ class TestCancelBooking:
         booking = CancelledBookingFactory()
         with pytest.raises(BookingNotCancellableError):
             cancel_booking(booking=booking)
+
+
+@pytest.mark.stripe
+class TestStartCheckout:
+    def test_saves_session_id_and_returns_url(self, mock_checkout_session):
+        booking = BookingFactory()
+        url = start_checkout(booking=booking)
+        assert url == "https://checkout.stripe.test/c/cs_test_123"
+        booking.refresh_from_db()
+        assert booking.stripe_session_id == "cs_test_123"
+
+    def test_propagates_stripe_error(self, mock_checkout_session):
+        mock_checkout_session.side_effect = stripe.APIConnectionError("boom")
+        with pytest.raises(stripe.StripeError):
+            start_checkout(booking=BookingFactory())

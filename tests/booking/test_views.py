@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+import stripe
 from django.urls import reverse
 from django.utils import timezone
 
@@ -56,23 +57,30 @@ class TestGet:
 
 
 class TestPost:
-    def test_valid_creates_booking_and_redirects(self, client):
+    @pytest.mark.stripe
+    def test_valid_creates_booking_and_redirects_to_stripe(self, client, mock_checkout_session):
         user = UserFactory()
         client.force_login(user)
         screening = _future_screening(capacity=50)
         resp = client.post(_book_url(screening), {"seats_count": 3})
         assert resp.status_code == 302
-        assert resp.url == reverse("cinema:movie_detail", kwargs={"pk": screening.movie_id})
+        assert resp.url == "https://checkout.stripe.test/c/cs_test_123"
         booking = Booking.objects.get(user=user, screening=screening)
         assert booking.status == BookingStatus.PENDING
         assert booking.seats_count == 3
+        assert booking.stripe_session_id == "cs_test_123"
 
-    def test_valid_sets_success_message(self, client):
-        client.force_login(UserFactory())
-        screening = _future_screening()
-        resp = client.post(_book_url(screening), {"seats_count": 1}, follow=True)
-        msgs = [str(m) for m in resp.context["messages"]]
-        assert any("Rezerwacja" in m for m in msgs)
+    @pytest.mark.stripe
+    def test_stripe_failure_redirects_to_detail(self, client, mock_checkout_session):
+        mock_checkout_session.side_effect = stripe.APIConnectionError("boom")
+        user = UserFactory()
+        client.force_login(user)
+        screening = _future_screening(capacity=50)
+        resp = client.post(_book_url(screening), {"seats_count": 3})
+        booking = Booking.objects.get(user=user, screening=screening)
+        assert resp.status_code == 302
+        assert resp.url == reverse("booking:detail", kwargs={"pk": booking.pk})
+        assert booking.status == BookingStatus.PENDING
 
     def test_invalid_form_rerenders_no_booking(self, client):
         client.force_login(UserFactory())
