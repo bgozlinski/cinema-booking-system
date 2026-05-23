@@ -53,6 +53,14 @@ class BookingDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     template_name = "booking/booking_detail.html"
     context_object_name = "booking"
 
+    def get(self, request, *args, **kwargs):
+        stripe_status = request.GET.get("stripe")
+        if stripe_status == "success":
+            messages.info(request, "Płatność przyjęta — potwierdzenie rezerwacji wkrótce.")
+        elif stripe_status == "cancelled":
+            messages.warning(request, "Płatność anulowana. Możesz spróbować ponownie.")
+        return super().get(request, *args, **kwargs)
+
     def get_queryset(self):
         return Booking.objects.select_related("screening__movie", "screening__hall", "user")
 
