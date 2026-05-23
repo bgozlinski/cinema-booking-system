@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<article class="container py-4" style="max-width: 640px;">
+  <h1 class="mb-4">Rezerwacja #{{ booking.id }}</h1>
+
+  <div class="card">
+    <div class="card-body">
+      <h2 class="h5 card-title">{{ booking.screening.movie.title }}</h2>
+      <dl class="row mb-0">
+        <dt class="col-5">Termin</dt><dd class="col-7">{{ booking.screening.start_time|date:"d.m.Y H:i" }}</dd>
+        <dt class="col-5">Sala</dt><dd class="col-7">{{ booking.screening.hall.name }}</dd>
+        <dt class="col-5">Liczba miejsc</dt><dd class="col-7">{{ booking.seats_count }}</dd>
+        <dt class="col-5">Łączna cena</dt><dd class="col-7">{{ booking.total_price }} zł</dd>
+        <dt class="col-5">Status</dt>
+        <dd class="col-7"><span class="badge {% if booking.status == 'PENDING' %}bg-warning text-dark{% elif booking.status == 'CONFIRMED' %}bg-success{% else %}bg-secondary{% endif %}">{{ booking.get_status_display }}</span></dd>
+      </dl>
+    </div>
+  </div>
+
+  <a href="{% url 'cinema:movie_list' %}" class="btn btn-outline-light mt-4">← Repertuar</a>
+</article>
+{% endblock %}

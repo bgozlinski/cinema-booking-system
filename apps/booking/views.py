@@ -1,9 +1,11 @@
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
+from django.views.generic import DetailView
 
 from apps.booking.forms import BookingForm
+from apps.booking.models import Booking
 from apps.booking.services import BookingError, create_booking
 from apps.cinema.models import Screening
 
@@ -36,3 +38,21 @@ class BookingCreateView(LoginRequiredMixin, View):
 
         messages.success(request, "Rezerwacja utworzona (PENDING) — dokończ płatność.")
         return redirect(checkout_url)
+
+
+class BookingDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    model = Booking
+    template_name = "booking/booking_detail.html"
+    context_object_name = "booking"
+
+    def get_queryset(self):
+        return Booking.objects.select_related("screening__movie", "screening__hall", "user")
+
+    def get_object(self, queryset=None):
+        if not hasattr(self, "_booking"):
+            self._booking = super().get_object(queryset)
+        return self._booking
+
+    def test_func(self) -> bool:
+        booking = self.get_object()
+        return self.request.user == booking.user or self.request.user.is_staff
