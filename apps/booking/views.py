@@ -1,8 +1,9 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views import View
-from django.views.generic import DetailView
+from django.views.generic import DetailView, ListView
 
 from apps.booking.forms import BookingForm
 from apps.booking.models import Booking
@@ -56,3 +57,28 @@ class BookingDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     def test_func(self) -> bool:
         booking = self.get_object()
         return self.request.user == booking.user or self.request.user.is_staff
+
+
+class MyBookingsView(LoginRequiredMixin, ListView):
+    model = Booking
+    template_name = "booking/my_bookings.html"
+    context_object_name = "bookings"
+
+    def _active_tab(self) -> str:
+        return "history" if self.request.GET.get("tab") == "history" else "upcoming"
+
+    def get_queryset(self):
+        qs = Booking.objects.filter(user=self.request.user.pk).select_related(
+            "screening__movie", "screening__hall"
+        )
+        now = timezone.now()
+        if self._active_tab() == "history":
+            qs = qs.filter(screening__start_time__lt=now)
+        else:
+            qs = qs.filter(screening__start_time__gte=now)
+        return qs.order_by("-created_at")
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["active_tab"] = self._active_tab()
+        return ctx
