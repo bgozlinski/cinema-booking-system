@@ -8,12 +8,18 @@ from django.utils import timezone
 
 from apps.booking.models import Booking, BookingStatus
 from apps.booking.services import (
+    BookingNotCancellableError,
     NotEnoughSeatsError,
     ScreeningInPastError,
+    cancel_booking,
     create_booking,
 )
 from tests.accounts.factories import UserFactory
-from tests.booking.factories import ConfirmedBookingFactory
+from tests.booking.factories import (
+    BookingFactory,
+    CancelledBookingFactory,
+    ConfirmedBookingFactory,
+)
 from tests.cinema.factories import HallFactory, ScreeningFactory
 
 pytestmark = pytest.mark.django_db
@@ -72,3 +78,33 @@ class TestCreateBookingErrors:
             for b in Booking.objects.filter(screening=screening, status=BookingStatus.PENDING)
         )
         assert booked <= screening.hall.capacity
+
+
+class TestCancelBooking:
+    def test_cancels_pending(self):
+        booking = BookingFactory()  # PENDING, future +7d
+        result = cancel_booking(booking=booking)
+        assert result.status == BookingStatus.CANCELLED
+        assert result.expires_at is None
+        booking.refresh_from_db()
+        assert booking.status == BookingStatus.CANCELLED
+
+    def test_raises_for_confirmed(self):
+        booking = ConfirmedBookingFactory()
+        with pytest.raises(BookingNotCancellableError):
+            cancel_booking(booking=booking)
+        booking.refresh_from_db()
+        assert booking.status == BookingStatus.CONFIRMED
+
+    def test_raises_when_too_late(self):
+        screening = ScreeningFactory(start_time=timezone.now() + timedelta(minutes=30))
+        booking = BookingFactory(screening=screening)
+        with pytest.raises(BookingNotCancellableError):
+            cancel_booking(booking=booking)
+        booking.refresh_from_db()
+        assert booking.status == BookingStatus.PENDING
+
+    def test_raises_when_already_cancelled(self):
+        booking = CancelledBookingFactory()
+        with pytest.raises(BookingNotCancellableError):
+            cancel_booking(booking=booking)

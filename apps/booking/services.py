@@ -59,3 +59,28 @@ def create_booking(*, user, screening: Screening, seats_count: int) -> tuple[Boo
         booking.save(update_fields=["stripe_session_id"])
 
     return booking, checkout_url
+
+
+class BookingNotCancellableError(BookingError):
+    """Booking can't be cancelled (wrong status, too late, or already cancelled)."""
+
+    def __init__(self) -> None:
+        super().__init__("Tej rezerwacji nie można już anulować.")
+
+
+def cancel_booking(*, booking: Booking) -> Booking:
+    """Cancel a PENDING booking race-safely (FR-10).
+
+    Locks the booking row, re-checks can_be_cancelled() under the lock, flips
+    status to CANCELLED and clears expires_at. Raises BookingNotCancellableError
+    if the booking is no longer cancellable. Caller verifies ownership. US-27 will
+    add a Stripe refund branch for CONFIRMED bookings before the status change.
+    """
+    with transaction.atomic():
+        locked = Booking.objects.select_for_update().get(pk=booking.pk)
+        if not locked.can_be_cancelled():
+            raise BookingNotCancellableError()
+        locked.status = BookingStatus.CANCELLED
+        locked.expires_at = None
+        locked.save(update_fields=["status", "expires_at"])
+    return locked
