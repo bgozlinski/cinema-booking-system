@@ -1,13 +1,19 @@
 """Tests for apps.booking.Booking model."""
 
+from datetime import timedelta
 from decimal import Decimal
 
 import pytest
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 from apps.booking.models import Booking, BookingStatus
 from tests.accounts.factories import UserFactory
-from tests.booking.factories import BookingFactory, ConfirmedBookingFactory
+from tests.booking.factories import (
+    BookingFactory,
+    CancelledBookingFactory,
+    ConfirmedBookingFactory,
+)
 from tests.cinema.factories import ScreeningFactory
 
 pytestmark = pytest.mark.django_db
@@ -112,3 +118,27 @@ class TestBookingFactoryVariants:
         assert booking.expires_at is None
         assert booking.stripe_session_id.startswith("cs_test_")
         assert booking.stripe_payment_intent_id.startswith("pi_test_")
+
+
+class TestCanBeCancelled:
+    def test_pending_future_over_1h_true(self):
+        booking = BookingFactory()  # PENDING, screening +7d
+        assert booking.can_be_cancelled() is True
+
+    def test_pending_under_1h_false(self):
+        screening = ScreeningFactory(start_time=timezone.now() + timedelta(minutes=30))
+        booking = BookingFactory(screening=screening)
+        assert booking.can_be_cancelled() is False
+
+    def test_pending_past_false(self):
+        screening = ScreeningFactory(start_time=timezone.now() - timedelta(days=1))
+        booking = BookingFactory(screening=screening)
+        assert booking.can_be_cancelled() is False
+
+    def test_confirmed_false(self):
+        booking = ConfirmedBookingFactory()  # future, but CONFIRMED → US-23 PENDING-only
+        assert booking.can_be_cancelled() is False
+
+    def test_cancelled_false(self):
+        booking = CancelledBookingFactory()
+        assert booking.can_be_cancelled() is False

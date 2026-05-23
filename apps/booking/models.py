@@ -1,8 +1,10 @@
+from datetime import timedelta
 from decimal import Decimal
 
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 
@@ -60,3 +62,14 @@ class Booking(models.Model):
     @property
     def total_price(self) -> Decimal:
         return self.seats_count * self.screening.price
+
+    def can_be_cancelled(self) -> bool:
+        """True when this booking may still be cancelled by its owner (FR-10).
+
+        US-23 scope: PENDING bookings up to 1h before the screening. US-27 will
+        broaden this to CONFIRMED (which additionally requires a Stripe refund).
+        """
+        return (
+            self.status == BookingStatus.PENDING
+            and self.screening.start_time > timezone.now() + timedelta(hours=1)
+        )

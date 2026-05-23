@@ -7,7 +7,7 @@ from django.views.generic import DetailView, ListView
 
 from apps.booking.forms import BookingForm
 from apps.booking.models import Booking
-from apps.booking.services import BookingError, create_booking
+from apps.booking.services import BookingError, cancel_booking, create_booking
 from apps.cinema.models import Screening
 
 
@@ -82,3 +82,15 @@ class MyBookingsView(LoginRequiredMixin, ListView):
         ctx = super().get_context_data(**kwargs)
         ctx["active_tab"] = self._active_tab()
         return ctx
+
+
+class BookingCancelView(LoginRequiredMixin, View):
+    def post(self, request, pk: int):
+        booking = get_object_or_404(Booking, pk=pk, user=request.user)
+        try:
+            cancel_booking(booking=booking)
+        except BookingError as exc:
+            messages.error(request, str(exc))
+        else:
+            messages.success(request, "Rezerwacja została anulowana.")
+        return redirect("booking:my_bookings")
