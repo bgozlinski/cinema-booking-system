@@ -99,13 +99,15 @@ class TestMyBookingsContent:
         resp = client.get(_url())
         assert "booking/my_bookings.html" in [t.name for t in resp.templates]
 
-    def test_cancel_button_disabled_placeholder(self, client):
+    def test_cancel_button_wired_to_cancel_endpoint(self, client):
+        # US-23 wired the US-22 placeholder into a real POST form for cancellable
+        # (PENDING + >1h) bookings.
         me = UserFactory()
-        BookingFactory(user=me)  # PENDING, future → cancellable-looking
+        booking = BookingFactory(user=me)  # PENDING, future → cancellable
         client.force_login(me)
         content = client.get(_url()).content.decode()
         assert "Anuluj" in content
-        assert "disabled" in content
+        assert reverse("booking:cancel", kwargs={"pk": booking.pk}) in content
 
 
 class TestMyBookingsBudget:
