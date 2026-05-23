@@ -46,6 +46,15 @@
                        href="{% url 'cinema:screening_list' %}">Seanse</a>
                     {% endif %}
                 </li>
+                {% if user.is_authenticated %}
+                <li class="nav-item">
+                    {% if un == 'my_bookings' %}
+                    <a class="nav-link active" href="{% url 'booking:my_bookings' %}">Moje rezerwacje</a>
+                    {% else %}
+                    <a class="nav-link" href="{% url 'booking:my_bookings' %}">Moje rezerwacje</a>
+                    {% endif %}
+                </li>
+                {% endif %}
             </ul>
             {% endwith %}
             <ul class="navbar-nav align-items-lg-center">
