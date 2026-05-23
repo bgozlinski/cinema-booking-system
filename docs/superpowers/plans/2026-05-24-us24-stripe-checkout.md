@@ -130,7 +130,7 @@ def mock_checkout_session(mocker):
     """Patch stripe.checkout.Session.create with a fake session.
 
     Returns the patched mock. Default returns a fake session (.url + .id); set
-    `.side_effect = stripe.error.APIConnectionError("boom")` to simulate failure.
+    `.side_effect = stripe.APIConnectionError("boom")` to simulate failure.
     """
     fake = mocker.MagicMock(url="https://checkout.stripe.test/c/cs_test_123", id="cs_test_123")
     return mocker.patch(
@@ -181,8 +181,8 @@ def test_returns_url_and_session_id(mock_checkout_session):
 
 
 def test_propagates_stripe_error(mock_checkout_session):
-    mock_checkout_session.side_effect = stripe.error.APIConnectionError("network down")
-    with pytest.raises(stripe.error.StripeError):
+    mock_checkout_session.side_effect = stripe.APIConnectionError("network down")
+    with pytest.raises(stripe.StripeError):
         create_checkout_session(BookingFactory())
 ```
 
@@ -208,7 +208,7 @@ stripe.api_key = settings.STRIPE_API_KEY
 def create_checkout_session(booking: Booking) -> tuple[str, str]:
     """Create a real Stripe Checkout Session for a PENDING booking (FR-21).
 
-    Returns (checkout_url, session_id). Raises stripe.error.StripeError on
+    Returns (checkout_url, session_id). Raises stripe.StripeError on
     API/network failure — the caller handles it. No DB writes here.
     """
     detail_path = reverse("booking:detail", kwargs={"pk": booking.id})
@@ -294,8 +294,8 @@ class TestStartCheckout:
     def test_propagates_stripe_error(self, mock_checkout_session):
         import stripe
 
-        mock_checkout_session.side_effect = stripe.error.APIConnectionError("boom")
-        with pytest.raises(stripe.error.StripeError):
+        mock_checkout_session.side_effect = stripe.APIConnectionError("boom")
+        with pytest.raises(stripe.StripeError):
             start_checkout(booking=BookingFactory())
 ```
 
@@ -331,7 +331,7 @@ Replace `test_valid_creates_booking_and_redirects`, **remove** `test_valid_sets_
     def test_stripe_failure_redirects_to_detail(self, client, mock_checkout_session):
         import stripe
 
-        mock_checkout_session.side_effect = stripe.error.APIConnectionError("boom")
+        mock_checkout_session.side_effect = stripe.APIConnectionError("boom")
         user = UserFactory()
         client.force_login(user)
         screening = _future_screening(capacity=50)
@@ -380,7 +380,7 @@ def create_booking(*, user, screening: Screening, seats_count: int) -> Booking:
 def start_checkout(*, booking: Booking) -> str:
     """Create a Stripe Checkout session for a PENDING booking; return its URL.
 
-    Persists the returned stripe_session_id. Lets stripe.error.StripeError
+    Persists the returned stripe_session_id. Lets stripe.StripeError
     propagate to the view. Shared by create + retry flows.
     """
     checkout_url, session_id = create_checkout_session(booking)
@@ -412,7 +412,7 @@ Add imports: `import stripe`, and `start_checkout` to the services import. Repla
             return render(request, self.template_name, {"screening": screening, "form": form})
         try:
             checkout_url = start_checkout(booking=booking)
-        except stripe.error.StripeError:
+        except stripe.StripeError:
             messages.error(
                 request,
                 "Płatność jest chwilowo niedostępna — spróbuj ponownie z poziomu rezerwacji.",
@@ -510,7 +510,7 @@ class TestBookingCheckoutView:
         assert mock_checkout_session.call_count == 0
 
     def test_stripe_failure_flashes_error(self, client, mock_checkout_session):
-        mock_checkout_session.side_effect = stripe.error.APIConnectionError("boom")
+        mock_checkout_session.side_effect = stripe.APIConnectionError("boom")
         booking = BookingFactory()
         client.force_login(booking.user)
         resp = client.post(_checkout_url(booking), follow=True)
@@ -540,7 +540,7 @@ class BookingCheckoutView(LoginRequiredMixin, View):
             return redirect("booking:detail", pk=booking.pk)
         try:
             checkout_url = start_checkout(booking=booking)
-        except stripe.error.StripeError:
+        except stripe.StripeError:
             messages.error(request, "Płatność jest chwilowo niedostępna — spróbuj ponownie.")
             return redirect("booking:detail", pk=booking.pk)
         return redirect(checkout_url)
@@ -719,4 +719,4 @@ PR body: Summary / Linked (Spec + Plan + Closes US-24) / DoD / Test plan / Out o
 
 **Placeholder scan:** no TBD/TODO; every step has full code/command. Task 3 Step 1 uses prose "change/delete" directives for the existing file edits (with exact lines), not placeholders.
 
-**Type consistency:** `create_checkout_session(booking) -> (str, str)` (Task 2) consumed by `start_checkout` (Task 3); `start_checkout(*, booking) -> str` consumed by both views (Tasks 3, 4); `create_booking(...) -> Booking` (Task 3) consumed by create view. `booking:checkout` URL name consistent (urls, checkout tests, template, detail test). `mock_checkout_session` fixture (`.url`/`.id`/`.side_effect`) used consistently across payments + booking Stripe tests. `stripe.error.StripeError`/`APIConnectionError` consistent.
+**Type consistency:** `create_checkout_session(booking) -> (str, str)` (Task 2) consumed by `start_checkout` (Task 3); `start_checkout(*, booking) -> str` consumed by both views (Tasks 3, 4); `create_booking(...) -> Booking` (Task 3) consumed by create view. `booking:checkout` URL name consistent (urls, checkout tests, template, detail test). `mock_checkout_session` fixture (`.url`/`.id`/`.side_effect`) used consistently across payments + booking Stripe tests. `stripe.StripeError`/`APIConnectionError` consistent.
