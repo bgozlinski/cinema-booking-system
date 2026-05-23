@@ -132,7 +132,7 @@
             <div class="mt-2">
                 <div class="time-pill-hall-label">Sala {{ hall_group.grouper }}</div>
                 <div class="time-pill-group">
-                    {% for s in hall_group.list %}<a href="#" class="time-pill {% if not s.is_available %}is-soldout{% endif %}">{{ s.start_time|date:"H:i" }}</a>{% endfor %}
+                    {% for s in hall_group.list %}{% if s.is_available %}<a href="{% url 'booking:create' pk=s.pk %}" class="time-pill">{{ s.start_time|date:"H:i" }}</a>{% else %}<span class="time-pill is-soldout">{{ s.start_time|date:"H:i" }}</span>{% endif %}{% endfor %}
                 </div>
             </div>
             {% endfor %}

@@ -7,7 +7,8 @@ from django.urls.resolvers import URLPattern, URLResolver
 urlpatterns: list[URLPattern | URLResolver] = [
     path("admin/", admin.site.urls),
     path("accounts/", include("apps.accounts.urls", namespace="accounts")),
-    path("", include("apps.cinema.urls", namespace="cinema")),  # ← new
+    path("", include("apps.cinema.urls", namespace="cinema")),
+    path("", include("apps.booking.urls", namespace="booking")),
 ]
 
 if settings.DEBUG:
