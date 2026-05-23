@@ -105,3 +105,8 @@ LOGOUT_REDIRECT_URL = "/"
 # Activation tokens reuse Django's PASSWORD_RESET_TIMEOUT (default 3 days = 259200s).
 # Single timeout for all token-based auth flows — no separate setting.
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="noreply@kinomania.local")
+
+
+# ─── Stripe ────────────────────────────────────────────────────────────────
+STRIPE_API_KEY = env("STRIPE_API_KEY", default="")
+BASE_URL = env("BASE_URL", default="http://localhost:8000")
