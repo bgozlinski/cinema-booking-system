@@ -95,3 +95,16 @@ def _lock_booking(client_reference_id) -> Booking | None:
         return Booking.objects.select_for_update().get(pk=int(client_reference_id))
     except (Booking.DoesNotExist, ValueError, TypeError):
         return None
+
+
+def create_refund(booking: Booking) -> str:
+    """Refund a CONFIRMED booking's payment via Stripe; return the refund id.
+
+    Static idempotency key (booking-<id>-refund) so a retry refunds at most once.
+    Raises stripe.StripeError on failure (already-refunded, card-revoked, network).
+    """
+    refund = stripe.Refund.create(
+        payment_intent=booking.stripe_payment_intent_id,
+        idempotency_key=f"booking-{booking.id}-refund",
+    )
+    return refund.id

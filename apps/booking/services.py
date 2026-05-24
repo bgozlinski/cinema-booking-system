@@ -1,11 +1,12 @@
 from datetime import timedelta
 
+import stripe
 from django.db import transaction
 from django.utils import timezone
 
 from apps.booking.models import Booking, BookingStatus
 from apps.cinema.models import Screening
-from apps.payments.services import create_checkout_session
+from apps.payments.services import create_checkout_session, create_refund
 
 
 class BookingError(Exception):
@@ -84,3 +85,37 @@ def cancel_booking(*, booking: Booking) -> Booking:
         locked.expires_at = None
         locked.save(update_fields=["status", "expires_at"])
     return locked
+
+
+class RefundError(BookingError):
+    """Stripe refund failed during cancellation — booking left unchanged."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            "Anulowanie nieudane — zwrot płatności nie powiódł się. Skontaktuj się z obsługą."
+        )
+
+    @staticmethod
+    def cancel_booking(*, booking: Booking) -> Booking:
+        """Cancel a booking race-safely (FR-10 + FR-24 refund).
+
+        A CONFIRMED booking with a payment is refunded via Stripe inside the transaction
+        (static idempotency key) before the status flips — a Stripe failure rolls back and
+        raises RefundError, so we never end up CANCELLED without a refund. PENDING bookings
+        cancel without any Stripe call. Caller verifies ownership.
+        """
+        with transaction.atomic():
+            locked = Booking.objects.select_for_update().get(pk=booking.pk)
+            if not locked.can_be_cancelled():
+                raise BookingNotCancellableError()
+            if locked.status == BookingStatus.CONFIRMED and locked.stripe_payment_intent_id:
+                try:
+                    refund_id = create_refund(locked)
+                except stripe.StripeError as exc:
+                    raise RefundError() from exc
+                locked.refund_id = refund_id
+                locked.refunded_at = timezone.now()
+            locked.status = BookingStatus.CANCELLED
+            locked.expires_at = None
+            locked.save(update_fields=["status", "expires_at", "refund_id", "refunded_at"])
+        return locked

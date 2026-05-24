@@ -12,3 +12,10 @@ def mock_checkout_session(mocker):
     """
     fake = mocker.MagicMock(url="https://checkout.stripe.test/c/cs_test_123", id="cs_test_123")
     return mocker.patch("apps.payments.services.stripe.checkout.Session.create", return_value=fake)
+
+
+@pytest.fixture
+def mock_refund(mocker):
+    """Patch stripe.Refund.create with a fake refund (.id). Set .side_effect to fail."""
+    fake = mocker.MagicMock(id="re_test_123")
+    return mocker.patch("apps.payments.services.stripe.Refund.create", return_value=fake)
