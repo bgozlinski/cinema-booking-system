@@ -85,11 +85,12 @@ class TestCancelBooking:
     @pytest.mark.stripe
     def test_cancels_confirmed_with_refund(self, mock_refund):
         booking = ConfirmedBookingFactory()  # future, has stripe_payment_intent_id
-        result = cancel_booking(booking=booking)
-        assert result.status == BookingStatus.CANCELLED
-        assert result.refund_id == "re_test_123"
-        assert result.refunded_at is not None
+        cancel_booking(booking=booking)
         mock_refund.assert_called_once()
+        booking.refresh_from_db()  # assert persisted, not just the in-memory object
+        assert booking.status == BookingStatus.CANCELLED
+        assert booking.refund_id == "re_test_123"
+        assert booking.refunded_at is not None
 
     @pytest.mark.stripe
     def test_confirmed_refund_failure_does_not_cancel(self, mock_refund):
