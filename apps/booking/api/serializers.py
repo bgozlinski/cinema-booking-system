@@ -30,3 +30,16 @@ class BookingSerializer(serializers.ModelSerializer):
             "expires_at",
         )
         read_only_fields = fields
+
+
+class BookingCreateSerializer(serializers.Serializer):
+    screening_id = serializers.PrimaryKeyRelatedField(
+        queryset=Screening.objects.all(), source="screening"
+    )
+    seats_count = serializers.IntegerField(min_value=1, max_value=10)
+
+
+class BookingCreateResponseSerializer(serializers.Serializer):
+    booking = BookingSerializer()
+    checkout_url = serializers.CharField(allow_null=True)
+    detail = serializers.CharField(required=False)
