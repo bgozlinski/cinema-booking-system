@@ -101,3 +101,33 @@ class RefundError(BookingError):
         super().__init__(
             "Anulowanie nieudane — zwrot płatności nie powiódł się. Skontaktuj się z obsługą."
         )
+
+
+class BookingNotRefundableError(BookingError):
+    """Booking can't be refunded (not CONFIRMED or no payment to refund)."""
+
+    def __init__(self) -> None:
+        super().__init__("Tej rezerwacji nie można zwrócić.")
+
+
+def refund_booking(*, booking: Booking) -> Booking:
+    """Admin manual refund (FR-19) — overrides the auto cancel rules.
+
+    Unlike cancel_booking, no can_be_cancelled() time check: an admin can refund a
+    CONFIRMED booking regardless of how close the screening is. The refund runs inside
+    the transaction before the status flips, so a Stripe failure rolls back (never
+    CANCELLED without a refund).
+    """
+    with transaction.atomic():
+        locked = Booking.objects.select_for_update().get(pk=booking.pk)
+        if locked.status != BookingStatus.CONFIRMED or not locked.stripe_payment_intent_id:
+            raise BookingNotRefundableError()
+        try:
+            refund_id = create_refund(locked)
+        except stripe.StripeError as exc:
+            raise RefundError() from exc
+        locked.refund_id = refund_id
+        locked.refunded_at = timezone.now()
+        locked.status = BookingStatus.CANCELLED
+        locked.save(update_fields=["status", "refund_id", "refunded_at"])
+    return locked
