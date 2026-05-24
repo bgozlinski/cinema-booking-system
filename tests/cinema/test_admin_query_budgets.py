@@ -15,6 +15,7 @@ import pytest
 from django.urls import reverse
 
 from tests.accounts.factories import UserFactory
+from tests.booking.factories import BookingFactory
 from tests.cinema.factories import (
     ActorFactory,
     DirectorFactory,
@@ -118,5 +119,36 @@ class TestMovieAdminQueryBudget:
         # Cap 15: admin baseline (~10) + 1 annotate + 1 prefetch + 1 list_filter dropdown
         # + 2 buffer. Tighten after measurement.
         with django_assert_max_num_queries(15):
+            response = admin_client.get(url)
+            assert response.status_code == 200
+
+
+class TestScreeningAdminQueryBudget:
+    def test_changelist_uses_bounded_queries(self, admin_client, django_assert_max_num_queries):
+        """12 screenings x 2 active-PENDING bookings. available/booked_seats_display
+        call booked_seats_count() — without get_queryset annotate that's a query per
+        row. After annotate + select_related(movie, hall): one main fetch."""
+        for _ in range(12):
+            screening = ScreeningFactory()
+            BookingFactory.create_batch(2, screening=screening)
+
+        url = reverse("admin:cinema_screening_changelist")
+        # Cap 12: admin baseline + 1 annotate + select_related joins + buffer.
+        # Tighten after measurement.
+        with django_assert_max_num_queries(12):
+            response = admin_client.get(url)
+            assert response.status_code == 200
+
+
+class TestBookingAdminQueryBudget:
+    def test_changelist_uses_bounded_queries(self, admin_client, django_assert_max_num_queries):
+        """12 bookings. __str__ (movie title) + user + total_price (screening.price)
+        are N+1 without select_related("user", "screening__movie")."""
+        for _ in range(12):
+            BookingFactory()
+
+        url = reverse("admin:booking_booking_changelist")
+        # Cap 12: admin baseline + select_related joins + buffer. Tighten after measurement.
+        with django_assert_max_num_queries(12):
             response = admin_client.get(url)
             assert response.status_code == 200

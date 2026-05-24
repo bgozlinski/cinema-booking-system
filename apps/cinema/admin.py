@@ -1,8 +1,11 @@
 from django.contrib import admin
-from django.db.models import Count
+from django.db.models import Count, Q, Sum
+from django.db.models.functions import Coalesce
+from django.utils import timezone
 from django.utils.html import format_html
 
-from apps.cinema.models import Actor, Director, Genre, Hall, Movie
+from apps.booking.models import Booking, BookingStatus
+from apps.cinema.models import Actor, Director, Genre, Hall, Movie, Screening
 
 
 @admin.register(Genre)
@@ -99,3 +102,68 @@ class MovieAdmin(admin.ModelAdmin):
     def genres_list(self, obj):
         names = sorted(g.name for g in obj.genres.all())
         return ", ".join(names) if names else "—"
+
+
+class BookingInline(admin.TabularInline):
+    model = Booking
+    extra = 0
+    fields = ("user", "seats_count", "status", "created_at")
+    readonly_fields = ("user", "seats_count", "status", "created_at")
+    can_delete = False
+    show_change_link = True
+
+
+@admin.register(Screening)
+class ScreeningAdmin(admin.ModelAdmin):
+    list_display = (
+        "movie",
+        "start_time",
+        "hall",
+        "price",
+        "available_seats_display",
+        "booked_seats_display",
+    )
+    list_filter = ("hall", "movie", "start_time")
+    search_fields = ("movie__title",)
+    date_hierarchy = "start_time"
+    inlines = (BookingInline,)
+
+    def get_queryset(self, request):
+        now = timezone.now()
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("movie", "hall")
+            .annotate(
+                _annotated_booked_count=Coalesce(
+                    Sum(
+                        "bookings__seats_count",
+                        filter=(
+                            Q(bookings__status=BookingStatus.CONFIRMED)
+                            | Q(
+                                bookings__status=BookingStatus.PENDING,
+                                bookings__expires_at__gt=now,
+                            )
+                        ),
+                    ),
+                    0,
+                )
+            )
+        )
+
+    @admin.display(description="booked")
+    def booked_seats_display(self, obj):
+        return obj.booked_seats_count()
+
+    @admin.display(description="available")
+    def available_seats_display(self, obj):
+        available = obj.available_seats_count()
+        capacity = obj.hall.capacity
+        ratio = available / capacity if capacity else 0
+        if ratio > 0.5:
+            color = "green"
+        elif ratio >= 0.2:
+            color = "orange"
+        else:
+            color = "red"
+        return format_html('<b style="color: {};">{}</b>', color, available)
