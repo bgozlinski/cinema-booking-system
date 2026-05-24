@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Any, cast
 
 import stripe
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -51,7 +51,20 @@ class BookingViewSet(
             return BookingCreateSerializer
         return BookingSerializer
 
-    @extend_schema(responses=BookingCreateResponseSerializer)
+    @extend_schema(
+        summary="Create a booking and start Stripe checkout",
+        responses=BookingCreateResponseSerializer,
+        examples=[
+            OpenApiExample(
+                "Created",
+                value={
+                    "booking": {"id": 1, "status": "PENDING", "seats_count": 2},
+                    "checkout_url": "https://checkout.stripe.com/c/cs_test_123",
+                },
+                response_only=True,
+            )
+        ],
+    )
     def create(self, request, *args, **kwargs):
         in_ser = BookingCreateSerializer(data=request.data)
         in_ser.is_valid(raise_exception=True)
@@ -73,7 +86,9 @@ class BookingViewSet(
             data["detail"] = "Payment temporarily unavailable; retry via the checkout action."
         return Response(data, status=status.HTTP_201_CREATED)
 
-    @extend_schema(request=None, responses=BookingSerializer)
+    @extend_schema(
+        summary="Cancel a booking (refunds if CONFIRMED)", request=None, responses=BookingSerializer
+    )
     @action(detail=True, methods=["post"])
     def cancel(self, request, pk=None):
         booking = self.get_object()
@@ -85,7 +100,11 @@ class BookingViewSet(
             return Response({"detail": str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
         return Response(BookingSerializer(updated).data)
 
-    @extend_schema(request=None, responses=CheckoutResponseSerializer)
+    @extend_schema(
+        summary="Create a fresh Stripe checkout session for a PENDING booking",
+        request=None,
+        responses=CheckoutResponseSerializer,
+    )
     @action(detail=True, methods=["post"])
     def checkout(self, request, pk=None):
         booking = self.get_object()

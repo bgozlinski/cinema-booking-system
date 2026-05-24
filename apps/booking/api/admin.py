@@ -49,7 +49,11 @@ class AdminBookingViewSet(
     queryset = Booking.objects.select_related("user", "screening__movie")
     serializer_class = AdminBookingSerializer
 
-    @extend_schema(request=None, responses=AdminBookingSerializer)
+    @extend_schema(
+        summary="Manually refund a CONFIRMED booking (admin override of the cancel window)",
+        request=None,
+        responses=AdminBookingSerializer,
+    )
     @action(detail=True, methods=["post"])
     def refund(self, request, pk=None):
         booking = self.get_object()
