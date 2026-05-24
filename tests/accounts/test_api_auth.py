@@ -128,3 +128,21 @@ class TestTokenEndpoint:
         resp = api_client.post(REFRESH_URL, {"refresh": tokens["refresh"]}, format="json")
         assert resp.status_code == 200
         assert "access" in resp.data
+
+
+ME_URL = "/api/v1/auth/me/"
+
+
+class TestMeEndpoint:
+    def test_authenticated_user_sees_own_data(self, auth_client):
+        user = UserFactory(email="me@example.com", first_name="Me")
+        resp = auth_client(user).get(ME_URL)
+        assert resp.status_code == 200
+        assert resp.data["email"] == "me@example.com"
+        assert resp.data["first_name"] == "Me"
+        assert resp.data["is_staff"] is False
+        assert set(resp.data) == {"id", "email", "first_name", "last_name", "is_staff"}
+
+    def test_anonymous_rejected(self, api_client):
+        resp = api_client.get(ME_URL)
+        assert resp.status_code == 401
