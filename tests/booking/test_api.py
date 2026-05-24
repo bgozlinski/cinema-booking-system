@@ -4,6 +4,7 @@ import pytest
 import stripe
 from django.utils import timezone
 
+from apps.booking.models import BookingStatus
 from tests.accounts.factories import UserFactory
 from tests.booking.factories import BookingFactory, ConfirmedBookingFactory
 from tests.cinema.factories import HallFactory, ScreeningFactory
@@ -102,3 +103,58 @@ class TestBookingCreate:
         assert resp.status_code == 201
         assert resp.data["checkout_url"] is None
         assert "detail" in resp.data
+
+
+class TestBookingCancel:
+    def test_owner_cancels_pending(self, auth_client):
+        owner = UserFactory()
+        booking = BookingFactory(user=owner)  # PENDING, future screening
+        resp = auth_client(owner).post(f"{BOOKINGS_URL}{booking.id}/cancel/")
+        assert resp.status_code == 200
+        assert resp.data["status"] == "CANCELLED"
+
+    def test_not_cancellable_conflict(self, auth_client):
+        owner = UserFactory()
+        booking = BookingFactory(user=owner, status=BookingStatus.CANCELLED, expires_at=None)
+        resp = auth_client(owner).post(f"{BOOKINGS_URL}{booking.id}/cancel/")
+        assert resp.status_code == 409
+
+    def test_non_owner_404(self, auth_client):
+        booking = BookingFactory()
+        resp = auth_client(UserFactory()).post(f"{BOOKINGS_URL}{booking.id}/cancel/")
+        assert resp.status_code == 404
+
+    @pytest.mark.stripe
+    def test_confirmed_cancel_refunds(self, auth_client, mock_refund):
+        owner = UserFactory()
+        booking = ConfirmedBookingFactory(user=owner)  # CONFIRMED + payment intent
+        resp = auth_client(owner).post(f"{BOOKINGS_URL}{booking.id}/cancel/")
+        assert resp.status_code == 200
+        assert resp.data["status"] == "CANCELLED"
+        booking.refresh_from_db()
+        assert booking.refund_id == "re_test_123"
+
+
+class TestBookingCheckout:
+    @pytest.mark.stripe
+    def test_pending_checkout(self, auth_client, mock_checkout_session):
+        owner = UserFactory()
+        booking = BookingFactory(user=owner)  # PENDING
+        resp = auth_client(owner).post(f"{BOOKINGS_URL}{booking.id}/checkout/")
+        assert resp.status_code == 200
+        assert resp.data["checkout_url"] == FAKE_CHECKOUT_URL
+        assert resp.data["session_id"] == "cs_test_123"
+
+    def test_non_pending_conflict(self, auth_client):
+        owner = UserFactory()
+        booking = BookingFactory(user=owner, status=BookingStatus.CANCELLED, expires_at=None)
+        resp = auth_client(owner).post(f"{BOOKINGS_URL}{booking.id}/checkout/")
+        assert resp.status_code == 409
+
+    @pytest.mark.stripe
+    def test_stripe_down_502(self, auth_client, mock_checkout_session):
+        mock_checkout_session.side_effect = stripe.APIConnectionError("boom")
+        owner = UserFactory()
+        booking = BookingFactory(user=owner)
+        resp = auth_client(owner).post(f"{BOOKINGS_URL}{booking.id}/checkout/")
+        assert resp.status_code == 502

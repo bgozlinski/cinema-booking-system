@@ -43,3 +43,8 @@ class BookingCreateResponseSerializer(serializers.Serializer):
     booking = BookingSerializer()
     checkout_url = serializers.CharField(allow_null=True)
     detail = serializers.CharField(required=False)
+
+
+class CheckoutResponseSerializer(serializers.Serializer):
+    checkout_url = serializers.CharField()
+    session_id = serializers.CharField()
