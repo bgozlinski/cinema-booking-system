@@ -4,7 +4,8 @@ import pytest
 import stripe
 from django.utils import timezone
 
-from apps.booking.models import BookingStatus
+from apps.booking.models import Booking, BookingStatus
+from apps.payments.services import process_webhook_event
 from tests.accounts.factories import UserFactory
 from tests.booking.factories import BookingFactory, ConfirmedBookingFactory
 from tests.cinema.factories import HallFactory, ScreeningFactory
@@ -158,3 +159,38 @@ class TestBookingCheckout:
         booking = BookingFactory(user=owner)
         resp = auth_client(owner).post(f"{BOOKINGS_URL}{booking.id}/checkout/")
         assert resp.status_code == 502
+
+
+class TestApiBookingWebhookConfirm:
+    @pytest.mark.stripe
+    def test_api_created_booking_confirmed_via_webhook(self, auth_client, mock_checkout_session):
+        # Create through the API (not BookingFactory) so we exercise the real
+        # client_reference_id wiring, then confirm via the single web webhook handler.
+        screening = ScreeningFactory()
+        create_resp = auth_client(UserFactory()).post(
+            BOOKINGS_URL, {"screening_id": screening.id, "seats_count": 2}, format="json"
+        )
+        assert create_resp.status_code == 201
+        booking_id = create_resp.data["booking"]["id"]
+
+        event = {
+            "id": "evt_api_confirm_1",
+            "type": "checkout.session.completed",
+            "data": {
+                "object": {
+                    "client_reference_id": str(booking_id),
+                    "payment_intent": "pi_api_1",
+                }
+            },
+        }
+        assert process_webhook_event(event) is True
+
+        booking = Booking.objects.get(pk=booking_id)
+        assert booking.status == BookingStatus.CONFIRMED
+        assert booking.stripe_payment_intent_id == "pi_api_1"
+        assert booking.expires_at is None
+
+
+def test_checkout_endpoint_in_schema(api_client):
+    paths = api_client.get("/api/v1/schema/?format=json").json()["paths"]
+    assert any("checkout" in path for path in paths)
