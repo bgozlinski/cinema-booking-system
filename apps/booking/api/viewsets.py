@@ -38,6 +38,8 @@ class BookingViewSet(
     permission_classes = [IsAuthenticated, IsBookingOwnerOrStaff]  # noqa: RUF012
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Booking.objects.none()
         user = cast("User", self.request.user)
         qs = Booking.objects.select_related("screening__movie", "screening__hall")
         if not user.is_staff:
