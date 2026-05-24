@@ -135,8 +135,13 @@ class TestCanBeCancelled:
         booking = BookingFactory(screening=screening)
         assert booking.can_be_cancelled() is False
 
-    def test_confirmed_false(self):
-        booking = ConfirmedBookingFactory()  # future, but CONFIRMED → US-23 PENDING-only
+    def test_confirmed_future_over_1h_true(self):
+        booking = ConfirmedBookingFactory()  # future, CONFIRMED → cancellable (US-27 refund)
+        assert booking.can_be_cancelled() is True
+
+    def test_confirmed_under_1h_false(self):
+        screening = ScreeningFactory(start_time=timezone.now() + timedelta(minutes=30))
+        booking = ConfirmedBookingFactory(screening=screening)
         assert booking.can_be_cancelled() is False
 
     def test_cancelled_false(self):

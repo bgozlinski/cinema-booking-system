@@ -69,7 +69,7 @@ class Booking(models.Model):
         US-23 scope: PENDING bookings up to 1h before the screening. US-27 will
         broaden this to CONFIRMED (which additionally requires a Stripe refund).
         """
-        return (
-            self.status == BookingStatus.PENDING
-            and self.screening.start_time > timezone.now() + timedelta(hours=1)
-        )
+        return self.status in (
+            BookingStatus.PENDING,
+            BookingStatus.CONFIRMED,
+        ) and self.screening.start_time > timezone.now() + timedelta(hours=1)

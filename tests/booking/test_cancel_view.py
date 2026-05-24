@@ -5,7 +5,11 @@ from django.urls import reverse
 
 from apps.booking.models import BookingStatus
 from tests.accounts.factories import UserFactory
-from tests.booking.factories import BookingFactory, ConfirmedBookingFactory
+from tests.booking.factories import (
+    BookingFactory,
+    CancelledBookingFactory,
+    ConfirmedBookingFactory,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -45,13 +49,22 @@ class TestBookingCancelView:
         assert booking.status == BookingStatus.PENDING
 
     def test_not_cancellable_flashes_error(self, client):
-        booking = ConfirmedBookingFactory()  # CONFIRMED → not cancellable in US-23
+        booking = CancelledBookingFactory()  # already CANCELLED → not cancellable
+        client.force_login(booking.user)
+        resp = client.post(_cancel_url(booking), follow=True)
+        assert resp.redirect_chain[-1][0] == reverse("booking:my_bookings")
+        assert any("nie można" in str(m).lower() for m in resp.context["messages"])
+
+    @pytest.mark.stripe
+    def test_owner_cancels_confirmed_with_refund(self, client, mock_refund):
+        booking = ConfirmedBookingFactory()
         client.force_login(booking.user)
         resp = client.post(_cancel_url(booking), follow=True)
         assert resp.redirect_chain[-1][0] == reverse("booking:my_bookings")
         booking.refresh_from_db()
-        assert booking.status == BookingStatus.CONFIRMED
-        assert any("nie można" in str(m).lower() for m in resp.context["messages"])
+        assert booking.status == BookingStatus.CANCELLED
+        assert booking.refund_id == "re_test_123"
+        assert any("anulowana" in str(m).lower() for m in resp.context["messages"])
 
     def test_404_for_missing_booking(self, client):
         client.force_login(UserFactory())

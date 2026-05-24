@@ -10,6 +10,7 @@ from apps.booking.models import Booking, BookingStatus
 from apps.booking.services import (
     BookingNotCancellableError,
     NotEnoughSeatsError,
+    RefundError,
     ScreeningInPastError,
     cancel_booking,
     create_booking,
@@ -77,15 +78,29 @@ class TestCancelBooking:
         result = cancel_booking(booking=booking)
         assert result.status == BookingStatus.CANCELLED
         assert result.expires_at is None
+        assert result.refund_id == ""  # no Stripe refund for PENDING
         booking.refresh_from_db()
         assert booking.status == BookingStatus.CANCELLED
 
-    def test_raises_for_confirmed(self):
+    @pytest.mark.stripe
+    def test_cancels_confirmed_with_refund(self, mock_refund):
+        booking = ConfirmedBookingFactory()  # future, has stripe_payment_intent_id
+        cancel_booking(booking=booking)
+        mock_refund.assert_called_once()
+        booking.refresh_from_db()  # assert persisted, not just the in-memory object
+        assert booking.status == BookingStatus.CANCELLED
+        assert booking.refund_id == "re_test_123"
+        assert booking.refunded_at is not None
+
+    @pytest.mark.stripe
+    def test_confirmed_refund_failure_does_not_cancel(self, mock_refund):
+        mock_refund.side_effect = stripe.APIConnectionError("boom")
         booking = ConfirmedBookingFactory()
-        with pytest.raises(BookingNotCancellableError):
+        with pytest.raises(RefundError):
             cancel_booking(booking=booking)
         booking.refresh_from_db()
         assert booking.status == BookingStatus.CONFIRMED
+        assert booking.refund_id == ""
 
     def test_raises_when_too_late(self):
         screening = ScreeningFactory(start_time=timezone.now() + timedelta(minutes=30))
