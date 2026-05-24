@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
-from apps.cinema.api.filters import MovieFilter
+from apps.cinema.api.filters import MovieFilter, ScreeningFilter
 from apps.cinema.api.serializers import (
     ActorSerializer,
     DirectorSerializer,
@@ -9,8 +9,10 @@ from apps.cinema.api.serializers import (
     HallSerializer,
     MovieDetailSerializer,
     MovieListSerializer,
+    ScreeningSerializer,
 )
-from apps.cinema.models import Actor, Director, Genre, Hall, Movie
+from apps.cinema.models import Actor, Director, Genre, Hall, Movie, Screening
+from apps.cinema.selectors import annotate_booked_count
 
 
 class PublicReadViewSet(viewsets.ReadOnlyModelViewSet):
@@ -52,3 +54,12 @@ class MovieViewSet(PublicReadViewSet):
         if self.action == "retrieve":
             qs = qs.prefetch_related("actors", "directors")
         return qs
+
+
+class ScreeningViewSet(PublicReadViewSet):
+    queryset = Screening.objects.all()
+    serializer_class = ScreeningSerializer
+    filterset_class = ScreeningFilter
+
+    def get_queryset(self):
+        return annotate_booked_count(Screening.objects.select_related("movie", "hall"))

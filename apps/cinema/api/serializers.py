@@ -86,3 +86,16 @@ class MovieDetailSerializer(serializers.ModelSerializer):
             .order_by("start_time")
         )
         return MovieScreeningSerializer(qs, many=True).data
+
+
+class ScreeningSerializer(serializers.ModelSerializer):
+    movie = MovieMiniSerializer(read_only=True)
+    hall = HallSerializer(read_only=True)
+    available_seats_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Screening
+        fields = ("id", "movie", "hall", "start_time", "price", "available_seats_count")
+
+    def get_available_seats_count(self, obj) -> int:
+        return obj.available_seats_count()

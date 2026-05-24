@@ -1,9 +1,11 @@
+import datetime as dt
 from datetime import timedelta
 
 import pytest
 from django.utils import timezone
 
 from tests.accounts.factories import UserFactory
+from tests.booking.factories import ConfirmedBookingFactory
 from tests.cinema.factories import (
     ActorFactory,
     DirectorFactory,
@@ -103,3 +105,48 @@ class TestMovies:
         assert resp.data["directors"][0]["full_name"] == "Lana Wachowski"
         assert len(resp.data["upcoming_screenings"]) == 1  # past excluded
         assert "available_seats_count" in resp.data["upcoming_screenings"][0]
+
+
+class TestScreenings:
+    def test_list_anon_with_available_seats(self, api_client):
+        hall = HallFactory(name="A", capacity=10)
+        screening = ScreeningFactory(hall=hall, start_time=timezone.now() + timedelta(days=2))
+        ConfirmedBookingFactory(screening=screening, seats_count=3)
+        resp = api_client.get("/api/v1/screenings/")
+        assert resp.status_code == 200
+        row = next(s for s in resp.data["results"] if s["id"] == screening.id)
+        assert row["available_seats_count"] == 7
+        assert row["movie"]["id"] == screening.movie_id
+        assert {"id", "name", "capacity", "description"} <= set(row["hall"])
+
+    def test_filter_by_date(self, api_client):
+        # Pin to noon local on the target day -> deterministic across TZ/DST
+        # (avoids the now()+1day-UTC vs localdate()+1 boundary flakiness).
+        target = timezone.localdate() + timedelta(days=1)
+        on_time = timezone.make_aware(dt.datetime.combine(target, dt.time(12, 0)))
+        on = ScreeningFactory(start_time=on_time)
+        ScreeningFactory(start_time=on_time + timedelta(days=9))
+        resp = api_client.get(f"/api/v1/screenings/?date={target.isoformat()}")
+        ids = {s["id"] for s in resp.data["results"]}
+        assert on.id in ids
+        assert len(ids) == 1
+
+    def test_filter_by_movie_and_hall(self, api_client):
+        hall = HallFactory(name="H1")
+        s1 = ScreeningFactory(hall=hall)
+        ScreeningFactory()  # different movie + hall
+        resp = api_client.get(f"/api/v1/screenings/?movie={s1.movie_id}&hall={hall.id}")
+        ids = {s["id"] for s in resp.data["results"]}
+        assert ids == {s1.id}
+
+    def test_detail(self, api_client):
+        screening = ScreeningFactory()
+        resp = api_client.get(f"/api/v1/screenings/{screening.id}/")
+        assert resp.status_code == 200
+        assert "available_seats_count" in resp.data
+
+    def test_list_query_budget(self, api_client, django_assert_max_num_queries):
+        for _ in range(8):
+            ScreeningFactory(start_time=timezone.now() + timedelta(days=2))
+        with django_assert_max_num_queries(6):
+            api_client.get("/api/v1/screenings/")
