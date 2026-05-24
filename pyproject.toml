@@ -12,7 +12,11 @@ dependencies = [
     "django-environ (>=0.13.0,<0.14.0)",
     "psycopg[binary] (>=3.3.4,<4.0.0)",
     "pillow (>=11.0,<12)",
-    "stripe (>=15.1.0,<16.0.0)"
+    "stripe (>=15.1.0,<16.0.0)",
+    "djangorestframework (>=3.17.1,<4.0.0)",
+    "djangorestframework-simplejwt (>=5.5.1,<6.0.0)",
+    "django-filter (>=25.2,<26.0)",
+    "drf-spectacular (>=0.29.0,<0.30.0)"
 ]
 
 
@@ -32,7 +36,8 @@ dev = [
     "faker (>=40.15.0,<41.0.0)",
     "django-stubs[compatible-mypy] (>=6.0.3,<7.0.0)",
     "pre-commit (>=4.6.0,<5.0.0)",
-    "freezegun (>=1.5.5,<2.0.0)"
+    "freezegun (>=1.5.5,<2.0.0)",
+    "djangorestframework-stubs[compatible-mypy] (>=3.17.0,<4.0.0)"
 ]
 
 [tool.ruff]
@@ -62,17 +67,15 @@ select = [
 [tool.mypy]
 python_version = "3.13"
 strict_optional = true
+plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
 warn_redundant_casts = true
 warn_unused_ignores = true
 disallow_untyped_defs = false
 check_untyped_defs = true
-plugins = ["mypy_django_plugin.main"]
-
 
 [[tool.mypy.overrides]]
 module = ["*.migrations.*", "*.tests.*", "tests.*"]
 ignore_errors = true
-
 
 [[tool.mypy.overrides]]
 module = ["environ"]
