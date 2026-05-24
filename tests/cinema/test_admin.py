@@ -6,7 +6,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory
 from django.utils.safestring import SafeString
 
-from apps.cinema.models import Actor, Director, Genre, Hall, Movie
+from apps.cinema.models import Actor, Director, Genre, Hall, Movie, Screening
+from tests.booking.factories import ConfirmedBookingFactory
 from tests.cinema.factories import (
     ActorFactory,
     DirectorFactory,
@@ -271,3 +272,51 @@ class TestMovieAdmin:
         assert ma.poster_thumbnail.short_description == "poster"
         assert ma.screenings_count.short_description == "screenings"
         assert ma.genres_list.short_description == "genres"
+
+
+class TestScreeningAdmin:
+    """ScreeningAdmin with colored availability badges (US-28 / FR-11)."""
+
+    def test_screening_is_registered(self):
+        assert admin.site.is_registered(Screening)
+
+    def test_list_display(self):
+        ma = admin.site._registry[Screening]
+        assert ma.list_display == (
+            "movie",
+            "start_time",
+            "hall",
+            "price",
+            "available_seats_display",
+            "booked_seats_display",
+        )
+
+    def _annotated(self, screening):
+        ma = admin.site._registry[Screening]
+        request = RequestFactory().get("/admin/")
+        return ma, ma.get_queryset(request).get(pk=screening.pk)
+
+    def test_available_badge_green_when_mostly_free(self):
+        screening = ScreeningFactory(hall=HallFactory(capacity=100))  # 0 booked → 100% free
+        ma, annotated = self._annotated(screening)
+        result = ma.available_seats_display(annotated)
+        assert isinstance(result, SafeString)
+        assert "green" in result
+
+    def test_available_badge_orange_when_mid(self):
+        screening = ScreeningFactory(hall=HallFactory(capacity=10))
+        ConfirmedBookingFactory(screening=screening, seats_count=6)  # 4/10 free = 40% → orange
+        ma, annotated = self._annotated(screening)
+        assert "orange" in ma.available_seats_display(annotated)
+
+    def test_available_badge_red_when_almost_sold_out(self):
+        screening = ScreeningFactory(hall=HallFactory(capacity=10))
+        ConfirmedBookingFactory(screening=screening, seats_count=9)  # 1/10 free = 10% → red
+        ma, annotated = self._annotated(screening)
+        assert "red" in ma.available_seats_display(annotated)
+
+    def test_booked_seats_display_uses_annotation(self):
+        screening = ScreeningFactory(hall=HallFactory(capacity=50))
+        ConfirmedBookingFactory(screening=screening, seats_count=7)
+        ma, annotated = self._annotated(screening)
+        assert ma.booked_seats_display(annotated) == 7
