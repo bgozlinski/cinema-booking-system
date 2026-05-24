@@ -1,3 +1,4 @@
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -12,7 +13,13 @@ env = environ.Env(
     LANGUAGE_CODE=(str, "pl"),
     TIME_ZONE=(str, "Europe/Warsaw"),
     SEED_DB_DEFAULT_PASSWORD=(str, "test1234"),
+    JWT_ACCESS_TOKEN_LIFETIME_MIN=(int, 15),
+    JWT_REFRESH_TOKEN_LIFETIME_DAYS=(int, 7),
+    THROTTLE_ANON=(str, "100/hour"),
+    THROTTLE_USER=(str, "1000/hour"),
+    THROTTLE_AUTH=(str, "20/hour"),
 )
+
 environ.Env.read_env(BASE_DIR / ".env")
 
 SECRET_KEY = env("SECRET_KEY")
@@ -32,6 +39,9 @@ INSTALLED_APPS = [
     "apps.cinema",
     "apps.payments",
     "apps.booking",
+    "rest_framework",
+    "django_filters",
+    "drf_spectacular",
 ]
 
 MIDDLEWARE = [
@@ -111,3 +121,48 @@ DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="noreply@kinomania.local"
 STRIPE_API_KEY = env("STRIPE_API_KEY", default="")
 BASE_URL = env("BASE_URL", default="http://localhost:8000")
 STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
+
+
+# ─── REST API (DRF) ──────────────────────────────────────────────────────────
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 12,
+    "DEFAULT_FILTER_BACKENDS": (
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
+    ),
+    "DEFAULT_THROTTLE_CLASSES": (
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ),
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": env("THROTTLE_ANON"),
+        "user": env("THROTTLE_USER"),
+        "auth": env("THROTTLE_AUTH"),
+    },
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=env("JWT_ACCESS_TOKEN_LIFETIME_MIN")),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=env("JWT_REFRESH_TOKEN_LIFETIME_DAYS")),
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "KinoMania API",
+    "DESCRIPTION": (
+        "REST API for the KinoMania cinema booking system — public catalog, "
+        "JWT-authenticated bookings, and staff administration."
+    ),
+    "VERSION": "0.4.0",
+    "OAS_VERSION": "3.1.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+}

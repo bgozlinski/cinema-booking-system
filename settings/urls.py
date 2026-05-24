@@ -10,6 +10,7 @@ urlpatterns: list[URLPattern | URLResolver] = [
     path("", include("apps.cinema.urls", namespace="cinema")),
     path("", include("apps.booking.urls", namespace="booking")),
     path("", include("apps.payments.urls", namespace="payments")),
+    path("api/v1/", include("settings.api_urls")),
 ]
 
 if settings.DEBUG:
