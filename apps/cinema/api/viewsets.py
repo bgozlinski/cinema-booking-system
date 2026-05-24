@@ -62,4 +62,6 @@ class ScreeningViewSet(PublicReadViewSet):
     filterset_class = ScreeningFilter
 
     def get_queryset(self):
-        return annotate_booked_count(Screening.objects.select_related("movie", "hall"))
+        return annotate_booked_count(Screening.objects.select_related("movie", "hall")).order_by(
+            "start_time"
+        )
