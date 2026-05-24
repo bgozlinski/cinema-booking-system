@@ -9,6 +9,7 @@ urlpatterns: list[URLPattern | URLResolver] = [
     path("accounts/", include("apps.accounts.urls", namespace="accounts")),
     path("", include("apps.cinema.urls", namespace="cinema")),
     path("", include("apps.booking.urls", namespace="booking")),
+    path("", include("apps.payments.urls", namespace="payments")),
 ]
 
 if settings.DEBUG:
