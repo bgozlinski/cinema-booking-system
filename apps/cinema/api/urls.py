@@ -5,9 +5,11 @@ from apps.cinema.api.viewsets import (
     DirectorViewSet,
     GenreViewSet,
     HallViewSet,
+    MovieViewSet,
 )
 
 router = SimpleRouter()
+router.register("movies", MovieViewSet)
 router.register("genres", GenreViewSet)
 router.register("halls", HallViewSet)
 router.register("actors", ActorViewSet)
