@@ -13,4 +13,5 @@ urlpatterns = [
     path("", include("apps.cinema.api.urls")),
     path("", include("apps.booking.api.urls")),
     path("admin/", include("apps.cinema.api.admin_urls")),
+    path("admin/", include("apps.booking.api.admin_urls")),
 ]
