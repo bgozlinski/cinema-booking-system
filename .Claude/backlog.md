@@ -363,9 +363,9 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 | Status | US |
 |---|---|
 | **In Progress (WIP=1)** | _none_ |
-| **Ready (DoR ✅)** | **US-25** (Stripe webhook + StripeEvent idempotency) — **brainstorm-required** per `m3_planning.md` (`checkout.session.completed` → CONFIRMED, signature verify, StripeEvent dedupe, `STRIPE_WEBHOOK_SECRET`) |
-| **Backlog** | US-27, US-28 (M3) + US-29..US-43 (M4-M5) |
-| **Done** | **US-01..US-24 + US-26** ✅ (25 US) — M2 COMPLETE; M3 in progress (8/11; zostają US-25/27/28) |
+| **Ready (DoR ✅)** | **US-27** (refund on CONFIRMED cancel — FR-24) — mixed; extends `cancel_booking` (CONFIRMED + `stripe.Refund.create` przed status change) |
+| **Backlog** | US-28 (M3) + US-29..US-43 (M4-M5) |
+| **Done** | **US-01..US-26** ✅ (26 US) — M2 COMPLETE; M3 in progress (9/11; zostają US-27, US-28) |
 
 **Bieżący milestone:** **M2 — Catalog web (`v0.2.0`) COMPLETE.** Wszystkie 8 US (US-10..US-17) zmergowane. **US-17 (performance pass)** wyeliminowało N+1 w admin (US-15) przez `get_queryset` override z `annotate(Count(...))` we wszystkich 5 ModelAdmin (`GenreAdmin`/`HallAdmin`/`ActorAdmin`/`DirectorAdmin` po 1 N+1 helper każdy + `MovieAdmin` z 2 N+1 helperami + `prefetch_related("genres")`). Bonus: sortable count columns via `@admin.display(ordering="_<field>")`. 11 nowych budget testów (5 admin w `tests/cinema/test_admin_query_budgets.py` + 6 public extensions). ~11 istniejących `test_admin.py` helper testów zaktualizowanych do nowego access pattern przez `ma.get_queryset(RequestFactory().get("/admin/"))`. Plus visual redesign poza M2 backlogiem: PR #18 (cinema-city style) + PR #19 (auth pages). Post-merge: cut `v0.1.0` (outstanding M1) + `v0.2.0` tagi + GitHub releases. Następny milestone: **M3 — Booking web + Stripe (`v0.3.0`)** — 11 US (US-18..US-28), Booking model + reservation flow + Stripe sandbox payments.
 
