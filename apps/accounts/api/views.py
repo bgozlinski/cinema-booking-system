@@ -25,7 +25,11 @@ class RegisterView(generics.CreateAPIView):
     throttle_classes = [ScopedRateThrottle]  # noqa: RUF012
     throttle_scope = "auth"
 
-    @extend_schema(responses=RegisterResponseSerializer)
+    @extend_schema(
+        summary="Register a new account",
+        description="Creates an inactive user and sends an activation email. Returns no JWT — activate via the emailed link, then obtain a token at /auth/token/.",
+        responses=RegisterResponseSerializer,
+    )
     def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)

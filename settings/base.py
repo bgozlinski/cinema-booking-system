@@ -158,8 +158,13 @@ SIMPLE_JWT = {
 SPECTACULAR_SETTINGS = {
     "TITLE": "KinoMania API",
     "DESCRIPTION": (
-        "REST API for the KinoMania cinema booking system — public catalog, "
-        "JWT-authenticated bookings, and staff administration."
+        "REST API for the KinoMania cinema booking system.\n\n"
+        "- **Auth:** obtain a JWT at `/auth/token/` (email + password), send it as "
+        "`Authorization: Bearer <access>`.\n"
+        "- **Public:** catalog reads (`/movies/`, `/screenings/`, ...) are open.\n"
+        "- **Bookings:** create/cancel/checkout under `/bookings/` (owner-scoped).\n"
+        "- **Admin:** staff-only write API under `/admin/`.\n"
+        "- Throttled: anon 100/h, user 1000/h, auth 20/h."
     ),
     "VERSION": "0.4.0",
     "OAS_VERSION": "3.1.0",
