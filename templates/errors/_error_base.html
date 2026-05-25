@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="text-center py-5">
+    <p class="display-1 fw-bold mb-2" style="color: var(--accent);">{% block error_code %}{% endblock %}</p>
+    <h1 class="h3 mb-3">{% block error_title %}{% endblock %}</h1>
+    <p class="text-muted mb-4">{% block error_text %}{% endblock %}</p>
+    <a href="/" class="btn btn-primary">{% trans "Wróć na stronę główną" %}</a>
+</div>
+{% endblock %}
