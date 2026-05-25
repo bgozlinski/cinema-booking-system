@@ -1,0 +1,6 @@
+{% extends "errors/_error_base.html" %}
+{% load i18n %}
+{% block title %}403 — KinoMania{% endblock %}
+{% block error_code %}403{% endblock %}
+{% block error_title %}{% trans "Brak dostępu" %}{% endblock %}
+{% block error_text %}{% trans "Nie masz uprawnień, aby zobaczyć tę stronę." %}{% endblock %}

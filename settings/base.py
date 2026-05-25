@@ -2,6 +2,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import environ
+from django.contrib.messages import constants as message_constants
 from django.utils.translation import gettext_lazy as _
 
 # ─── Paths ──────────────────────────────────────────────────────────────────
@@ -72,6 +73,10 @@ TEMPLATES = [
         },
     },
 ]
+
+# ─── Messages ───────────────────────────────────────────────────────────────
+# Django tags the ERROR level as "error"; Bootstrap's alert class is "danger".
+MESSAGE_TAGS = {message_constants.ERROR: "danger"}
 
 WSGI_APPLICATION = "settings.wsgi.application"
 

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: KinoMania 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-25 18:36+0200\n"
+"POT-Creation-Date: 2026-05-25 19:12+0200\n"
 "PO-Revision-Date: 2026-05-25 10:00+0200\n"
 "Last-Translator: KinoMania <bartlomiej.gozlinski@gmail.com>\n"
 "Language-Team: English\n"
@@ -283,13 +283,41 @@ msgstr "Stripe event"
 msgid "Stripe events"
 msgstr "Stripe events"
 
-#: .\settings\base.py:100
+#: .\settings\base.py:105
 msgid "Polski"
 msgstr "Polish"
 
-#: .\settings\base.py:100
+#: .\settings\base.py:105
 msgid "English"
 msgstr "English"
+
+#: .\templates\403.html:5
+msgid "Brak dostępu"
+msgstr "Access denied"
+
+#: .\templates\403.html:6
+msgid "Nie masz uprawnień, aby zobaczyć tę stronę."
+msgstr "You don't have permission to view this page."
+
+#: .\templates\404.html:5
+msgid "Nie znaleziono strony"
+msgstr "Page not found"
+
+#: .\templates\404.html:6
+msgid "Strona, której szukasz, nie istnieje lub została przeniesiona."
+msgstr "The page you're looking for doesn't exist or has moved."
+
+#: .\templates\500.html:15
+msgid "Coś poszło nie tak"
+msgstr "Something went wrong"
+
+#: .\templates\500.html:16
+msgid "Wystąpił błąd po naszej stronie. Spróbuj ponownie za chwilę."
+msgstr "Something went wrong on our side. Please try again in a moment."
+
+#: .\templates\500.html:17 .\templates\errors\_error_base.html:9
+msgid "Wróć na stronę główną"
+msgstr "Back to home"
 
 #: .\templates\accounts\activation_invalid.html:4
 msgid "Link nieprawidłowy"
@@ -469,11 +497,11 @@ msgstr "Sign up"
 msgid "Język"
 msgstr "Language"
 
-#: .\templates\base.html:100
+#: .\templates\base.html:98
 msgid "Zamknij"
 msgstr "Close"
 
-#: .\templates\base.html:111
+#: .\templates\base.html:109
 msgid "projekt edukacyjny"
 msgstr "educational project"
 

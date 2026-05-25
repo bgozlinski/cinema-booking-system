@@ -1,0 +1,6 @@
+{% extends "errors/_error_base.html" %}
+{% load i18n %}
+{% block title %}404 — KinoMania{% endblock %}
+{% block error_code %}404{% endblock %}
+{% block error_title %}{% trans "Nie znaleziono strony" %}{% endblock %}
+{% block error_text %}{% trans "Strona, której szukasz, nie istnieje lub została przeniesiona." %}{% endblock %}
