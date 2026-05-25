@@ -55,3 +55,14 @@ class TestAdminBookings:
             f"{ADMIN_BOOKINGS_URL}{booking.id}/refund/"
         )
         assert resp.status_code == 409
+
+
+class TestAdminBookingQueryBudget:
+    def test_list_is_bounded(self, auth_client, django_assert_max_num_queries):
+        for _ in range(8):
+            BookingFactory()
+        client = auth_client(UserFactory(is_staff=True))
+        with django_assert_max_num_queries(8):
+            resp = client.get(ADMIN_BOOKINGS_URL)
+        assert resp.status_code == 200
+        assert resp.data["count"] == 8

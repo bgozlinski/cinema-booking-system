@@ -194,3 +194,23 @@ class TestApiBookingWebhookConfirm:
 def test_checkout_endpoint_in_schema(api_client):
     paths = api_client.get("/api/v1/schema/?format=json").json()["paths"]
     assert any("checkout" in path for path in paths)
+
+
+class TestBookingQueryBudget:
+    def test_list_is_bounded(self, auth_client, django_assert_max_num_queries):
+        owner = UserFactory()
+        for _ in range(8):
+            BookingFactory(user=owner)
+        client = auth_client(owner)  # token minted outside the assertion block
+        with django_assert_max_num_queries(8):
+            resp = client.get(BOOKINGS_URL)
+        assert resp.status_code == 200
+        assert resp.data["count"] == 8
+
+    def test_retrieve_is_bounded(self, auth_client, django_assert_max_num_queries):
+        owner = UserFactory()
+        booking = BookingFactory(user=owner)
+        client = auth_client(owner)
+        with django_assert_max_num_queries(6):
+            resp = client.get(f"{BOOKINGS_URL}{booking.id}/")
+        assert resp.status_code == 200

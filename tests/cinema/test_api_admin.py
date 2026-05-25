@@ -7,7 +7,14 @@ from django.utils import timezone
 from PIL import Image
 
 from tests.accounts.factories import UserFactory
-from tests.cinema.factories import GenreFactory, HallFactory, MovieFactory
+from tests.cinema.factories import (
+    ActorFactory,
+    DirectorFactory,
+    GenreFactory,
+    HallFactory,
+    MovieFactory,
+    ScreeningFactory,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -83,3 +90,43 @@ class TestCinemaAdminImageUpload:
         )
         assert resp.status_code == 400
         assert "photo" in resp.data
+
+
+class TestAdminCinemaQueryBudget:
+    def test_movie_list_is_bounded(self, auth_client, django_assert_max_num_queries):
+        for _ in range(8):
+            MovieFactory(
+                genres=[GenreFactory()], actors=[ActorFactory()], directors=[DirectorFactory()]
+            )
+        client = auth_client(UserFactory(is_staff=True))
+        with django_assert_max_num_queries(10):
+            resp = client.get("/api/v1/admin/movies/")
+        assert resp.status_code == 200
+        assert resp.data["count"] == 8
+
+    def test_movie_detail_is_bounded(self, auth_client, django_assert_max_num_queries):
+        movie = MovieFactory(
+            genres=[GenreFactory() for _ in range(4)],
+            actors=[ActorFactory() for _ in range(4)],
+            directors=[DirectorFactory() for _ in range(4)],
+        )
+        client = auth_client(UserFactory(is_staff=True))
+        with django_assert_max_num_queries(9):
+            resp = client.get(f"/api/v1/admin/movies/{movie.id}/")
+        assert resp.status_code == 200
+
+    def test_screening_list_is_bounded(self, auth_client, django_assert_max_num_queries):
+        for _ in range(8):
+            ScreeningFactory()
+        client = auth_client(UserFactory(is_staff=True))
+        with django_assert_max_num_queries(8):
+            resp = client.get("/api/v1/admin/screenings/")
+        assert resp.status_code == 200
+        assert resp.data["count"] == 8
+
+    def test_screening_detail_is_bounded(self, auth_client, django_assert_max_num_queries):
+        screening = ScreeningFactory()
+        client = auth_client(UserFactory(is_staff=True))
+        with django_assert_max_num_queries(7):
+            resp = client.get(f"/api/v1/admin/screenings/{screening.id}/")
+        assert resp.status_code == 200
