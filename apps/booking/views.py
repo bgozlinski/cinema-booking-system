@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from django.views import View
 from django.views.generic import DetailView, ListView
 
@@ -42,7 +43,7 @@ class BookingCreateView(LoginRequiredMixin, View):
         except stripe.StripeError:
             messages.error(
                 request,
-                "Płatność jest chwilowo niedostępna — spróbuj ponownie z poziomu rezerwacji.",
+                _("Płatność jest chwilowo niedostępna — spróbuj ponownie z poziomu rezerwacji."),
             )
             return redirect("booking:detail", pk=booking.pk)
         return redirect(checkout_url)
@@ -56,9 +57,9 @@ class BookingDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     def get(self, request, *args, **kwargs):
         stripe_status = request.GET.get("stripe")
         if stripe_status == "success":
-            messages.info(request, "Płatność przyjęta — potwierdzenie rezerwacji wkrótce.")
+            messages.info(request, _("Płatność przyjęta — potwierdzenie rezerwacji wkrótce."))
         elif stripe_status == "cancelled":
-            messages.warning(request, "Płatność anulowana. Możesz spróbować ponownie.")
+            messages.warning(request, _("Płatność anulowana. Możesz spróbować ponownie."))
         return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
@@ -107,7 +108,7 @@ class BookingCancelView(LoginRequiredMixin, View):
         except BookingError as exc:
             messages.error(request, str(exc))
         else:
-            messages.success(request, "Rezerwacja została anulowana.")
+            messages.success(request, _("Rezerwacja została anulowana."))
         return redirect("booking:my_bookings")
 
 
@@ -115,11 +116,11 @@ class BookingCheckoutView(LoginRequiredMixin, View):
     def post(self, request, pk: int):
         booking = get_object_or_404(Booking, pk=pk, user=request.user)
         if booking.status != BookingStatus.PENDING:
-            messages.error(request, "Tej rezerwacji nie można już opłacić.")
+            messages.error(request, _("Tej rezerwacji nie można już opłacić."))
             return redirect("booking:detail", pk=booking.pk)
         try:
             checkout_url = start_checkout(booking=booking)
         except stripe.StripeError:
-            messages.error(request, "Płatność jest chwilowo niedostępna — spróbuj ponownie.")
+            messages.error(request, _("Płatność jest chwilowo niedostępna — spróbuj ponownie."))
             return redirect("booking:detail", pk=booking.pk)
         return redirect(checkout_url)

@@ -1,23 +1,24 @@
 {% extends "base.html" %}
+{% load i18n %}
 
 {% block content %}
 <article class="container py-4" style="max-width: 640px;">
-  <h1 class="mb-4">Rezerwacja #{{ booking.id }}</h1>
+  <h1 class="mb-4">{% blocktrans with id=booking.id %}Rezerwacja #{{ id }}{% endblocktrans %}</h1>
 
   <div class="card">
     <div class="card-body">
       <h2 class="h5 card-title">{{ booking.screening.movie.title }}</h2>
       <dl class="row mb-0">
-        <dt class="col-5">Termin</dt><dd class="col-7">{{ booking.screening.start_time|date:"d.m.Y H:i" }}</dd>
-        <dt class="col-5">Sala</dt><dd class="col-7">{{ booking.screening.hall.name }}</dd>
-        <dt class="col-5">Liczba miejsc</dt><dd class="col-7">{{ booking.seats_count }}</dd>
-        <dt class="col-5">Łączna cena</dt><dd class="col-7">{{ booking.total_price }} zł</dd>
-        <dt class="col-5">Status</dt>
-        <dd class="col-7"><span class="badge {% if booking.status == 'PENDING' %}<form method="post" action="{% url 'booking:checkout' pk=booking.pk %}" class="mt-3">{% csrf_token %}<button type="submit" class="btn btn-success">Zapłać</button></form>{% endif %}">{{ booking.get_status_display }}</span></dd>
+        <dt class="col-5">{% trans "Termin" %}</dt><dd class="col-7">{{ booking.screening.start_time|date:"d.m.Y H:i" }}</dd>
+        <dt class="col-5">{% trans "Sala" %}</dt><dd class="col-7">{{ booking.screening.hall.name }}</dd>
+        <dt class="col-5">{% trans "Liczba miejsc" %}</dt><dd class="col-7">{{ booking.seats_count }}</dd>
+        <dt class="col-5">{% trans "Łączna cena" %}</dt><dd class="col-7">{{ booking.total_price }} zł</dd>
+        <dt class="col-5">{% trans "Status" %}</dt>
+        <dd class="col-7"><span class="badge {% if booking.status == 'PENDING' %}<form method="post" action="{% url 'booking:checkout' pk=booking.pk %}" class="mt-3">{% csrf_token %}<button type="submit" class="btn btn-success">{% trans "Zapłać" %}</button></form>{% endif %}">{{ booking.get_status_display }}</span></dd>
       </dl>
     </div>
   </div>
 
-  <a href="{% url 'cinema:movie_list' %}" class="btn btn-outline-light mt-4">← Repertuar</a>
+  <a href="{% url 'cinema:movie_list' %}" class="btn btn-outline-light mt-4">← {% trans "Repertuar" %}</a>
 </article>
 {% endblock %}

@@ -1,24 +1,25 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Seanse — {{ effective_date|date:"d.m.Y" }} — KinoMania{% endblock %}
+{% block title %}{% trans "Seanse" %} — {{ effective_date|date:"d.m.Y" }} — KinoMania{% endblock %}
 
 {% block content %}
-<h1 class="mb-1">Seanse</h1>
+<h1 class="mb-1">{% trans "Seanse" %}</h1>
 <p class="text-muted small mb-4">{{ effective_date|date:"l, j E Y" }}</p>
 
 <form method="get" class="filter-bar" role="search">
     <div>
-        <label for="date-input">Data</label>
+        <label for="date-input">{% trans "Data" %}</label>
         <input type="date" id="date-input" name="date"
                min="{{ today|date:'Y-m-d' }}"
                max="{{ max_date|date:'Y-m-d' }}"
                value="{{ effective_date|date:'Y-m-d' }}">
     </div>
-    <button type="submit" class="btn btn-primary">Pokaż</button>
+    <button type="submit" class="btn btn-primary">{% trans "Pokaż" %}</button>
     {% if request.GET.date %}
     <a href="{% url 'cinema:screening_list' %}"
        class="btn btn-outline-light"
-       title="Wróć do dzisiejszego dnia">Dzisiaj</a>
+       title="{% trans 'Wróć do dzisiejszego dnia' %}">{% trans "Dzisiaj" %}</a>
     {% endif %}
 </form>
 
@@ -41,7 +42,7 @@
         {% regroup screenings|dictsort:"hall.name" by hall.name as hall_groups %}
         {% for hall_group in hall_groups %}
         <div class="mt-3">
-            <div class="time-pill-hall-label">Sala {{ hall_group.grouper }}</div>
+            <div class="time-pill-hall-label">{% blocktrans with name=hall_group.grouper %}Sala {{ name }}{% endblocktrans %}</div>
             <div class="time-pill-group">
                 {% for s in hall_group.list %}
                 {% if s.is_available %}<a href="{% url 'booking:create' pk=s.pk %}" class="time-pill">{{ s.start_time|date:"H:i" }}</a>{% else %}<span class="time-pill is-soldout">{{ s.start_time|date:"H:i" }}</span>{% endif %}
@@ -54,7 +55,7 @@
 {% endfor %}
 {% else %}
 <div class="alert alert-info">
-    Brak seansów na dzień {{ effective_date|date:"d.m.Y" }}.
+    {% blocktrans with d=effective_date|date:"d.m.Y" %}Brak seansów na dzień {{ d }}.{% endblocktrans %}
 </div>
 {% endif %}
 {% endblock %}

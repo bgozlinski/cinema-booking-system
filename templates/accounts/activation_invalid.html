@@ -1,16 +1,16 @@
 {% extends "accounts/_auth_base.html" %}
+{% load i18n %}
 
-{% block title %}Link nieprawidłowy — KinoMania{% endblock %}
-{% block auth_tagline %}Link nieprawidłowy lub wygasł{% endblock %}
+{% block title %}{% trans "Link nieprawidłowy" %} — KinoMania{% endblock %}
+{% block auth_tagline %}{% trans "Link nieprawidłowy lub wygasł" %}{% endblock %}
 
 {% block auth_body %}
 <div class="auth-card__message">
     <div class="auth-card__message-emoji" aria-hidden="true">⚠️</div>
-    <p class="auth-card__message-text">Link aktywacyjny jest nieprawidłowy lub wygasł.</p>
-    <p class="auth-card__message-hint">Możliwe przyczyny: link został już użyty, hasło zostało w międzyczasie
-        zmienione, albo link jest starszy niż 3 dni.</p>
+    <p class="auth-card__message-text">{% trans "Link aktywacyjny jest nieprawidłowy lub wygasł." %}</p>
+    <p class="auth-card__message-hint">{% trans "Możliwe przyczyny: link został już użyty, hasło zostało w międzyczasie zmienione, albo link jest starszy niż 3 dni." %}</p>
     <div class="mt-4">
-        <a href="{% url 'accounts:activation_resend' %}" class="btn btn-primary">Wyślij link ponownie</a>
+        <a href="{% url 'accounts:activation_resend' %}" class="btn btn-primary">{% trans "Wyślij link ponownie" %}</a>
     </div>
 </div>
 {% endblock %}

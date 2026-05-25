@@ -3,6 +3,8 @@ from datetime import timedelta
 import stripe
 from django.db import transaction
 from django.utils import timezone
+from django.utils.translation import gettext as _
+from django.utils.translation import ngettext
 
 from apps.booking.models import Booking, BookingStatus
 from apps.cinema.models import Screening
@@ -18,14 +20,21 @@ class NotEnoughSeatsError(BookingError):
 
     def __init__(self, available: int) -> None:
         self.available = available
-        super().__init__(f"Dostępnych jest tylko {available} miejsc — wybierz mniejszą liczbę.")
+        super().__init__(
+            ngettext(
+                "Dostępnych jest tylko %(count)d miejsce — wybierz mniejszą liczbę.",
+                "Dostępnych jest tylko %(count)d miejsc — wybierz mniejszą liczbę.",
+                available,
+            )
+            % {"count": available}
+        )
 
 
 class ScreeningInPastError(BookingError):
     """Screening already started by lock time."""
 
     def __init__(self) -> None:
-        super().__init__("Seans już się rozpoczął — nie można zarezerwować miejsc.")
+        super().__init__(_("Seans już się rozpoczął — nie można zarezerwować miejsc."))
 
 
 def create_booking(*, user, screening: Screening, seats_count: int) -> Booking:
@@ -66,7 +75,7 @@ class BookingNotCancellableError(BookingError):
     """Booking can't be cancelled (wrong status, too late, or already cancelled)."""
 
     def __init__(self) -> None:
-        super().__init__("Tej rezerwacji nie można już anulować.")
+        super().__init__(_("Tej rezerwacji nie można już anulować."))
 
 
 def cancel_booking(*, booking: Booking) -> Booking:
@@ -99,7 +108,7 @@ class RefundError(BookingError):
 
     def __init__(self) -> None:
         super().__init__(
-            "Anulowanie nieudane — zwrot płatności nie powiódł się. Skontaktuj się z obsługą."
+            _("Anulowanie nieudane — zwrot płatności nie powiódł się. Skontaktuj się z obsługą.")
         )
 
 
@@ -107,7 +116,7 @@ class BookingNotRefundableError(BookingError):
     """Booking can't be refunded (not CONFIRMED or no payment to refund)."""
 
     def __init__(self) -> None:
-        super().__init__("Tej rezerwacji nie można zwrócić.")
+        super().__init__(_("Tej rezerwacji nie można zwrócić."))
 
 
 def refund_booking(*, booking: Booking) -> Booking:

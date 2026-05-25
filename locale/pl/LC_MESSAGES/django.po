@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: KinoMania 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-25 09:51+0200\n"
+"POT-Creation-Date: 2026-05-25 18:36+0200\n"
 "PO-Revision-Date: 2026-05-25 10:00+0200\n"
 "Last-Translator: KinoMania <bartlomiej.gozlinski@gmail.com>\n"
 "Language-Team: Polish\n"
@@ -15,9 +15,8 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && "
-"(n%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && "
-"n%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
+"Plural-Forms: nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && (n%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && n%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
+
 #: .\apps\accounts\views.py:52
 msgid "Konto jest już aktywne. Możesz się zalogować."
 msgstr ""
@@ -26,32 +25,36 @@ msgstr ""
 msgid "Konto aktywowane. Zaloguj się."
 msgstr ""
 
-#: .\apps\booking\forms.py:21
+#: .\apps\booking\forms.py:22 .\templates\booking\booking_detail.html:14
 msgid "Liczba miejsc"
 msgstr ""
 
-#: .\apps\booking\forms.py:25
+#: .\apps\booking\forms.py:26
 msgid "Podaj liczbę miejsc."
 msgstr ""
 
-#: .\apps\booking\forms.py:26
+#: .\apps\booking\forms.py:27
 msgid "Podaj poprawną liczbę miejsc."
 msgstr ""
 
-#: .\apps\booking\forms.py:27
+#: .\apps\booking\forms.py:28
 msgid "Musisz zarezerwować co najmniej 1 miejsce."
 msgstr ""
 
-#: .\apps\booking\forms.py:28
+#: .\apps\booking\forms.py:29
 msgid "Maksymalnie możesz zarezerwować 10 miejsc."
 msgstr ""
 
-#: .\apps\booking\forms.py:42
+#: .\apps\booking\forms.py:44 .\apps\booking\services.py:25
 #, python-format
-msgid "Dostępnych jest tylko %(available)d miejsc — wybierz mniejszą liczbę."
-msgstr ""
+msgid "Dostępnych jest tylko %(count)d miejsce — wybierz mniejszą liczbę."
+msgid_plural "Dostępnych jest tylko %(count)d miejsc — wybierz mniejszą liczbę."
+msgstr[0] "Dostępnych jest tylko %(count)d miejsce — wybierz mniejszą liczbę."
+msgstr[1] "Dostępnych jest tylko %(count)d miejsca — wybierz mniejszą liczbę."
+msgstr[2] "Dostępnych jest tylko %(count)d miejsc — wybierz mniejszą liczbę."
+msgstr[3] "Dostępnych jest tylko %(count)d miejsca — wybierz mniejszą liczbę."
 
-#: .\apps\booking\forms.py:52
+#: .\apps\booking\forms.py:57 .\apps\booking\services.py:37
 msgid "Seans już się rozpoczął — nie można zarezerwować miejsc."
 msgstr ""
 
@@ -113,6 +116,50 @@ msgstr ""
 
 #: .\apps\booking\models.py:53
 msgid "bookings"
+msgstr ""
+
+#: .\apps\booking\services.py:78
+msgid "Tej rezerwacji nie można już anulować."
+msgstr ""
+
+#: .\apps\booking\services.py:111
+msgid "Anulowanie nieudane — zwrot płatności nie powiódł się. Skontaktuj się z obsługą."
+msgstr ""
+
+#: .\apps\booking\services.py:119
+msgid "Tej rezerwacji nie można zwrócić."
+msgstr ""
+
+#: .\apps\booking\views.py:46
+msgid "Płatność jest chwilowo niedostępna — spróbuj ponownie z poziomu rezerwacji."
+msgstr ""
+
+#: .\apps\booking\views.py:60
+msgid "Płatność przyjęta — potwierdzenie rezerwacji wkrótce."
+msgstr ""
+
+#: .\apps\booking\views.py:62
+msgid "Płatność anulowana. Możesz spróbować ponownie."
+msgstr ""
+
+#: .\apps\booking\views.py:111
+msgid "Rezerwacja została anulowana."
+msgstr ""
+
+#: .\apps\booking\views.py:119
+msgid "Tej rezerwacji nie można już opłacić."
+msgstr ""
+
+#: .\apps\booking\views.py:124
+msgid "Płatność jest chwilowo niedostępna — spróbuj ponownie."
+msgstr ""
+
+#: .\apps\cinema\forms.py:11
+msgid "Tytuł filmu..."
+msgstr ""
+
+#: .\apps\cinema\forms.py:17
+msgid "Wszystkie gatunki"
 msgstr ""
 
 #: .\apps\cinema\models.py:11 .\apps\cinema\models.py:51
@@ -239,23 +286,162 @@ msgstr ""
 msgid "Stripe events"
 msgstr ""
 
-#: .\settings\base.py:99
+#: .\settings\base.py:100
 msgid "Polski"
 msgstr ""
 
-#: .\settings\base.py:99
+#: .\settings\base.py:100
 msgid "English"
 msgstr ""
 
+#: .\templates\accounts\activation_invalid.html:4
+msgid "Link nieprawidłowy"
+msgstr ""
+
+#: .\templates\accounts\activation_invalid.html:5
+msgid "Link nieprawidłowy lub wygasł"
+msgstr ""
+
+#: .\templates\accounts\activation_invalid.html:10
+msgid "Link aktywacyjny jest nieprawidłowy lub wygasł."
+msgstr ""
+
+#: .\templates\accounts\activation_invalid.html:11
+msgid "Możliwe przyczyny: link został już użyty, hasło zostało w międzyczasie zmienione, albo link jest starszy niż 3 dni."
+msgstr ""
+
+#: .\templates\accounts\activation_invalid.html:13
+#: .\templates\accounts\activation_sent.html:17
+msgid "Wyślij link ponownie"
+msgstr ""
+
+#: .\templates\accounts\activation_sent.html:4
+msgid "Sprawdź skrzynkę"
+msgstr ""
+
+#: .\templates\accounts\activation_sent.html:5
+msgid "Email wysłany"
+msgstr ""
+
+#: .\templates\accounts\activation_sent.html:10
+msgid "Wysłaliśmy link aktywacyjny na podany adres. Kliknij w niego, aby aktywować konto."
+msgstr ""
+
+#: .\templates\accounts\activation_sent.html:11
+msgid "Link jest ważny przez 3 dni. Nie widzisz emaila? Sprawdź folder spam."
+msgstr ""
+
+#: .\templates\accounts\emails\activation_body.txt:1
+#, python-format
+msgid ""
+"Cześć!\n"
+"\n"
+"Aby aktywować swoje konto KinoMania, kliknij w poniższy link:\n"
+"\n"
+"%(activation_url)s\n"
+"\n"
+"Link jest ważny przez 3 dni. Jeśli to nie Ty zakładałeś konto,\n"
+"zignoruj tę wiadomość — bez kliknięcia konto pozostanie nieaktywne.\n"
+"\n"
+"— zespół KinoMania"
+msgstr ""
+
+#: .\templates\accounts\emails\activation_subject.txt:1
+msgid "Aktywuj swoje konto KinoMania"
+msgstr ""
+
+#: .\templates\accounts\login.html:4 .\templates\accounts\login.html:8
+msgid "Logowanie"
+msgstr ""
+
+#: .\templates\accounts\login.html:5
+msgid "Zaloguj się, żeby zarezerwować bilety"
+msgstr ""
+
+#: .\templates\accounts\login.html:23 .\templates\accounts\register.html:33
+msgid "Zaloguj się"
+msgstr ""
+
+#: .\templates\accounts\login.html:29
+msgid "Nie dostałeś emaila aktywacyjnego?"
+msgstr ""
+
+#: .\templates\accounts\login.html:31
+msgid "Nie masz konta?"
+msgstr ""
+
+#: .\templates\accounts\login.html:31 .\templates\accounts\register.html:27
+msgid "Zarejestruj się"
+msgstr ""
+
+#: .\templates\accounts\register.html:4 .\templates\accounts\register.html:8
+msgid "Rejestracja"
+msgstr ""
+
+#: .\templates\accounts\register.html:5
+msgid "Stwórz konto i zacznij rezerwować"
+msgstr ""
+
+#: .\templates\accounts\register.html:9
+msgid "Po wysłaniu formularza otrzymasz email z linkiem aktywacyjnym."
+msgstr ""
+
+#: .\templates\accounts\register.html:33
+msgid "Masz już konto?"
+msgstr ""
+
+#: .\templates\accounts\resend.html:4
+msgid "Wyślij ponownie link"
+msgstr ""
+
+#: .\templates\accounts\resend.html:5
+msgid "Wyślij ponownie link aktywacyjny"
+msgstr ""
+
+#: .\templates\accounts\resend.html:8
+msgid "Wyślij ponownie"
+msgstr ""
+
+#: .\templates\accounts\resend.html:9
+msgid "Wpisz email użyty przy rejestracji — jeśli konto czeka na aktywację, wyślemy nowy link."
+msgstr ""
+
+#: .\templates\accounts\resend.html:24
+msgid "Wyślij"
+msgstr ""
+
+#: .\templates\accounts\resend_done.html:4
+#: .\templates\accounts\resend_done.html:5
+msgid "Wysłane"
+msgstr ""
+
+#: .\templates\accounts\resend_done.html:10
+msgid "Jeśli konto o podanym adresie email istnieje i nie zostało jeszcze aktywowane, wysłaliśmy nowy link aktywacyjny."
+msgstr ""
+
+#: .\templates\accounts\resend_done.html:11
+msgid "Link jest ważny przez 3 dni."
+msgstr ""
+
+#: .\templates\base.html:28
+msgid "Przełącz nawigację"
+msgstr ""
+
 #: .\templates\base.html:36 .\templates\base.html:38
+#: .\templates\booking\booking_detail.html:22
+#: .\templates\cinema\movie_detail.html:21 .\templates\cinema\movie_list.html:4
+#: .\templates\cinema\movie_list.html:7
 msgid "Repertuar"
 msgstr ""
 
 #: .\templates\base.html:43 .\templates\base.html:45
+#: .\templates\cinema\screening_list.html:4
+#: .\templates\cinema\screening_list.html:7
 msgid "Seanse"
 msgstr ""
 
 #: .\templates\base.html:51 .\templates\base.html:53
+#: .\templates\booking\my_bookings.html:6
 msgid "Moje rezerwacje"
 msgstr ""
 
@@ -273,4 +459,218 @@ msgstr ""
 
 #: .\templates\base.html:82
 msgid "Język"
+msgstr ""
+
+#: .\templates\base.html:100
+msgid "Zamknij"
+msgstr ""
+
+#: .\templates\base.html:111
+msgid "projekt edukacyjny"
+msgstr ""
+
+#: .\templates\booking\booking_detail.html:6
+#, python-format
+msgid "Rezerwacja #%(id)s"
+msgstr ""
+
+#: .\templates\booking\booking_detail.html:12
+#: .\templates\booking\booking_form.html:13
+msgid "Termin"
+msgstr ""
+
+#: .\templates\booking\booking_detail.html:13
+#: .\templates\booking\booking_form.html:15
+msgid "Sala"
+msgstr ""
+
+#: .\templates\booking\booking_detail.html:15
+msgid "Łączna cena"
+msgstr ""
+
+#: .\templates\booking\booking_detail.html:16
+msgid "Status"
+msgstr ""
+
+#: .\templates\booking\booking_detail.html:17
+msgid "Zapłać"
+msgstr ""
+
+#: .\templates\booking\booking_form.html:7
+msgid "Rezerwacja"
+msgstr ""
+
+#: .\templates\booking\booking_form.html:17
+msgid "Cena za miejsce"
+msgstr ""
+
+#: .\templates\booking\booking_form.html:19
+msgid "Dostępne miejsca"
+msgstr ""
+
+#: .\templates\booking\booking_form.html:37
+msgid "Razem:"
+msgstr ""
+
+#: .\templates\booking\booking_form.html:38
+msgid "Zarezerwuj i zapłać"
+msgstr ""
+
+#: .\templates\booking\my_bookings.html:10
+msgid "Nadchodzące"
+msgstr ""
+
+#: .\templates\booking\my_bookings.html:13
+msgid "Historia"
+msgstr ""
+
+#: .\templates\booking\my_bookings.html:25
+#: .\templates\cinema\movie_detail.html:134
+#: .\templates\cinema\screening_list.html:45
+#, python-format
+msgid "Sala %(name)s"
+msgstr ""
+
+#: .\templates\booking\my_bookings.html:25
+#, python-format
+msgid "%(counter)s miejsce"
+msgid_plural "%(counter)s miejsc"
+msgstr[0] "%(counter)s miejsce"
+msgstr[1] "%(counter)s miejsca"
+msgstr[2] "%(counter)s miejsc"
+msgstr[3] "%(counter)s miejsca"
+
+#: .\templates\booking\my_bookings.html:31
+msgid "Anuluj"
+msgstr ""
+
+#: .\templates\booking\my_bookings.html:41
+msgid "Brak historycznych rezerwacji."
+msgstr ""
+
+#: .\templates\booking\my_bookings.html:41
+#, python-format
+msgid "Nie masz nadchodzących rezerwacji. <a href=\"%(ml_url)s\">Przeglądaj repertuar</a>."
+msgstr ""
+
+#: .\templates\cinema\movie_detail.html:24
+#, python-format
+msgid "Premiera %(d)s"
+msgstr ""
+
+#: .\templates\cinema\movie_detail.html:24
+msgid "Reż."
+msgstr ""
+
+#: .\templates\cinema\movie_detail.html:32
+msgid "Obsada:"
+msgstr ""
+
+#: .\templates\cinema\movie_detail.html:33
+msgid "i inni"
+msgstr ""
+
+#: .\templates\cinema\movie_detail.html:42
+#: .\templates\cinema\movie_detail.html:54
+msgid "Zwiastun"
+msgstr ""
+
+#: .\templates\cinema\movie_detail.html:44
+#, python-format
+msgid "Zwiastun: %(t)s"
+msgstr ""
+
+#: .\templates\cinema\movie_detail.html:58
+msgid "Zobacz zwiastun (link zewnętrzny)"
+msgstr ""
+
+#: .\templates\cinema\movie_detail.html:64
+msgid "Reżyseria"
+msgstr ""
+
+#: .\templates\cinema\movie_detail.html:88
+msgid "Obsada"
+msgstr ""
+
+#: .\templates\cinema\movie_detail.html:113
+msgid "Poprzedni"
+msgstr ""
+
+#: .\templates\cinema\movie_detail.html:118
+msgid "Następny"
+msgstr ""
+
+#: .\templates\cinema\movie_detail.html:125
+msgid "Nadchodzące seanse"
+msgstr ""
+
+#: .\templates\cinema\movie_detail.html:143
+msgid "Brak zaplanowanych seansów dla tego filmu."
+msgstr ""
+
+#: .\templates\cinema\movie_list.html:8
+msgid "Wszystkie filmy z zaplanowanymi seansami"
+msgstr ""
+
+#: .\templates\cinema\movie_list.html:12
+msgid "Szukaj"
+msgstr ""
+
+#: .\templates\cinema\movie_list.html:16
+msgid "Gatunek"
+msgstr ""
+
+#: .\templates\cinema\movie_list.html:20
+#: .\templates\cinema\screening_list.html:12
+msgid "Data"
+msgstr ""
+
+#: .\templates\cinema\movie_list.html:23
+msgid "Filtruj"
+msgstr ""
+
+#: .\templates\cinema\movie_list.html:27 .\templates\cinema\movie_list.html:28
+msgid "Wyczyść filtry"
+msgstr ""
+
+#: .\templates\cinema\movie_list.html:54
+msgid "Paginacja"
+msgstr ""
+
+#: .\templates\cinema\movie_list.html:60
+msgid "Poprzednia strona"
+msgstr ""
+
+#: .\templates\cinema\movie_list.html:70
+msgid "Następna strona"
+msgstr ""
+
+#: .\templates\cinema\movie_list.html:79
+msgid "Brak filmów pasujących do wybranych kryteriów."
+msgstr ""
+
+#: .\templates\cinema\movie_list.html:81
+#, python-format
+msgid "<a href=\"%(ml_url)s\">Wyczyść filtry</a> żeby zobaczyć wszystkie."
+msgstr ""
+
+#: .\templates\cinema\movie_list.html:83
+msgid "Aktualnie brak filmów z zaplanowanymi seansami. Wróć wkrótce!"
+msgstr ""
+
+#: .\templates\cinema\screening_list.html:18
+msgid "Pokaż"
+msgstr ""
+
+#: .\templates\cinema\screening_list.html:22
+msgid "Wróć do dzisiejszego dnia"
+msgstr ""
+
+#: .\templates\cinema\screening_list.html:22
+msgid "Dzisiaj"
+msgstr ""
+
+#: .\templates\cinema\screening_list.html:58
+#, python-format
+msgid "Brak seansów na dzień %(d)s."
 msgstr ""

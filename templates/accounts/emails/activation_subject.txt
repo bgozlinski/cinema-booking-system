@@ -1,1 +1,1 @@
-Activate your KinoMania account
+{% load i18n %}{% trans "Aktywuj swoje konto KinoMania" %}
