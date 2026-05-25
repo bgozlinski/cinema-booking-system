@@ -83,9 +83,10 @@ Add `path("i18n/", include("django.conf.urls.i18n"))` to `urlpatterns` → provi
 
 - `python manage.py makemessages -l en -l pl --ignore=.venv` → `locale/pl/LC_MESSAGES/django.po`
   + `locale/en/LC_MESSAGES/django.po` (containing the navbar msgids).
-- Fill **`en/django.po`** msgstrs: `Repertuar`→"What's on", `Seanse`→"Screenings",
-  `Moje rezerwacje`→"My bookings", `Wyloguj`→"Log out", `Zaloguj`→"Log in",
-  `Zarejestruj`→"Sign up", `Polski`→"Polish", `English`→"English", `Język`→"Language".
+- Fill **`en/django.po`** msgstrs (apostrophe-free, to avoid HTML-escaping fragility in the
+  test): `Repertuar`→"Now Showing", `Seanse`→"Screenings", `Moje rezerwacje`→"My Bookings",
+  `Wyloguj`→"Log out", `Zaloguj`→"Log in", `Zarejestruj`→"Sign up", `Polski`→"Polish",
+  `English`→"English", `Język`→"Language".
   Leave `pl/django.po` msgstrs empty (msgid fallback).
 - `python manage.py compilemessages` → `.mo` files (commit them).
 
@@ -97,8 +98,8 @@ Add `path("i18n/", include("django.conf.urls.i18n"))` to `urlpatterns` → provi
 `@pytest.mark.django_db` where the request hits the DB (movie list query on `/`).
 - **`test_default_language_polish`** — `GET /` → response contains "Repertuar".
 - **`test_switch_to_english`** — `POST /i18n/setlang/ {language: "en", next: "/"}` → 302;
-  follow / re-`GET /` → response contains "What's on" (proves the switch + the compiled `en`
-  catalog). Uses the test client's session/cookie persistence.
+  re-`GET /` → response contains "Now Showing" (proves the switch + the compiled `en`
+  catalog). Uses the test client's cookie persistence.
 - **`test_switcher_rendered`** — `GET /` → the navbar contains
   `action="/i18n/setlang/"` (or `reverse("set_language")`) and both PL/EN options.
 - **`test_languages_setting`** — `settings.LANGUAGES` has `pl` and `en` (guards the config).

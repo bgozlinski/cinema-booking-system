@@ -11,6 +11,7 @@ urlpatterns: list[URLPattern | URLResolver] = [
     path("", include("apps.booking.urls", namespace="booking")),
     path("", include("apps.payments.urls", namespace="payments")),
     path("api/v1/", include("settings.api_urls")),
+    path("i18n/", include("django.conf.urls.i18n")),
 ]
 
 if settings.DEBUG:

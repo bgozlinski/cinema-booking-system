@@ -9,11 +9,18 @@ Real email is sent only in the inactive-user scenario.
 
 from __future__ import annotations
 
+import re
+
 import pytest
 from django.core import mail
 from django.urls import reverse
 
 from tests.accounts.factories import UserFactory
+
+# The global navbar language switcher (US-37) is a POST form, so every page now
+# carries a per-request-random CSRF token. It is independent of the submitted
+# email, so we normalize it out before asserting byte-identical responses below.
+_CSRF_TOKEN_RE = re.compile(rb'name="csrfmiddlewaretoken" value="[^"]*"')
 
 
 @pytest.mark.django_db
@@ -74,14 +81,16 @@ def test_resend_for_nonexistent_user_sends_no_email(client) -> None:
 
 @pytest.mark.django_db
 def test_resend_renders_the_same_response_in_all_scenarios(client) -> None:
-    """The no-enumeration-leak invariant: byte-identical response bodies
+    """The no-enumeration-leak invariant: response bodies must be identical
     across (inactive / active / nonexistent). If a future change adds
     e.g. "we sent you an email" copy that only appears in the inactive
     case, attackers can probe which emails are registered.
 
-    resend_done.html has no form → no CSRF token → bodies are exactly
-    equal. If we later add anything dynamic to that template, this test
-    will start failing and force a re-think."""
+    The only per-request-variable content is the CSRF token in the global
+    navbar language switcher (US-37) — random regardless of the submitted
+    email, so it carries no enumeration signal and is normalized out before
+    comparing. If anything *email-dependent* ever diverges, this test starts
+    failing and forces a re-think."""
     UserFactory(inactive=True, email="dormant@example.com")
     UserFactory(email="active@example.com")
 
@@ -91,12 +100,15 @@ def test_resend_renders_the_same_response_in_all_scenarios(client) -> None:
             reverse("accounts:activation_resend"),
             data={"email": email},
         )
-        bodies.append(response.content)
+        normalized = _CSRF_TOKEN_RE.sub(
+            b'name="csrfmiddlewaretoken" value="NORMALIZED"', response.content
+        )
+        bodies.append(normalized)
 
     assert bodies[0] == bodies[1] == bodies[2], (
-        "All three resend scenarios must render byte-identical responses "
-        "(no enumeration leak). If this fails, check whether resend_done.html "
-        "started including dynamic content based on the submitted email."
+        "All three resend scenarios must render identical responses "
+        "(no enumeration leak; CSRF token normalized out). If this fails, check "
+        "whether resend_done.html started including email-dependent content."
     )
 
 
