@@ -1,30 +1,31 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Repertuar — KinoMania{% endblock %}
+{% block title %}{% trans "Repertuar" %} — KinoMania{% endblock %}
 
 {% block content %}
-<h1 class="mb-1">Repertuar</h1>
-<p class="text-muted small mb-4">Wszystkie filmy z zaplanowanymi seansami</p>
+<h1 class="mb-1">{% trans "Repertuar" %}</h1>
+<p class="text-muted small mb-4">{% trans "Wszystkie filmy z zaplanowanymi seansami" %}</p>
 
 <form method="get" class="filter-bar" role="search">
     <div style="flex:2; min-width:200px;">
-        <label for="id_q">Szukaj</label>
+        <label for="id_q">{% trans "Szukaj" %}</label>
         {{ filter_form.q }}
     </div>
     <div style="flex:1; min-width:140px;">
-        <label for="id_genre">Gatunek</label>
+        <label for="id_genre">{% trans "Gatunek" %}</label>
         {{ filter_form.genre }}
     </div>
     <div style="flex:1; min-width:140px;">
-        <label for="id_date">Data</label>
+        <label for="id_date">{% trans "Data" %}</label>
         {{ filter_form.date }}
     </div>
-    <button type="submit" class="btn btn-primary">Filtruj</button>
+    <button type="submit" class="btn btn-primary">{% trans "Filtruj" %}</button>
     {% if request.GET %}
     <a href="{% url 'cinema:movie_list' %}"
        class="btn btn-outline-light"
-       title="Wyczyść filtry"
-       aria-label="Wyczyść filtry">×</a>
+       title="{% trans 'Wyczyść filtry' %}"
+       aria-label="{% trans 'Wyczyść filtry' %}">×</a>
     {% endif %}
 </form>
 
@@ -50,13 +51,13 @@
 </div>
 
 {% if is_paginated %}
-<nav aria-label="Paginacja" class="mt-4">
+<nav aria-label="{% trans 'Paginacja' %}" class="mt-4">
     <ul class="pagination justify-content-center">
         {% if page_obj.has_previous %}
         <li class="page-item">
             <a class="page-link"
                href="?{% querystring page=page_obj.previous_page_number %}"
-               aria-label="Poprzednia strona">«</a>
+               aria-label="{% trans 'Poprzednia strona' %}">«</a>
         </li>
         {% endif %}
         <li class="page-item active" aria-current="page">
@@ -66,7 +67,7 @@
         <li class="page-item">
             <a class="page-link"
                href="?{% querystring page=page_obj.next_page_number %}"
-               aria-label="Następna strona">»</a>
+               aria-label="{% trans 'Następna strona' %}">»</a>
         </li>
         {% endif %}
     </ul>
@@ -75,10 +76,11 @@
 {% else %}
 <div class="alert alert-info">
     {% if request.GET %}
-    Brak filmów pasujących do wybranych kryteriów.
-    <a href="{% url 'cinema:movie_list' %}">Wyczyść filtry</a> żeby zobaczyć wszystkie.
+    {% trans "Brak filmów pasujących do wybranych kryteriów." %}
+    {% url 'cinema:movie_list' as ml_url %}
+    {% blocktrans %}<a href="{{ ml_url }}">Wyczyść filtry</a> żeby zobaczyć wszystkie.{% endblocktrans %}
     {% else %}
-    Aktualnie brak filmów z zaplanowanymi seansami. Wróć wkrótce!
+    {% trans "Aktualnie brak filmów z zaplanowanymi seansami. Wróć wkrótce!" %}
     {% endif %}
 </div>
 {% endif %}

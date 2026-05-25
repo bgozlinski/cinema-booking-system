@@ -1,21 +1,22 @@
 {% extends "base.html" %}
+{% load i18n %}
 
 {% block content %}
 <article class="container py-4" style="max-width: 640px;">
     <a href="{{ screening.movie.get_absolute_url }}" class="text-decoration-none">← {{ screening.movie.title }}</a>
-    <h1 class="mt-2 mb-4">Rezerwacja</h1>
+    <h1 class="mt-2 mb-4">{% trans "Rezerwacja" %}</h1>
 
     <div class="card mb-4">
         <div class="card-body">
             <h2 class="h5 card-title">{{ screening.movie.title }}</h2>
             <dl class="row mb-0">
-                <dt class="col-5">Termin</dt>
+                <dt class="col-5">{% trans "Termin" %}</dt>
                 <dd class="col-7">{{ screening.start_time|date:"d.m.Y H:i" }}</dd>
-                <dt class="col-5">Sala</dt>
+                <dt class="col-5">{% trans "Sala" %}</dt>
                 <dd class="col-7">{{ screening.hall.name }}</dd>
-                <dt class="col-5">Cena za miejsce</dt>
+                <dt class="col-5">{% trans "Cena za miejsce" %}</dt>
                 <dd class="col-7">{{ screening.price }} zł</dd>
-                <dt class="col-5">Dostępne miejsca</dt>
+                <dt class="col-5">{% trans "Dostępne miejsca" %}</dt>
                 <dd class="col-7">{{ screening.available_seats_count }}</dd>
             </dl>
         </div>
@@ -33,8 +34,8 @@
             <div class="text-danger small mt-1">{{ form.seats_count.errors }}</div>
             {% endif %}
         </div>
-        <p class="fs-5">Razem: <strong id="booking-total">—</strong> zł</p>
-        <button type="submit" class="btn btn-primary">Zarezerwuj i zapłać</button>
+        <p class="fs-5">{% trans "Razem:" %} <strong id="booking-total">—</strong> zł</p>
+        <button type="submit" class="btn btn-primary">{% trans "Zarezerwuj i zapłać" %}</button>
     </form>
 </article>
 

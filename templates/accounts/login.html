@@ -1,10 +1,11 @@
 {% extends "accounts/_auth_base.html" %}
+{% load i18n %}
 
-{% block title %}Logowanie — KinoMania{% endblock %}
-{% block auth_tagline %}Zaloguj się, żeby zarezerwować bilety{% endblock %}
+{% block title %}{% trans "Logowanie" %} — KinoMania{% endblock %}
+{% block auth_tagline %}{% trans "Zaloguj się, żeby zarezerwować bilety" %}{% endblock %}
 
 {% block auth_body %}
-<h2 class="auth-card__title">Logowanie</h2>
+<h2 class="auth-card__title">{% trans "Logowanie" %}</h2>
 <form method="post" novalidate>
     {% csrf_token %}
     {% for field in form %}
@@ -19,14 +20,14 @@
     {% if form.non_field_errors %}
     <div class="alert alert-danger">{{ form.non_field_errors }}</div>
     {% endif %}
-    <button type="submit" class="btn btn-primary auth-card__submit">Zaloguj się</button>
+    <button type="submit" class="btn btn-primary auth-card__submit">{% trans "Zaloguj się" %}</button>
 </form>
 {% endblock %}
 
 {% block auth_footer %}
 <div class="auth-footer-link">
-    <a href="{% url 'accounts:activation_resend' %}">Nie dostałeś emaila aktywacyjnego?</a>
+    <a href="{% url 'accounts:activation_resend' %}">{% trans "Nie dostałeś emaila aktywacyjnego?" %}</a>
     <div class="auth-footer-link__divider"></div>
-    Nie masz konta? <a href="{% url 'accounts:register' %}">Zarejestruj się</a>
+    {% trans "Nie masz konta?" %} <a href="{% url 'accounts:register' %}">{% trans "Zarejestruj się" %}</a>
 </div>
 {% endblock %}

@@ -362,10 +362,10 @@ T-shirt sizes: **S** (~2h), **M** (~0.5 dnia), **L** (~1 dzień), **XL** (~2 dni
 
 | Status | US |
 |---|---|
-| **In Progress (WIP=1)** | **US-36** (M4 — API throttling tests) — `feat/FR-16-api-throttling` |
-| **Ready (DoR ✅)** | US-37 (M5 start) — po merge US-36 + `v0.4.0` tag/release |
-| **Backlog** | US-38..US-43 (M5) |
-| **Done** | **US-01..US-35** ✅ (35 US) — M3 COMPLETE + M4: US-29..US-35 merged (DRF/Auth/Public/Booking/checkout-verify/Admin/OpenAPI) |
+| **In Progress (WIP=1)** | **US-38** (M5 — exhaustive PL/EN translations) — `feat/FR-15-translations` |
+| **Ready (DoR ✅)** | US-39 (custom 403/404/500 + flash polish) — `feat/FR-12-error-pages` |
+| **Backlog** | US-40..US-43 (M5) |
+| **Done** | **US-01..US-37** ✅ (37 US) — M3 + M4 COMPLETE + M5: US-37 (i18n setup + navbar switcher) merged (PR #42) |
 
 **Bieżący milestone:** **M2 — Catalog web (`v0.2.0`) COMPLETE.** Wszystkie 8 US (US-10..US-17) zmergowane. **US-17 (performance pass)** wyeliminowało N+1 w admin (US-15) przez `get_queryset` override z `annotate(Count(...))` we wszystkich 5 ModelAdmin (`GenreAdmin`/`HallAdmin`/`ActorAdmin`/`DirectorAdmin` po 1 N+1 helper każdy + `MovieAdmin` z 2 N+1 helperami + `prefetch_related("genres")`). Bonus: sortable count columns via `@admin.display(ordering="_<field>")`. 11 nowych budget testów (5 admin w `tests/cinema/test_admin_query_budgets.py` + 6 public extensions). ~11 istniejących `test_admin.py` helper testów zaktualizowanych do nowego access pattern przez `ma.get_queryset(RequestFactory().get("/admin/"))`. Plus visual redesign poza M2 backlogiem: PR #18 (cinema-city style) + PR #19 (auth pages). Post-merge: cut `v0.1.0` (outstanding M1) + `v0.2.0` tagi + GitHub releases. Następny milestone: **M3 — Booking web + Stripe (`v0.3.0`)** — 11 US (US-18..US-28), Booking model + reservation flow + Stripe sandbox payments.
 

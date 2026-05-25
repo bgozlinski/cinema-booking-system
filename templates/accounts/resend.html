@@ -1,12 +1,12 @@
 {% extends "accounts/_auth_base.html" %}
+{% load i18n %}
 
-{% block title %}Wyślij ponownie link — KinoMania{% endblock %}
-{% block auth_tagline %}Wyślij ponownie link aktywacyjny{% endblock %}
+{% block title %}{% trans "Wyślij ponownie link" %} — KinoMania{% endblock %}
+{% block auth_tagline %}{% trans "Wyślij ponownie link aktywacyjny" %}{% endblock %}
 
 {% block auth_body %}
-<h2 class="auth-card__title">Resend</h2>
-<p class="auth-card__hint">Wpisz email użyty przy rejestracji — jeśli konto czeka na aktywację, wyślemy nowy
-    link.</p>
+<h2 class="auth-card__title">{% trans "Wyślij ponownie" %}</h2>
+<p class="auth-card__hint">{% trans "Wpisz email użyty przy rejestracji — jeśli konto czeka na aktywację, wyślemy nowy link." %}</p>
 <form method="post" novalidate>
     {% csrf_token %}
     {% for field in form %}
@@ -21,6 +21,6 @@
     {% if form.non_field_errors %}
     <div class="alert alert-danger">{{ form.non_field_errors }}</div>
     {% endif %}
-    <button type="submit" class="btn btn-primary auth-card__submit">Wyślij</button>
+    <button type="submit" class="btn btn-primary auth-card__submit">{% trans "Wyślij" %}</button>
 </form>
 {% endblock %}

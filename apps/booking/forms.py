@@ -2,6 +2,7 @@ from typing import Any
 
 from django import forms
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import ngettext
 
 from apps.cinema.models import Screening
 
@@ -39,9 +40,13 @@ class BookingForm(forms.Form):
         available = self.screening.available_seats_count()
         if seats_count > available:
             raise forms.ValidationError(
-                _("Dostępnych jest tylko %(available)d miejsc — wybierz mniejszą liczbę."),
+                ngettext(
+                    "Dostępnych jest tylko %(count)d miejsce — wybierz mniejszą liczbę.",
+                    "Dostępnych jest tylko %(count)d miejsc — wybierz mniejszą liczbę.",
+                    available,
+                ),
                 code="exceeds_available",
-                params={"available": available},
+                params={"count": available},
             )
         return seats_count
 

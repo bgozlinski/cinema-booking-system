@@ -1,20 +1,19 @@
 {% extends "accounts/_auth_base.html" %}
+{% load i18n %}
 
-{% block title %}Sprawdź skrzynkę — KinoMania{% endblock %}
-{% block auth_tagline %}Email wysłany{% endblock %}
+{% block title %}{% trans "Sprawdź skrzynkę" %} — KinoMania{% endblock %}
+{% block auth_tagline %}{% trans "Email wysłany" %}{% endblock %}
 
 {% block auth_body %}
 <div class="auth-card__message">
     <div class="auth-card__message-emoji" aria-hidden="true">📬</div>
-    <p class="auth-card__message-text">Wysłaliśmy link aktywacyjny na podany adres. Kliknij w niego, aby
-        aktywować konto.</p>
-    <p class="auth-card__message-hint">Link jest ważny przez 3 dni. Nie widzisz emaila? Sprawdź folder
-        spam.</p>
+    <p class="auth-card__message-text">{% trans "Wysłaliśmy link aktywacyjny na podany adres. Kliknij w niego, aby aktywować konto." %}</p>
+    <p class="auth-card__message-hint">{% trans "Link jest ważny przez 3 dni. Nie widzisz emaila? Sprawdź folder spam." %}</p>
 </div>
 {% endblock %}
 
 {% block auth_footer %}
 <div class="auth-footer-link">
-    <a href="{% url 'accounts:activation_resend' %}">Wyślij link ponownie</a>
+    <a href="{% url 'accounts:activation_resend' %}">{% trans "Wyślij link ponownie" %}</a>
 </div>
 {% endblock %}

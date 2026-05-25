@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load i18n %}
 
 {% block title %}{{ movie.title }} — KinoMania{% endblock %}
 
@@ -17,10 +18,10 @@
                 {% endif %}
             </div>
             <div class="movie-hero__body">
-                <a href="{% url 'cinema:movie_list' %}" class="movie-hero__breadcrumb">← Repertuar</a>
+                <a href="{% url 'cinema:movie_list' %}" class="movie-hero__breadcrumb">← {% trans "Repertuar" %}</a>
                 <h1 class="movie-hero__title">{{ movie.title }}</h1>
                 <div class="movie-hero__meta">
-                    {{ movie.duration_minutes }} min · Premiera {{ movie.release_date|date:"d.m.Y" }}{% if movie.directors.all %} · Reż. {% for d in movie.directors.all %}{{ d.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}
+                    {{ movie.duration_minutes }} min · {% blocktrans with d=movie.release_date|date:"d.m.Y" %}Premiera {{ d }}{% endblocktrans %}{% if movie.directors.all %} · {% trans "Reż." %} {% for d in movie.directors.all %}{{ d.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}
                 </div>
                 <div class="mb-3">
                     {% for genre in movie.genres.all %}<span class="movie-hero__genre-badge">{{ genre.name }}</span>{% endfor %}
@@ -28,8 +29,8 @@
                 <p class="movie-hero__description">{{ movie.description|linebreaksbr }}</p>
                 {% if movie.actors.all %}
                 <p class="movie-hero__cast">
-                    <strong>Obsada:</strong>
-                    {% for a in movie.actors.all|slice:":6" %}{{ a.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if movie.actors.all|length > 6 %} i inni{% endif %}
+                    <strong>{% trans "Obsada:" %}</strong>
+                    {% for a in movie.actors.all|slice:":6" %}{{ a.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if movie.actors.all|length > 6 %} {% trans "i inni" %}{% endif %}
                 </p>
                 {% endif %}
             </div>
@@ -38,9 +39,9 @@
 
     {% if trailer_embed_url %}
     <section class="mb-5">
-        <h2 class="mb-3">Zwiastun</h2>
+        <h2 class="mb-3">{% trans "Zwiastun" %}</h2>
         <iframe src="{{ trailer_embed_url }}"
-                title="Zwiastun: {{ movie.title }}"
+                title="{% blocktrans with t=movie.title %}Zwiastun: {{ t }}{% endblocktrans %}"
                 width="100%"
                 style="aspect-ratio: 16/9; border-radius: var(--radius-md); border: 0;"
                 allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -50,17 +51,17 @@
     </section>
     {% elif movie.trailer_url %}
     <section class="mb-5">
-        <h2 class="mb-3">Zwiastun</h2>
+        <h2 class="mb-3">{% trans "Zwiastun" %}</h2>
         <a href="{{ movie.trailer_url }}"
            class="btn btn-outline-light"
            target="_blank"
-           rel="noopener noreferrer">Zobacz zwiastun (link zewnętrzny)</a>
+           rel="noopener noreferrer">{% trans "Zobacz zwiastun (link zewnętrzny)" %}</a>
     </section>
     {% endif %}
 
     {% if movie.directors.all %}
     <section class="mb-5">
-        <h2 class="mb-3">Reżyseria</h2>
+        <h2 class="mb-3">{% trans "Reżyseria" %}</h2>
         <div class="row row-cols-2 row-cols-md-4 g-3">
             {% for director in movie.directors.all %}
             <div class="col text-center">
@@ -84,7 +85,7 @@
 
     {% if movie.actors.all %}
     <section class="mb-5">
-        <h2 class="mb-3">Obsada</h2>
+        <h2 class="mb-3">{% trans "Obsada" %}</h2>
         <div id="actorsCarousel" class="carousel slide bg-elev-card" data-bs-ride="false">
             <div class="carousel-inner">
                 {% for actor in movie.actors.all %}
@@ -109,19 +110,19 @@
             <button class="carousel-control-prev" type="button"
                     data-bs-target="#actorsCarousel" data-bs-slide="prev">
                 <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Poprzedni</span>
+                <span class="visually-hidden">{% trans "Poprzedni" %}</span>
             </button>
             <button class="carousel-control-next" type="button"
                     data-bs-target="#actorsCarousel" data-bs-slide="next">
                 <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Następny</span>
+                <span class="visually-hidden">{% trans "Następny" %}</span>
             </button>
         </div>
     </section>
     {% endif %}
 
     <section class="mb-5">
-        <h2 class="mb-3">Nadchodzące seanse</h2>
+        <h2 class="mb-3">{% trans "Nadchodzące seanse" %}</h2>
         {% if upcoming_screenings %}
         {% regroup upcoming_screenings by start_time|date:"Y-m-d" as date_groups %}
         {% for date_group in date_groups %}
@@ -130,7 +131,7 @@
             {% regroup date_group.list|dictsort:"hall.name" by hall.name as hall_groups %}
             {% for hall_group in hall_groups %}
             <div class="mt-2">
-                <div class="time-pill-hall-label">Sala {{ hall_group.grouper }}</div>
+                <div class="time-pill-hall-label">{% blocktrans with name=hall_group.grouper %}Sala {{ name }}{% endblocktrans %}</div>
                 <div class="time-pill-group">
                     {% for s in hall_group.list %}{% if s.is_available %}<a href="{% url 'booking:create' pk=s.pk %}" class="time-pill">{{ s.start_time|date:"H:i" }}</a>{% else %}<span class="time-pill is-soldout">{{ s.start_time|date:"H:i" }}</span>{% endif %}{% endfor %}
                 </div>
@@ -139,7 +140,7 @@
         </div>
         {% endfor %}
         {% else %}
-        <div class="alert alert-info">Brak zaplanowanych seansów dla tego filmu.</div>
+        <div class="alert alert-info">{% trans "Brak zaplanowanych seansów dla tego filmu." %}</div>
         {% endif %}
     </section>
 </article>
