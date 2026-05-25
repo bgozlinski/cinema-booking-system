@@ -1,6 +1,7 @@
-{% load static %}
+{% load static i18n %}
+{% get_current_language as LANGUAGE_CODE %}
 <!DOCTYPE html>
-<html lang="pl" data-bs-theme="dark">
+<html lang="{{ LANGUAGE_CODE }}" data-bs-theme="dark">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -32,26 +33,24 @@
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
                     {% if un == 'home' or un == 'movie_list' or un == 'movie_detail' %}
-                    <a class="nav-link active" href="{% url 'cinema:home' %}">Repertuar</a>
+                    <a class="nav-link active" href="{% url 'cinema:home' %}">{% trans "Repertuar" %}</a>
                     {% else %}
-                    <a class="nav-link" href="{% url 'cinema:home' %}">Repertuar</a>
+                    <a class="nav-link" href="{% url 'cinema:home' %}">{% trans "Repertuar" %}</a>
                     {% endif %}
                 </li>
                 <li class="nav-item">
                     {% if un == 'screening_list' %}
-                    <a class="nav-link active"
-                       href="{% url 'cinema:screening_list' %}">Seanse</a>
+                    <a class="nav-link active" href="{% url 'cinema:screening_list' %}">{% trans "Seanse" %}</a>
                     {% else %}
-                    <a class="nav-link"
-                       href="{% url 'cinema:screening_list' %}">Seanse</a>
+                    <a class="nav-link" href="{% url 'cinema:screening_list' %}">{% trans "Seanse" %}</a>
                     {% endif %}
                 </li>
                 {% if user.is_authenticated %}
                 <li class="nav-item">
                     {% if un == 'my_bookings' %}
-                    <a class="nav-link active" href="{% url 'booking:my_bookings' %}">Moje rezerwacje</a>
+                    <a class="nav-link active" href="{% url 'booking:my_bookings' %}">{% trans "Moje rezerwacje" %}</a>
                     {% else %}
-                    <a class="nav-link" href="{% url 'booking:my_bookings' %}">Moje rezerwacje</a>
+                    <a class="nav-link" href="{% url 'booking:my_bookings' %}">{% trans "Moje rezerwacje" %}</a>
                     {% endif %}
                 </li>
                 {% endif %}
@@ -63,24 +62,29 @@
                     <span class="navbar-text text-muted small">{{ user.email }}</span>
                 </li>
                 <li class="nav-item">
-                    <form method="post"
-                          action="{% url 'accounts:logout' %}"
-                          class="d-inline">
+                    <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-light btn-sm">
-                            Wyloguj
-                        </button>
+                        <button type="submit" class="btn btn-outline-light btn-sm">{% trans "Wyloguj" %}</button>
                     </form>
                 </li>
                 {% else %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'accounts:login' %}">Zaloguj</a>
+                    <a class="nav-link" href="{% url 'accounts:login' %}">{% trans "Zaloguj" %}</a>
                 </li>
                 <li class="nav-item">
-                    <a class="btn btn-primary btn-sm ms-lg-2"
-                       href="{% url 'accounts:register' %}">Zarejestruj</a>
+                    <a class="btn btn-primary btn-sm ms-lg-2" href="{% url 'accounts:register' %}">{% trans "Zarejestruj" %}</a>
                 </li>
                 {% endif %}
+                <li class="nav-item ms-lg-2">
+                    <form method="post" action="{% url 'set_language' %}" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <select name="language" onchange="this.form.submit()" class="form-select form-select-sm" aria-label="{% trans 'Język' %}">
+                            <option value="pl" {% if LANGUAGE_CODE == 'pl' %}selected{% endif %}>PL</option>
+                            <option value="en" {% if LANGUAGE_CODE == 'en' %}selected{% endif %}>EN</option>
+                        </select>
+                    </form>
+                </li>
             </ul>
         </div>
     </div>

@@ -1,0 +1,274 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: KinoMania 1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-25 09:51+0200\n"
+"PO-Revision-Date: 2026-05-25 10:00+0200\n"
+"Last-Translator: KinoMania <bartlomiej.gozlinski@gmail.com>\n"
+"Language-Team: English\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+#: .\apps\accounts\views.py:52
+msgid "Konto jest już aktywne. Możesz się zalogować."
+msgstr ""
+
+#: .\apps\accounts\views.py:59
+msgid "Konto aktywowane. Zaloguj się."
+msgstr ""
+
+#: .\apps\booking\forms.py:21
+msgid "Liczba miejsc"
+msgstr ""
+
+#: .\apps\booking\forms.py:25
+msgid "Podaj liczbę miejsc."
+msgstr ""
+
+#: .\apps\booking\forms.py:26
+msgid "Podaj poprawną liczbę miejsc."
+msgstr ""
+
+#: .\apps\booking\forms.py:27
+msgid "Musisz zarezerwować co najmniej 1 miejsce."
+msgstr ""
+
+#: .\apps\booking\forms.py:28
+msgid "Maksymalnie możesz zarezerwować 10 miejsc."
+msgstr ""
+
+#: .\apps\booking\forms.py:42
+#, python-format
+msgid "Dostępnych jest tylko %(available)d miejsc — wybierz mniejszą liczbę."
+msgstr ""
+
+#: .\apps\booking\forms.py:52
+msgid "Seans już się rozpoczął — nie można zarezerwować miejsc."
+msgstr ""
+
+#: .\apps\booking\models.py:12
+msgid "Oczekująca"
+msgstr ""
+
+#: .\apps\booking\models.py:13
+msgid "Potwierdzona"
+msgstr ""
+
+#: .\apps\booking\models.py:14
+msgid "Anulowana"
+msgstr ""
+
+#: .\apps\booking\models.py:22
+msgid "user"
+msgstr ""
+
+#: .\apps\booking\models.py:28 .\apps\cinema\models.py:118
+msgid "screening"
+msgstr ""
+
+#: .\apps\booking\models.py:31
+msgid "seats count"
+msgstr ""
+
+#: .\apps\booking\models.py:35
+msgid "status"
+msgstr ""
+
+#: .\apps\booking\models.py:40
+msgid "expires at"
+msgstr ""
+
+#: .\apps\booking\models.py:42
+msgid "Stripe session ID"
+msgstr ""
+
+#: .\apps\booking\models.py:45
+msgid "Stripe payment intent ID"
+msgstr ""
+
+#: .\apps\booking\models.py:47
+msgid "refund ID"
+msgstr ""
+
+#: .\apps\booking\models.py:48
+msgid "refunded at"
+msgstr ""
+
+#: .\apps\booking\models.py:49
+msgid "created at"
+msgstr ""
+
+#: .\apps\booking\models.py:52
+msgid "booking"
+msgstr ""
+
+#: .\apps\booking\models.py:53
+msgid "bookings"
+msgstr ""
+
+#: .\apps\cinema\models.py:11 .\apps\cinema\models.py:51
+msgid "name"
+msgstr ""
+
+#: .\apps\cinema\models.py:14
+msgid "genre"
+msgstr ""
+
+#: .\apps\cinema\models.py:15 .\apps\cinema\models.py:81
+msgid "genres"
+msgstr ""
+
+#: .\apps\cinema\models.py:23 .\apps\cinema\models.py:37
+msgid "full name"
+msgstr ""
+
+#: .\apps\cinema\models.py:24 .\apps\cinema\models.py:38
+msgid "photo"
+msgstr ""
+
+#: .\apps\cinema\models.py:25 .\apps\cinema\models.py:39
+msgid "biography"
+msgstr ""
+
+#: .\apps\cinema\models.py:28
+msgid "actor"
+msgstr ""
+
+#: .\apps\cinema\models.py:29 .\apps\cinema\models.py:82
+msgid "actors"
+msgstr ""
+
+#: .\apps\cinema\models.py:42
+msgid "director"
+msgstr ""
+
+#: .\apps\cinema\models.py:43 .\apps\cinema\models.py:83
+msgid "directors"
+msgstr ""
+
+#: .\apps\cinema\models.py:53 .\apps\cinema\models.py:73
+msgid "description"
+msgstr ""
+
+#: .\apps\cinema\models.py:57
+msgid "capacity"
+msgstr ""
+
+#: .\apps\cinema\models.py:63 .\apps\cinema\models.py:107
+msgid "hall"
+msgstr ""
+
+#: .\apps\cinema\models.py:64
+msgid "halls"
+msgstr ""
+
+#: .\apps\cinema\models.py:72
+msgid "title"
+msgstr ""
+
+#: .\apps\cinema\models.py:74
+msgid "release date"
+msgstr ""
+
+#: .\apps\cinema\models.py:76
+msgid "duration (minutes)"
+msgstr ""
+
+#: .\apps\cinema\models.py:79
+msgid "poster"
+msgstr ""
+
+#: .\apps\cinema\models.py:80
+msgid "trailer URL"
+msgstr ""
+
+#: .\apps\cinema\models.py:86 .\apps\cinema\models.py:102
+msgid "movie"
+msgstr ""
+
+#: .\apps\cinema\models.py:87
+msgid "movies"
+msgstr ""
+
+#: .\apps\cinema\models.py:109
+msgid "start time"
+msgstr ""
+
+#: .\apps\cinema\models.py:111
+msgid "price"
+msgstr ""
+
+#: .\apps\cinema\models.py:119
+msgid "screenings"
+msgstr ""
+
+#: .\apps\payments\models.py:14
+msgid "Stripe event ID"
+msgstr ""
+
+#: .\apps\payments\models.py:18
+msgid "event type"
+msgstr ""
+
+#: .\apps\payments\models.py:19
+msgid "payload"
+msgstr ""
+
+#: .\apps\payments\models.py:20
+msgid "received at"
+msgstr ""
+
+#: .\apps\payments\models.py:21
+msgid "processed at"
+msgstr ""
+
+#: .\apps\payments\models.py:24
+msgid "Stripe event"
+msgstr ""
+
+#: .\apps\payments\models.py:25
+msgid "Stripe events"
+msgstr ""
+
+#: .\settings\base.py:99
+msgid "Polski"
+msgstr "Polish"
+
+#: .\settings\base.py:99
+msgid "English"
+msgstr "English"
+
+#: .\templates\base.html:36 .\templates\base.html:38
+msgid "Repertuar"
+msgstr "Now Showing"
+
+#: .\templates\base.html:43 .\templates\base.html:45
+msgid "Seanse"
+msgstr "Screenings"
+
+#: .\templates\base.html:51 .\templates\base.html:53
+msgid "Moje rezerwacje"
+msgstr "My Bookings"
+
+#: .\templates\base.html:67
+msgid "Wyloguj"
+msgstr "Log out"
+
+#: .\templates\base.html:72
+msgid "Zaloguj"
+msgstr "Log in"
+
+#: .\templates\base.html:75
+msgid "Zarejestruj"
+msgstr "Sign up"
+
+#: .\templates\base.html:82
+msgid "Język"
+msgstr "Language"

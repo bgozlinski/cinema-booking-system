@@ -25,7 +25,8 @@ db.sqlite3
 db.sqlite3-journal
 media/
 staticfiles/
-locale/*/LC_MESSAGES/*.mo
+# Compiled gettext catalogs (.mo) are committed so CI runs tests without a
+# compilemessages step — re-run `manage.py compilemessages` after editing .po (US-37).
 
 # Environment
 .env
