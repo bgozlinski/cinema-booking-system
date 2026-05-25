@@ -134,7 +134,7 @@ def test_catalog_page_translated_en(client):
 - [ ] **Step 2 [User]: Run to confirm FAIL**
 
 Run: `poetry run pytest tests/test_i18n.py -q --no-cov`
-Expected: the 3 new tests FAIL — `test_en_catalog_has_no_empty_msgstr` (no US-38 msgids translated yet / entries empty), `test_seat_count_plural_display` (msgid not in catalog → returns the Polish msgid, so EN assert fails), `test_catalog_page_translated_en` ("Search" not present — page still Polish). The 4 US-37 tests stay green.
+Expected: **2** of the new tests FAIL — `test_seat_count_plural_display` (msgid not in catalog yet → `ngettext` returns the Polish msgid, so the EN assert fails) and `test_catalog_page_translated_en` ("Search" not present — page still Polish). `test_en_catalog_has_no_empty_msgstr` **passes** here (the en catalog still holds only US-37's fully-translated navbar entries); it goes red transiently in Task 6 after `makemessages` extracts the new untranslated msgids, then green once they're filled. The 4 US-37 tests stay green.
 
 ---
 
