@@ -1,3 +1,94 @@
+# US-41 — README Rewrite Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Replace the sprint-zero `README.md` with a complete, accurate README for the finished M1–M5 project; add an MIT `LICENSE`; fix the `.env.example` Postgres port.
+
+**Architecture:** Docs-only — no TDD. Three files change: `README.md` (full rewrite), `LICENSE` (new), `.env.example` (one digit). All content is verified against the codebase in the spec. Verification = renders cleanly + commands are copy-pasteable + sanity `pytest` stays green (no Python touched).
+
+**Tech Stack:** Markdown · MIT license.
+
+**Role split:** Claude writes all three files. **You run** the verification commands and all `git`/`gh`. Branch is already `docs/M5-readme-rewrite`.
+
+**Spec:** `docs/superpowers/specs/2026-05-26-us41-readme-rewrite-design.md`
+
+---
+
+### Task 1: Add the MIT LICENSE
+
+**Files:**
+- Create: `LICENSE`
+
+- [ ] **Step 1: Create `LICENSE` (Claude)**
+
+```text
+MIT License
+
+Copyright (c) 2026 Bartłomiej Gozliński
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add LICENSE
+git commit -m "docs(M5): add MIT LICENSE (US-41)"
+```
+
+---
+
+### Task 2: Fix the `.env.example` Postgres port
+
+**Files:**
+- Modify: `.env.example` (the `DATABASE_URL` line)
+
+- [ ] **Step 1: Change the port (Claude)**
+
+Replace:
+```
+DATABASE_URL=postgres://kinomania:kinomania@localhost:5432/kinomania
+```
+with (port `5432` → `5439`, matching `docker-compose.override.yml`):
+```
+DATABASE_URL=postgres://kinomania:kinomania@localhost:5439/kinomania
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add .env.example
+git commit -m "fix(M5): align .env.example DB port with compose override 5439 (US-41)"
+```
+
+---
+
+### Task 3: Rewrite README.md
+
+**Files:**
+- Modify: `README.md` (full replacement)
+
+- [ ] **Step 1: Replace the entire file (Claude)**
+
+Write `README.md` with exactly this content:
+
+````markdown
 # KinoMania — Cinema Booking System
 
 [![CI](https://github.com/bgozlinski/cinema-booking-system/actions/workflows/ci.yml/badge.svg)](https://github.com/bgozlinski/cinema-booking-system/actions/workflows/ci.yml)
@@ -73,10 +164,11 @@ poetry install
 poetry run pre-commit install
 poetry run pre-commit install --hook-type pre-push
 
-# 4. Create your env file (see Configuration below)
+# 4. Create your env file (see Configuration below). The default DATABASE_URL
+#    points at host port 5439, matching docker-compose.override.yml.
 cp .env.example .env
 
-# 5. Start PostgreSQL (exposed on host port 5432)
+# 5. Start PostgreSQL (compose auto-merges the override → host port 5439)
 docker compose up -d
 
 # 6. Apply migrations
@@ -117,7 +209,7 @@ All configuration is read from `.env` (copy `.env.example`). Key variables:
 | `DEBUG` | Debug mode (`True` for local dev) |
 | `SECRET_KEY` | Django secret key |
 | `ALLOWED_HOSTS` | Comma-separated allowed hosts |
-| `DATABASE_URL` | Postgres DSN — host port **5432** locally |
+| `DATABASE_URL` | Postgres DSN — host port **5439** locally |
 | `LANGUAGE_CODE` / `TIME_ZONE` | Defaults (`pl` / `Europe/Warsaw`) |
 | `STRIPE_API_KEY` | Stripe test secret key (`sk_test_...`) |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret (`whsec_...`) |
@@ -128,10 +220,10 @@ All configuration is read from `.env` (copy `.env.example`). Key variables:
 
 ## Troubleshooting
 
-- **`connection refused` / can't reach Postgres** — make sure the Docker Postgres
-  container is up (`docker compose ps`); it's exposed on host port **5432**. If that
-  port is already used by a local Postgres, change the host port in both
-  `docker-compose.override.yml` and `DATABASE_URL`.
+- **`connection refused` / can't reach Postgres** — the committed
+  `docker-compose.override.yml` maps Postgres to host port **5439** (not 5432) to avoid
+  clashing with a local Postgres. Ensure `DATABASE_URL` uses `5439` (the shipped
+  `.env.example` already does).
 - **`database "kinomania" does not exist` / DB not ready** — the container needs a moment
   to pass its healthcheck; check `docker compose ps` and retry `migrate`.
 - **Can't log into `/admin/`** — `seed_db` creates only regular users. Create an admin
@@ -219,3 +311,49 @@ cinema-booking-system/
 ## License
 
 Released under the [MIT License](LICENSE).
+````
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add README.md
+git commit -m "docs(M5): rewrite README — setup, troubleshooting, architecture (US-41)"
+```
+
+---
+
+### Task 4: Verify and open PR
+
+- [ ] **Step 1: Sanity-check the repo is unaffected (you run)**
+
+```bash
+poetry run pytest -q
+```
+Expected: full suite still green (no Python changed).
+
+- [ ] **Step 2: Eyeball the rendered README (you)**
+
+Open `README.md` in the IDE/GitHub preview. Confirm: badges render, tables/code
+fences are well-formed, internal links (`LICENSE`, `.Claude/*`, `docs/*`) resolve,
+and the Getting-started commands match your environment.
+
+- [ ] **Step 3: Push + open PR (you run)**
+
+```bash
+git push -u origin docs/M5-readme-rewrite
+gh pr create --base main \
+  --title "docs(M5): README rewrite + MIT license (US-41)" \
+  --body "Closes US-41. Full README (setup/troubleshooting/architecture), MIT LICENSE, and .env.example DB-port fix (5432→5439)."
+```
+
+---
+
+## Self-review
+
+- **Spec coverage:** LICENSE (Task 1), `.env.example` port fix (Task 2), all 14 README
+  sections + Documentation pointer (Task 3), verification + PR (Task 4). Every spec
+  section maps to a task.
+- **Placeholders:** none — full LICENSE text and full README Markdown are inline; no TBD.
+- **Fact consistency:** webhook path `/payments/webhooks/stripe/`, API base `/api/v1/`,
+  port `5439`, `settings.dev` default, email-only superuser, tags `v0.1.0`–`v0.4.0`
+  (M5 → `v1.0.0` pending) — all match the verified codebase facts in the spec.
