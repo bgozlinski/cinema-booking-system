@@ -1,0 +1,17 @@
+{% comment %}
+Snippet — status badge dla rezerwacji. Wstaw przez include albo skopiuj inline.
+
+Użycie:
+  {% include "_partials/booking_badge.html" with status=booking.status display=booking.get_status_display %}
+
+Mapuje statusy modelu (PENDING / CONFIRMED / CANCELLED / PAST) na klasy km-badge--*.
+{% endcomment %}
+{% if status == 'PENDING' %}
+    <span class="km-badge km-badge--pending">{{ display }}</span>
+{% elif status == 'CONFIRMED' %}
+    <span class="km-badge km-badge--confirmed">{{ display }}</span>
+{% elif status == 'CANCELLED' %}
+    <span class="km-badge km-badge--cancelled">{{ display }}</span>
+{% else %}
+    <span class="km-badge km-badge--past">{{ display }}</span>
+{% endif %}

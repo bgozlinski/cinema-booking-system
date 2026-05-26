@@ -116,8 +116,14 @@ class ScreeningListView(TemplateView):
             grouped.setdefault(s.movie, []).append(s)
         movie_groups = sorted(grouped.items(), key=lambda item: item[1][0].start_time)
 
+        today = timezone.localdate()
         ctx["effective_date"] = effective
-        ctx["today"] = timezone.localdate()
-        ctx["max_date"] = timezone.localdate() + timedelta(days=30)
+        ctx["today"] = today
+        ctx["max_date"] = today + timedelta(days=30)
         ctx["movie_groups"] = movie_groups
+        # Date-chip strip: today + next 6 days (template renders it only if present).
+        ctx["available_dates"] = [
+            {"date": today + timedelta(days=i), "is_today": i == 0, "is_tomorrow": i == 1}
+            for i in range(7)
+        ]
         return ctx

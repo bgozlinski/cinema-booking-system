@@ -7,6 +7,23 @@
 <h1 class="mb-1">{% trans "Seanse" %}</h1>
 <p class="text-muted small mb-4">{{ effective_date|date:"l, j E Y" }}</p>
 
+{% if available_dates %}
+<nav class="km-datestrip" aria-label="{% trans 'Wybierz dzień' %}">
+    {% for d in available_dates %}
+    <a class="km-datechip {% if d.date == effective_date %}is-active{% endif %}"
+       href="?date={{ d.date|date:'Y-m-d' }}">
+        <div class="km-datechip__day">
+            {% if d.is_today %}{% trans "Dziś" %}
+            {% elif d.is_tomorrow %}{% trans "Jutro" %}
+            {% else %}{{ d.date|date:"D" }}{% endif %}
+        </div>
+        <div class="km-datechip__date">{{ d.date|date:"d.m" }}</div>
+    </a>
+    {% endfor %}
+</nav>
+{% endif %}
+
+{# Fallback / dokładny wybór daty — input pickera #}
 <form method="get" class="filter-bar" role="search">
     <div>
         <label for="date-input">{% trans "Data" %}</label>
@@ -45,7 +62,14 @@
             <div class="time-pill-hall-label">{% blocktrans with name=hall_group.grouper %}Sala {{ name }}{% endblocktrans %}</div>
             <div class="time-pill-group">
                 {% for s in hall_group.list %}
-                {% if s.is_available %}<a href="{% url 'booking:create' pk=s.pk %}" class="time-pill">{{ s.start_time|date:"H:i" }}</a>{% else %}<span class="time-pill is-soldout">{{ s.start_time|date:"H:i" }}</span>{% endif %}
+                {% if s.is_available %}
+                    <a href="{% url 'booking:create' pk=s.pk %}" class="time-pill">
+                        {{ s.start_time|date:"H:i" }}
+                        <span class="time-pill__price">{{ s.price }} zł</span>
+                    </a>
+                {% else %}
+                    <span class="time-pill is-soldout">{{ s.start_time|date:"H:i" }}</span>
+                {% endif %}
                 {% endfor %}
             </div>
         </div>

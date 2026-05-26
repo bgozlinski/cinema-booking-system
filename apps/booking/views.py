@@ -63,7 +63,10 @@ class BookingDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
-        return Booking.objects.select_related("screening__movie", "screening__hall", "user")
+        # prefetch genres: the redesigned ticket lists them, so avoid a render-time query.
+        return Booking.objects.select_related(
+            "screening__movie", "screening__hall", "user"
+        ).prefetch_related("screening__movie__genres")
 
     def get_object(self, queryset=None):
         if not hasattr(self, "_booking"):

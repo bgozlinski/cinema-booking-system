@@ -2,23 +2,79 @@
 {% load i18n %}
 
 {% block content %}
-<article class="container py-4" style="max-width: 640px;">
-  <h1 class="mb-4">{% blocktrans with id=booking.id %}Rezerwacja #{{ id }}{% endblocktrans %}</h1>
-
-  <div class="card">
-    <div class="card-body">
-      <h2 class="h5 card-title">{{ booking.screening.movie.title }}</h2>
-      <dl class="row mb-0">
-        <dt class="col-5">{% trans "Termin" %}</dt><dd class="col-7">{{ booking.screening.start_time|date:"d.m.Y H:i" }}</dd>
-        <dt class="col-5">{% trans "Sala" %}</dt><dd class="col-7">{{ booking.screening.hall.name }}</dd>
-        <dt class="col-5">{% trans "Liczba miejsc" %}</dt><dd class="col-7">{{ booking.seats_count }}</dd>
-        <dt class="col-5">{% trans "Łączna cena" %}</dt><dd class="col-7">{{ booking.total_price }} zł</dd>
-        <dt class="col-5">{% trans "Status" %}</dt>
-        <dd class="col-7"><span class="badge {% if booking.status == 'PENDING' %}<form method="post" action="{% url 'booking:checkout' pk=booking.pk %}" class="mt-3">{% csrf_token %}<button type="submit" class="btn btn-success">{% trans "Zapłać" %}</button></form>{% endif %}">{{ booking.get_status_display }}</span></dd>
-      </dl>
+<article class="container py-4">
+    {% if booking.status == 'CONFIRMED' %}
+    <div class="text-center mb-4">
+        <div class="km-success-circle">✓</div>
+        <h1 class="mb-2">{% trans "Rezerwacja potwierdzona!" %}</h1>
+        <p class="text-muted">{% trans "Bilety wysłaliśmy na Twój adres email." %}</p>
     </div>
-  </div>
+    {% else %}
+    <h1 class="mb-4 text-center">{% blocktrans with id=booking.id %}Rezerwacja #{{ id }}{% endblocktrans %}</h1>
+    {% endif %}
 
-  <a href="{% url 'cinema:movie_list' %}" class="btn btn-outline-light mt-4">← {% trans "Repertuar" %}</a>
+    <div class="km-ticket">
+        <div class="km-ticket__top">
+            <div class="d-flex gap-3 mb-3 align-items-start">
+                <div style="width:64px; aspect-ratio:2/3; border-radius:6px; overflow:hidden; flex-shrink:0;">
+                    {% if booking.screening.movie.poster %}
+                    <img src="{{ booking.screening.movie.poster.url }}" alt="{{ booking.screening.movie.title }}"
+                         style="width:100%; height:100%; object-fit:cover;">
+                    {% endif %}
+                </div>
+                <div class="flex-grow-1">
+                    <h2 class="h5 mb-1">{{ booking.screening.movie.title }}</h2>
+                    <div class="text-muted small">
+                        {% for genre in booking.screening.movie.genres.all %}{{ genre.name }}{% if not forloop.last %} · {% endif %}{% endfor %}
+                    </div>
+                    <div class="text-muted small mt-1">
+                        {{ booking.screening.start_time|date:"l, d.m.Y" }} · {{ booking.screening.start_time|date:"H:i" }}
+                    </div>
+                </div>
+                <span class="km-badge km-badge--{{ booking.status|lower }}">
+                    {{ booking.get_status_display }}
+                </span>
+            </div>
+
+            <dl class="km-dl">
+                <dt>{% trans "Numer rezerwacji" %}</dt>
+                <dd>#KM-{{ booking.id }}</dd>
+
+                <dt>{% trans "Sala" %}</dt>
+                <dd>{{ booking.screening.hall.name }}</dd>
+
+                <dt>{% trans "Liczba miejsc" %}</dt>
+                <dd>{{ booking.seats_count }}</dd>
+
+                <dt>{% trans "Łączna cena" %}</dt>
+                <dd style="color: var(--accent); font-weight: 700;">{{ booking.total_price }} zł</dd>
+            </dl>
+        </div>
+
+        <div class="km-ticket__perforate"></div>
+
+        <div class="km-ticket__bottom">
+            <div>
+                <div class="label-uppercase">{% trans "Bilet" %}</div>
+                <div class="km-mono fw-bold mt-1" style="font-size:16px;">KM-{{ booking.id }}</div>
+            </div>
+            {# Placeholder pod QR — zamień na realny generator jeśli masz #}
+            <div style="width:80px; height:80px; background:#fff; border-radius:8px;
+                        display:grid; place-items:center; color:#000; font-size:10px;">
+                QR
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        {% if booking.status == 'PENDING' %}
+        <form method="post" action="{% url 'booking:checkout' pk=booking.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success me-2">{% trans "Zapłać" %}</button>
+        </form>
+        {% endif %}
+        <a href="{% url 'booking:my_bookings' %}" class="btn btn-outline-light me-2">{% trans "Moje rezerwacje" %}</a>
+        <a href="{% url 'cinema:movie_list' %}" class="btn btn-primary">← {% trans "Repertuar" %}</a>
+    </div>
 </article>
 {% endblock %}

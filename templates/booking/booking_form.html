@@ -2,52 +2,98 @@
 {% load i18n %}
 
 {% block content %}
-<article class="container py-4" style="max-width: 640px;">
-    <a href="{{ screening.movie.get_absolute_url }}" class="text-decoration-none">← {{ screening.movie.title }}</a>
+<article class="container py-4">
+    <a href="{{ screening.movie.get_absolute_url }}" class="movie-hero__breadcrumb">
+        ← {{ screening.movie.title }}
+    </a>
     <h1 class="mt-2 mb-4">{% trans "Rezerwacja" %}</h1>
 
-    <div class="card mb-4">
-        <div class="card-body">
-            <h2 class="h5 card-title">{{ screening.movie.title }}</h2>
-            <dl class="row mb-0">
-                <dt class="col-5">{% trans "Termin" %}</dt>
-                <dd class="col-7">{{ screening.start_time|date:"d.m.Y H:i" }}</dd>
-                <dt class="col-5">{% trans "Sala" %}</dt>
-                <dd class="col-7">{{ screening.hall.name }}</dd>
-                <dt class="col-5">{% trans "Cena za miejsce" %}</dt>
-                <dd class="col-7">{{ screening.price }} zł</dd>
-                <dt class="col-5">{% trans "Dostępne miejsca" %}</dt>
-                <dd class="col-7">{{ screening.available_seats_count }}</dd>
-            </dl>
-        </div>
-    </div>
+    <div class="row g-4">
 
-    <form method="post" novalidate>
-        {% csrf_token %}
-        {% if form.non_field_errors %}
-        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
-        {% endif %}
-        <div class="mb-3">
-            <label for="{{ form.seats_count.id_for_label }}" class="form-label">{{ form.seats_count.label }}</label>
-            {{ form.seats_count }}
-            {% if form.seats_count.errors %}
-            <div class="text-danger small mt-1">{{ form.seats_count.errors }}</div>
-            {% endif %}
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+                        <div>
+                            <h2 class="h5 card-title mb-1">{{ screening.movie.title }}</h2>
+                            <div class="text-muted small">
+                                {{ screening.start_time|date:"l, d.m.Y" }} ·
+                                {{ screening.start_time|date:"H:i" }} ·
+                                {% blocktrans with name=screening.hall.name %}Sala {{ name }}{% endblocktrans %}
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 small">
+                            <div>
+                                <div class="label-uppercase">{% trans "Cena za miejsce" %}</div>
+                                <div class="fw-bold mt-1">{{ screening.price }} zł</div>
+                            </div>
+                            <div>
+                                <div class="label-uppercase">{% trans "Dostępne miejsca" %}</div>
+                                <div class="fw-bold mt-1">{{ screening.available_seats_count }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post" novalidate id="booking-form">
+                        {% csrf_token %}
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                        {% endif %}
+                        <div class="row mb-0">
+                            <div class="col-6 col-sm-4 col-lg-3">
+                                <label for="{{ form.seats_count.id_for_label }}" class="form-label">
+                                    {{ form.seats_count.label }}
+                                </label>
+                                {{ form.seats_count }}
+                                {% if form.seats_count.errors %}
+                                <div class="text-danger small mt-1">{{ form.seats_count.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-        <p class="fs-5">{% trans "Razem:" %} <strong id="booking-total">—</strong> zł</p>
-        <button type="submit" class="btn btn-primary">{% trans "Zarezerwuj i zapłać" %}</button>
-    </form>
+
+        <div class="col-lg-4">
+            <div class="km-summary">
+                <h3 class="label-uppercase mb-3">{% trans "Podsumowanie" %}</h3>
+
+                <div class="km-summary__row">
+                    <span class="text-muted">{{ screening.movie.title }}</span>
+                </div>
+                <div class="km-summary__row">
+                    <span><span id="booking-count">1</span> × {{ screening.price }} zł</span>
+                    <span id="booking-subtotal">{{ screening.price }} zł</span>
+                </div>
+                <div class="km-summary__row align-items-baseline mt-2">
+                    <span class="fw-bold">{% trans "Razem" %}</span>
+                    <span class="km-summary__total"><span id="booking-total">{{ screening.price }}</span> zł</span>
+                </div>
+
+                <button type="submit" form="booking-form"
+                        class="btn btn-primary w-100 mt-3">
+                    {% trans "Zarezerwuj i zapłać" %} →
+                </button>
+            </div>
+        </div>
+
+    </div>
 </article>
 
 <script>
     (function () {
         var price = parseFloat("{{ screening.price|stringformat:'f' }}");
         var input = document.getElementById("{{ form.seats_count.id_for_label }}");
-        var out = document.getElementById("booking-total");
+        var count = document.getElementById("booking-count");
+        var subtotal = document.getElementById("booking-subtotal");
+        var total = document.getElementById("booking-total");
 
         function update() {
-            var n = parseInt(input.value, 10);
-            out.textContent = (n > 0) ? (price * n).toFixed(2) : "—";
+            var n = parseInt(input.value, 10) || 0;
+            count.textContent = n;
+            subtotal.textContent = (price * n).toFixed(2) + " zł";
+            total.textContent = (price * n).toFixed(2);
         }
 
         input.addEventListener("input", update);
