@@ -1,0 +1,355 @@
+/* ============================================================
+   KinoMania — addons.css
+   Drop this next to theme.css and components.css in static/css/.
+   Adds: status badges, ticket layout, booking-row, date chips,
+   summary rail, section heading, styled 404, plus a few utility classes.
+   All variables come from theme.css.
+   ============================================================ */
+
+/* ───────── Section heading with rule ───────── */
+.km-section-h {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.km-section-h::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+/* ───────── Date chip strip (screening_list — wybór dnia) ───────── */
+.km-datestrip {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.km-datestrip::-webkit-scrollbar { display: none; }
+
+.km-datechip {
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    background: var(--bg-elev);
+    color: var(--text);
+    border: 1px solid var(--border);
+    font-weight: 600;
+    font-size: 12px;
+    min-width: 96px;
+    text-align: center;
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color 0.15s, background 0.15s;
+}
+.km-datechip:hover {
+    border-color: var(--accent);
+    color: var(--text);
+}
+.km-datechip.is-active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+.km-datechip__day {
+    font-size: 10px;
+    opacity: 0.7;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+.km-datechip__date {
+    font-size: 14px;
+    font-weight: 800;
+}
+
+/* ───────── Time-pill extras (price subline + active state) ───────── */
+.time-pill__price {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-left: 6px;
+}
+.time-pill:hover .time-pill__price { color: var(--accent); }
+.time-pill.is-active {
+    border-color: var(--accent);
+    background: var(--accent-bg);
+    color: var(--accent);
+}
+
+/* ───────── Movie-card extras (NEW/PREMIERE/HIT badge + rating chip) ───────── */
+.movie-card__badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: var(--radius-sm);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    z-index: 1;
+}
+
+.movie-hero__rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 12px;
+    vertical-align: middle;
+}
+.movie-hero__star { color: #fbbf24; }
+
+/* ───────── Status badges (rezerwacje) ───────── */
+.km-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    line-height: 1;
+}
+.km-badge--pending {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+}
+.km-badge--confirmed {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--success);
+}
+.km-badge--cancelled,
+.km-badge--past {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-muted);
+}
+.km-badge--new {
+    background: var(--accent-bg);
+    color: var(--accent);
+}
+
+/* ───────── Tabs (Bootstrap nav-pills alt — podkreślenie zamiast pigułki) ───────── */
+.km-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+}
+.km-tab {
+    padding: 10px 16px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.12s, border-color 0.12s;
+    text-decoration: none;
+}
+.km-tab:hover { color: var(--text); }
+.km-tab.is-active {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+/* ───────── Booking row (my_bookings — bogatszy layout niż card) ───────── */
+.km-brow {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    display: grid;
+    grid-template-columns: 60px 1fr auto;
+    gap: 16px;
+    align-items: center;
+}
+.km-brow__poster {
+    aspect-ratio: 2 / 3;
+    border-radius: 4px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #4a4d54 0%, #2a2d34 100%);
+    position: relative;
+}
+.km-brow__poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.km-brow__title {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text);
+    text-decoration: none;
+}
+.km-brow__title:hover { color: var(--accent); }
+.km-brow__meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+.km-brow__ref {
+    font-size: 11px;
+    color: var(--text-muted);
+    opacity: 0.7;
+    margin-top: 2px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+.km-brow__actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+@media (max-width: 575.98px) {
+    .km-brow {
+        grid-template-columns: 50px 1fr;
+    }
+    .km-brow__actions {
+        grid-column: 1 / -1;
+        justify-content: flex-end;
+    }
+}
+
+/* ───────── Booking summary rail (booking_form — sticky panel z totalami) ───────── */
+.km-summary {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    position: sticky;
+    top: 80px;
+}
+.km-summary__row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 13px;
+}
+.km-summary__row + .km-summary__row {
+    border-top: 1px dashed var(--border);
+}
+.km-summary__total {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--accent);
+}
+.km-chips {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+.km-chip {
+    background: var(--accent-bg);
+    color: var(--accent);
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ───────── Ticket / confirmation (booking_detail) ───────── */
+.km-ticket {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    max-width: 520px;
+    margin: 0 auto;
+}
+.km-ticket__top { padding: 20px; }
+.km-ticket__perforate {
+    height: 1px;
+    background: repeating-linear-gradient(to right, var(--border) 0 6px, transparent 6px 12px);
+    position: relative;
+}
+.km-ticket__perforate::before,
+.km-ticket__perforate::after {
+    content: "";
+    position: absolute;
+    top: -8px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--bg);
+}
+.km-ticket__perforate::before { left: -8px; }
+.km-ticket__perforate::after { right: -8px; }
+.km-ticket__bottom {
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.km-success-circle {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--success);
+    color: #0a1a0e;
+    display: grid;
+    place-items: center;
+    font-size: 32px;
+    font-weight: 800;
+    margin: 0 auto 16px;
+}
+
+/* ───────── Definition list (booking_detail / confirmation) ───────── */
+.km-dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 10px 24px;
+    font-size: 13px;
+    margin: 0;
+}
+.km-dl dt { color: var(--text-muted); }
+.km-dl dd { margin: 0; color: var(--text); font-weight: 500; }
+
+/* ───────── Styled error pages (403 / 404 / 500) ───────── */
+.km-error {
+    padding: 80px 32px;
+    text-align: center;
+}
+.km-error__code {
+    font-size: 120px;
+    font-weight: 900;
+    letter-spacing: -0.05em;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--accent), var(--text-muted));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 12px;
+}
+.km-error__title {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+.km-error__msg {
+    color: var(--text-muted);
+    max-width: 40ch;
+    margin: 0 auto 24px;
+}
+
+/* ───────── Small utility classes ───────── */
+.km-mono {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    letter-spacing: 0.04em;
+}

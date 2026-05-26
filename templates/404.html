@@ -1,6 +1,17 @@
 {% extends "errors/_error_base.html" %}
 {% load i18n %}
-{% block title %}404 — KinoMania{% endblock %}
-{% block error_code %}404{% endblock %}
-{% block error_title %}{% trans "Nie znaleziono strony" %}{% endblock %}
-{% block error_text %}{% trans "Strona, której szukasz, nie istnieje lub została przeniesiona." %}{% endblock %}
+
+{% block title %}404 — {% trans "Nie znaleziono" %}{% endblock %}
+
+{% block content %}
+<div class="km-error">
+    <div class="km-error__code">404</div>
+    <h1 class="km-error__title">{% trans "Nie znaleziono strony" %}</h1>
+    <p class="km-error__msg">
+        {% trans "Strona, której szukasz, nie istnieje albo została przeniesiona." %}
+    </p>
+    <a href="{% url 'cinema:movie_list' %}" class="btn btn-primary">
+        ← {% trans "Wróć do repertuaru" %}
+    </a>
+</div>
+{% endblock %}

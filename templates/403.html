@@ -1,6 +1,17 @@
 {% extends "errors/_error_base.html" %}
 {% load i18n %}
-{% block title %}403 — KinoMania{% endblock %}
-{% block error_code %}403{% endblock %}
-{% block error_title %}{% trans "Brak dostępu" %}{% endblock %}
-{% block error_text %}{% trans "Nie masz uprawnień, aby zobaczyć tę stronę." %}{% endblock %}
+
+{% block title %}403 — {% trans "Brak dostępu" %}{% endblock %}
+
+{% block content %}
+<div class="km-error">
+    <div class="km-error__code">403</div>
+    <h1 class="km-error__title">{% trans "Brak dostępu" %}</h1>
+    <p class="km-error__msg">
+        {% trans "Nie masz uprawnień do oglądania tej strony." %}
+    </p>
+    <a href="{% url 'cinema:movie_list' %}" class="btn btn-primary">
+        ← {% trans "Wróć do repertuaru" %}
+    </a>
+</div>
+{% endblock %}

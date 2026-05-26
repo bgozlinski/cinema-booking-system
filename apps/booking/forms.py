@@ -28,7 +28,9 @@ class BookingForm(forms.Form):
             "min_value": _("Musisz zarezerwować co najmniej 1 miejsce."),
             "max_value": _("Maksymalnie możesz zarezerwować 10 miejsc."),
         },
-        widget=forms.NumberInput(attrs={"min": 1, "max": 10, "class": "form-control"}),
+        widget=forms.NumberInput(
+            attrs={"min": 1, "max": 10, "class": "form-control form-control-sm"}
+        ),
     )
 
     def __init__(self, *args: Any, screening: Screening, **kwargs: Any) -> None:
