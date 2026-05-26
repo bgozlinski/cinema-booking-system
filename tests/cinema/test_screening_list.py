@@ -181,8 +181,9 @@ class TestRendering:
         assert f'href="/movies/{movie.pk}/"' in content
 
     def test_screening_pill_shows_hour_grouped_by_hall(self, client):
-        """Redesign: pigułka godziny + label sali. Cena/miejsca/Zarezerwuj zniknęły
-        z tej strony (przeniesione na przyszły screening_detail, US-21)."""
+        """UI-handoff redesign: hour pill + hall label, with the per-seat price shown as a
+        subline on the pill (.time-pill__price). The pill itself is the link to the booking
+        page, so there is no separate 'Zarezerwuj' button text on the list."""
         tomorrow = timezone.localdate() + timedelta(days=1)
         hall = HallFactory(name="Sala A", capacity=100)
         movie = MovieFactory()
@@ -202,11 +203,11 @@ class TestRendering:
         assert 'class="time-pill-hall-label"' in content
         # The hour is rendered inside a .time-pill anchor
         assert 'class="time-pill' in content
-        # Out-of-scope info no longer rendered on the list
+        # Price subline is now shown on the pill (handoff redesign re-adds it).
+        assert 'class="time-pill__price"' in content
+        assert "zł" in content
+        # No standalone "Zarezerwuj" button text — the pill is the link.
         assert "Zarezerwuj" not in content
-        assert "42,50" not in content
-        assert "42.50" not in content
-        assert "zł" not in content
 
     def test_genres_render_on_screening_card_meta(self, client):
         """Redesign: gatunki jako plain text w .screening-card__meta,
