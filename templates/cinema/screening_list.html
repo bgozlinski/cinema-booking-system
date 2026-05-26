@@ -7,8 +7,6 @@
 <h1 class="mb-1">{% trans "Seanse" %}</h1>
 <p class="text-muted small mb-4">{{ effective_date|date:"l, j E Y" }}</p>
 
-{# Date chip strip — szybki wybór dnia bez wpisywania w input. Pokazuje
-   dzisiaj + N kolejnych dni (przekaż w widoku jako `available_dates`). #}
 {% if available_dates %}
 <nav class="km-datestrip" aria-label="{% trans 'Wybierz dzień' %}">
     {% for d in available_dates %}

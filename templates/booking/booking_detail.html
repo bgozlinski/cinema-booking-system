@@ -3,8 +3,6 @@
 
 {% block content %}
 <article class="container py-4">
-    {# Stan "po opłaceniu" — wyróżniony success-circle. Dla PENDING/CANCELLED
-       pomiń tę sekcję i pokaż samą kartę biletu. #}
     {% if booking.status == 'CONFIRMED' %}
     <div class="text-center mb-4">
         <div class="km-success-circle">✓</div>

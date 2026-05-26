@@ -8,8 +8,6 @@
     </a>
     <h1 class="mt-2 mb-4">{% trans "Rezerwacja" %}</h1>
 
-    {# Dwukolumnowy układ: detale + summary sticky po prawej.
-       Na mobile (Bootstrap col-lg-*) summary spada pod główny formularz. #}
     <div class="row g-4">
 
         <div class="col-lg-8">
@@ -41,14 +39,16 @@
                         {% if form.non_field_errors %}
                         <div class="alert alert-danger">{{ form.non_field_errors }}</div>
                         {% endif %}
-                        <div class="mb-0">
-                            <label for="{{ form.seats_count.id_for_label }}" class="form-label">
-                                {{ form.seats_count.label }}
-                            </label>
-                            {{ form.seats_count }}
-                            {% if form.seats_count.errors %}
-                            <div class="text-danger small mt-1">{{ form.seats_count.errors }}</div>
-                            {% endif %}
+                        <div class="row mb-0">
+                            <div class="col-6 col-sm-4 col-lg-3">
+                                <label for="{{ form.seats_count.id_for_label }}" class="form-label">
+                                    {{ form.seats_count.label }}
+                                </label>
+                                {{ form.seats_count }}
+                                {% if form.seats_count.errors %}
+                                <div class="text-danger small mt-1">{{ form.seats_count.errors }}</div>
+                                {% endif %}
+                            </div>
                         </div>
                     </form>
                 </div>
