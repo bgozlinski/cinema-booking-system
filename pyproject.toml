@@ -38,7 +38,8 @@ dev = [
     "pre-commit (>=4.6.0,<5.0.0)",
     "freezegun (>=1.5.5,<2.0.0)",
     "djangorestframework-stubs[compatible-mypy] (>=3.17.0,<4.0.0)",
-    "django-debug-toolbar (>=6.3.0,<7.0.0)"
+    "django-debug-toolbar (>=6.3.0,<7.0.0)",
+    "bandit (>=1.8,<2.0)"
 ]
 
 [tool.ruff]
@@ -121,3 +122,12 @@ exclude_lines = [
   "if TYPE_CHECKING:",
   "if __name__ == .__main__.:",
 ]
+
+[tool.bandit]
+# First-party source is scanned via `-r apps settings`; these dirs are excluded
+# as noise (test asserts → B101) or generated/non-source.
+exclude_dirs = ["migrations", "tests", "media", "static", "locale", "htmlcov"]
+# B311 flags the stdlib `random` module wholesale. Our only use is
+# non-cryptographic demo-data seeding in seed_db.py (no tokens/passwords/crypto);
+# `random` appears nowhere else in apps/settings. Skipped project-wide.
+skips = ["B311"]
