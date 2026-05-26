@@ -127,3 +127,7 @@ exclude_lines = [
 # First-party source is scanned via `-r apps settings`; these dirs are excluded
 # as noise (test asserts → B101) or generated/non-source.
 exclude_dirs = ["migrations", "tests", "media", "static", "locale", "htmlcov"]
+# B311 flags the stdlib `random` module wholesale. Our only use is
+# non-cryptographic demo-data seeding in seed_db.py (no tokens/passwords/crypto);
+# `random` appears nowhere else in apps/settings. Skipped project-wide.
+skips = ["B311"]
