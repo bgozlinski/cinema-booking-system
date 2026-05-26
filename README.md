@@ -73,11 +73,10 @@ poetry install
 poetry run pre-commit install
 poetry run pre-commit install --hook-type pre-push
 
-# 4. Create your env file (see Configuration below). The default DATABASE_URL
-#    points at host port 5439, matching docker-compose.override.yml.
+# 4. Create your env file (see Configuration below)
 cp .env.example .env
 
-# 5. Start PostgreSQL (compose auto-merges the override → host port 5439)
+# 5. Start PostgreSQL (exposed on host port 5432)
 docker compose up -d
 
 # 6. Apply migrations
@@ -118,7 +117,7 @@ All configuration is read from `.env` (copy `.env.example`). Key variables:
 | `DEBUG` | Debug mode (`True` for local dev) |
 | `SECRET_KEY` | Django secret key |
 | `ALLOWED_HOSTS` | Comma-separated allowed hosts |
-| `DATABASE_URL` | Postgres DSN — host port **5439** locally |
+| `DATABASE_URL` | Postgres DSN — host port **5432** locally |
 | `LANGUAGE_CODE` / `TIME_ZONE` | Defaults (`pl` / `Europe/Warsaw`) |
 | `STRIPE_API_KEY` | Stripe test secret key (`sk_test_...`) |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret (`whsec_...`) |
@@ -129,10 +128,10 @@ All configuration is read from `.env` (copy `.env.example`). Key variables:
 
 ## Troubleshooting
 
-- **`connection refused` / can't reach Postgres** — the committed
-  `docker-compose.override.yml` maps Postgres to host port **5439** (not 5432) to avoid
-  clashing with a local Postgres. Ensure `DATABASE_URL` uses `5439` (the shipped
-  `.env.example` already does).
+- **`connection refused` / can't reach Postgres** — make sure the Docker Postgres
+  container is up (`docker compose ps`); it's exposed on host port **5432**. If that
+  port is already used by a local Postgres, change the host port in both
+  `docker-compose.override.yml` and `DATABASE_URL`.
 - **`database "kinomania" does not exist` / DB not ready** — the container needs a moment
   to pass its healthcheck; check `docker compose ps` and retry `migrate`.
 - **Can't log into `/admin/`** — `seed_db` creates only regular users. Create an admin
