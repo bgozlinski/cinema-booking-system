@@ -20,6 +20,21 @@ KinoMania is a learning-grade Django 6 + Django REST Framework application: a pu
 - **Admin** — Django admin for managing the catalog, screenings, and bookings.
 - **Quality gates** — pytest (coverage ≥ 80%), ruff, mypy, and bandit, all enforced in CI.
 
+## Screenshots
+
+> Captured from the demo dataset (`python manage.py seed_db --flush --posters`), UI in English. Movie posters are generated placeholder art — the project ships no copyrighted images.
+
+| | |
+|:---:|:---:|
+| ![Home page](docs/screenshots/home.png) | ![Movie catalog](docs/screenshots/movie-list.png) |
+| **Home** | **Movie catalog with search & filters** |
+| ![Movie detail](docs/screenshots/movie-detail.png) | ![Screenings schedule](docs/screenshots/screening-list.png) |
+| **Movie detail** | **Screenings schedule** |
+| ![Seat booking](docs/screenshots/booking.png) | ![My bookings](docs/screenshots/my-bookings.png) |
+| **Seat booking** | **My bookings** |
+| ![Django admin](docs/screenshots/admin.png) | ![Interactive API docs](docs/screenshots/api-docs.png) |
+| **Django admin** | **Interactive API docs (Swagger)** |
+
 ## Tech stack
 
 | Area | Technology |
@@ -95,8 +110,10 @@ poetry run python manage.py runserver
 Open <http://localhost:8000> for the site and <http://localhost:8000/admin/> for the admin.
 
 **`seed_db` options:** `--users N` (default 10), `--movies N` (20), `--screenings N`
-(100), `--bookings N` (30), `--flush` (delete non-superuser users first),
-`--append` (only create missing seed users), `--force` (allow when `DEBUG=False`).
+(100), `--bookings N` (30), `--posters` (generate placeholder movie posters — off by
+default), `--flush` (delete non-superuser users first), `--append` (only create missing
+seed users), `--force` (allow when `DEBUG=False`). For the look in the screenshots above,
+seed with `poetry run python manage.py seed_db --flush --posters`.
 
 **Stripe webhooks locally** (optional, for testing payment confirmation): install the
 [Stripe CLI](https://stripe.com/docs/stripe-cli), then:
@@ -204,7 +221,7 @@ cinema-booking-system/
 - [x] **M2 — Catalog web** (`v0.2.0`) — movies, screenings, search, admin
 - [x] **M3 — Booking + Stripe** (`v0.3.0`) — reservations, Stripe Checkout, refunds
 - [x] **M4 — REST API** (`v0.4.0`) — DRF mirror with JWT + OpenAPI
-- [ ] **M5 — Polish** (`v1.0.0`) — i18n PL/EN, error pages, performance, security, docs
+- [x] **M5 — Polish** (`v1.0.0`) — i18n PL/EN, error pages, performance, security, docs
 
 ## Further documentation
 
