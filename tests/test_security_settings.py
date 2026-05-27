@@ -25,3 +25,9 @@ def test_prod_has_static_root_for_collectstatic():
     assert prod.STATIC_ROOT.name == "staticfiles"
     # STATIC_ROOT (collect target) must differ from the source dirs
     assert prod.STATIC_ROOT not in prod.STATICFILES_DIRS
+
+
+def test_prod_trusts_the_deployment_origin_for_csrf():
+    prod = importlib.import_module("settings.prod")
+
+    assert "https://kinomaniak.bnbg.pl" in prod.CSRF_TRUSTED_ORIGINS
