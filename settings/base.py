@@ -108,6 +108,7 @@ LOCALE_PATHS = [BASE_DIR / "locale"]
 # ─── Static ─────────────────────────────────────────────────────────────────
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ─── Media (user uploads — Actor/Director photos, Movie posters) ────────────
