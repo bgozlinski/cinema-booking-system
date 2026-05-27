@@ -1,0 +1,5 @@
+# Shell scripts run inside Linux containers / on the EC2 host. Force LF endings
+# regardless of the committer's platform (core.autocrlf) so `#!/bin/sh` never
+# breaks with a `\r` (bad interpreter) on checkout.
+*.sh text eol=lf
+deploy/nginx/*.conf text eol=lf

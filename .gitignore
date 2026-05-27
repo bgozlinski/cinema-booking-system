@@ -32,6 +32,7 @@ staticfiles/
 .env
 .env.*
 !.env.example
+!.env.prod.example
 
 # IDE
 .idea/
@@ -57,6 +58,10 @@ coverage.xml
 
 # Docker
 docker-compose.override.yml
+
+# Let's Encrypt certs + DB backups (created on the server at runtime)
+certbot/
+backups/
 
 # Stripe CLI binary (downloaded per-machine, OS-specific — not tracked)
 stripe.exe
