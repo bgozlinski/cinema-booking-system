@@ -27,11 +27,11 @@ directory using the exact filenames. Until then, the README shows broken-image i
 
 | File | Page / URL | What to show |
 |---|---|---|
-| `home.png` | `/` (Home) | Landing page — hero + featured/now-showing section. |
+| `home.png` | `/` (Home) | Home renders the movie catalog (same `MovieListView` as `/movies/`) — grid with posters + search/filter. |
 | `movie-list.png` | `/movies/` (catalog) | Movie grid with posters and the search/filter controls visible. |
 | `movie-detail.png` | a movie detail page | Hero with poster, synopsis, cast/crew, and the screenings list. |
 | `screening-list.png` | screenings schedule | The schedule view with several screenings across days. |
-| `booking.png` | booking / seat-selection form | The reserve-seats form for a screening (seat count, price, CTA). |
+| `booking.png` | `/bookings/<id>/` (booking detail) | Booking confirmation — ticket card with QR, status badge, seats/price, Pay/Cancel. |
 | `my-bookings.png` | `/bookings/` (My bookings) | Logged-in user's bookings showing different statuses. |
 | `admin.png` | `/admin/` | A populated changelist — e.g. Bookings or Movies. |
 | `api-docs.png` | `/api/v1/docs/` | Swagger UI with the endpoint groups expanded. |

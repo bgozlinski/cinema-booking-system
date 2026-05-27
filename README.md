@@ -30,8 +30,8 @@ KinoMania is a learning-grade Django 6 + Django REST Framework application: a pu
 | **Home** | **Movie catalog with search & filters** |
 | ![Movie detail](docs/screenshots/movie-detail.png) | ![Screenings schedule](docs/screenshots/screening-list.png) |
 | **Movie detail** | **Screenings schedule** |
-| ![Seat booking](docs/screenshots/booking.png) | ![My bookings](docs/screenshots/my-bookings.png) |
-| **Seat booking** | **My bookings** |
+| ![Booking confirmation](docs/screenshots/booking.png) | ![My bookings](docs/screenshots/my-bookings.png) |
+| **Booking confirmation** | **My bookings** |
 | ![Django admin](docs/screenshots/admin.png) | ![Interactive API docs](docs/screenshots/api-docs.png) |
 | **Django admin** | **Interactive API docs (Swagger)** |
 
