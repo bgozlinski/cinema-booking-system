@@ -4,7 +4,10 @@ from django.contrib import admin
 from django.urls import include, path
 from django.urls.resolvers import URLPattern, URLResolver
 
+from apps.cinema.views import healthz
+
 urlpatterns: list[URLPattern | URLResolver] = [
+    path("healthz", healthz, name="healthz"),
     path("admin/", admin.site.urls),
     path("accounts/", include("apps.accounts.urls", namespace="accounts")),
     path("", include("apps.cinema.urls", namespace="cinema")),
