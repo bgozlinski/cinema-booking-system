@@ -33,7 +33,7 @@ echo "### Creating dummy certificate ..."
 live_path="/etc/letsencrypt/live/$domain"
 mkdir -p "$data_path/conf/live/$domain"
 $compose run --rm --entrypoint "\
-  openssl req -x509 -nodes -newkey rsa:1024 -days 1 \
+  openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
     -keyout '$live_path/privkey.pem' \
     -out '$live_path/fullchain.pem' \
     -subj '/CN=localhost'" certbot
