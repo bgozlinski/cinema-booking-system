@@ -33,3 +33,8 @@ SECURE_HSTS_PRELOAD = True
 # Defense-in-depth headers (explicit even where Django already defaults).
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
+
+# Django 6 requires the deployment origin to be trusted for CSRF when POSTing
+# from forms/admin behind a proxy; without this, every POST 403s. Comma-separated
+# in .env (e.g. "https://kinomaniak.bnbg.pl").
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=["https://kinomaniak.bnbg.pl"])

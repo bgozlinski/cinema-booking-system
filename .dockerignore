@@ -1,0 +1,46 @@
+# VCS / CI
+.git
+.github
+.gitignore
+
+# Python caches & envs
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Tests, coverage, docs (not needed in the runtime image)
+**/tests/
+htmlcov/
+.coverage*
+coverage.xml
+docs/
+
+# Local data & secrets
+media/
+staticfiles/
+.env
+.env.*
+!.env.prod.example
+db.sqlite3
+
+# Compose / deploy host-side files & certs
+docker-compose.override.yml
+certbot/
+backups/
+
+# Editor / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Source .po catalogs — keep compiled .mo (committed) for runtime translations
+locale/**/*.po
+
+# Stripe CLI binary
+stripe
+stripe.exe
