@@ -58,6 +58,10 @@ coverage.xml
 # Docker
 docker-compose.override.yml
 
+# Stripe CLI binary (downloaded per-machine, OS-specific — not tracked)
+stripe.exe
+stripe
+
 # User uploads (Actor/Director photos, Movie posters) — exclude content, keep .gitkeep
 media/*
 !media/.gitkeep

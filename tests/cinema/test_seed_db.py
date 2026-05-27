@@ -474,3 +474,53 @@ class TestSeedDbBookings:
         # Re-run without --flush or --append → CommandError
         with pytest.raises(CommandError, match="Database not empty"):
             call_command("seed_db", "--users=5", "--movies=3", "--screenings=10", "--bookings=5")
+
+
+# ---------------------------------------------------------------------------
+# US-43 — demo posters (--posters flag)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_seed_db_no_posters_by_default(tmp_path, settings):
+    """A plain seed leaves the poster ImageField empty — no image files written,
+    so the rest of the suite stays fast and MEDIA_ROOT stays clean."""
+    settings.MEDIA_ROOT = str(tmp_path)
+
+    call_command(
+        "seed_db",
+        "--movies=3",
+        "--screenings=5",
+        "--bookings=0",
+        stdout=StringIO(),
+        stderr=StringIO(),
+    )
+
+    assert Movie.objects.count() == 3
+    for movie in Movie.objects.all():
+        assert not movie.poster
+
+
+@pytest.mark.django_db
+def test_seed_db_posters_flag_attaches_png_images(tmp_path, settings):
+    """--posters generates and attaches a real PNG poster per movie."""
+    settings.MEDIA_ROOT = str(tmp_path)
+
+    call_command(
+        "seed_db",
+        "--movies=3",
+        "--screenings=5",
+        "--bookings=0",
+        "--posters",
+        stdout=StringIO(),
+        stderr=StringIO(),
+    )
+
+    movies = Movie.objects.all()
+    assert movies.count() == 3
+    for movie in movies:
+        assert movie.poster
+        assert movie.poster.name.endswith(".png")
+        assert movie.poster.storage.exists(movie.poster.name)
+        with movie.poster.open("rb") as fh:
+            assert fh.read(8) == b"\x89PNG\r\n\x1a\n"  # PNG magic bytes
