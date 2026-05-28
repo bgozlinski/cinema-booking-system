@@ -161,4 +161,5 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /opt/kinomania
+            git pull --ff-only
             ./deploy/deploy.sh
