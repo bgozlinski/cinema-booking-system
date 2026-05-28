@@ -75,7 +75,7 @@ docker compose -f docker-compose.prod.yml exec web python manage.py seed_db
 ```
 
 ### 9. Stripe webhook (TEST dashboard)
-Add endpoint `https://kinomaniak.bnbg.pl/payments/webhooks/stripe/`, copy the
+Add endpoint `https://kinomaniak.bnbg.pl/webhooks/stripe/`, copy the
 signing secret into `.env.prod` (`STRIPE_WEBHOOK_SECRET`), then:
 ```bash
 docker compose -f docker-compose.prod.yml up -d web

@@ -12,10 +12,19 @@ staging=0   # set to 1 to test against LE staging (avoids rate limits)
 
 compose="docker compose -f docker-compose.prod.yml"
 
+# This is a ONE-TIME bootstrap. Renewals happen automatically via the certbot
+# service in docker-compose.prod.yml — never re-run this on a live box. Re-running
+# is what mints duplicate `-0001` lineages and dummy-cert (`CN=localhost`) messes,
+# and burns Let's Encrypt's "5 duplicate certs/week" limit. So: refuse if a cert
+# already exists, and tell the operator how to deliberately re-issue.
 if [ -d "$data_path/conf/live/$domain" ]; then
-  printf "Existing certificate for %s found. Replace it? (y/N) " "$domain"
-  read -r decision
-  if [ "$decision" != "y" ] && [ "$decision" != "Y" ]; then exit; fi
+  echo "A certificate already exists at $data_path/conf/live/$domain."
+  echo "This bootstrap is one-time only; renewals are automatic (certbot service)."
+  echo "To intentionally re-issue, remove the existing lineage first, then re-run:"
+  echo "  $compose run --rm --entrypoint 'certbot delete --cert-name $domain' certbot   # a real cert"
+  echo "  # or a leftover dummy: sudo rm -rf $data_path/conf/live/$domain $data_path/conf/archive/$domain $data_path/conf/renewal/$domain.conf"
+  echo "Aborting — no changes made."
+  exit 1
 fi
 
 # 1. Recommended TLS params referenced by nginx (options-ssl-nginx.conf, dhparams).
@@ -58,7 +67,7 @@ $compose run --rm --entrypoint "\
     --email $email \
     -d $domain \
     --rsa-key-size $rsa_key_size \
-    --agree-tos --no-eff-email --force-renewal" certbot
+    --agree-tos --no-eff-email" certbot
 
 # 5. Reload nginx with the real cert.
 echo "### Reloading nginx ..."
