@@ -8,6 +8,7 @@ from apps.cinema.views import healthz
 
 urlpatterns: list[URLPattern | URLResolver] = [
     path("healthz", healthz, name="healthz"),
+    path("", include("django_prometheus.urls")),
     path("admin/", admin.site.urls),
     path("accounts/", include("apps.accounts.urls", namespace="accounts")),
     path("", include("apps.cinema.urls", namespace="cinema")),

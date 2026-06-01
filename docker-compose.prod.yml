@@ -15,11 +15,15 @@ services:
     image: ghcr.io/bgozlinski/cinema-booking-system:latest
     restart: unless-stopped
     env_file: .env.prod
+    environment:
+      - PROMETHEUS_MULTIPROC_DIR=/tmp/prometheus_multiproc
     expose:
       - "8000"
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
+    tmpfs:
+      - /tmp/prometheus_multiproc
     depends_on:
       db:
         condition: service_healthy
@@ -50,7 +54,62 @@ services:
     # Attempt renewal every 12h (no-op until ~30 days before expiry).
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    profiles: ["monitoring"]
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+    volumes:
+      - ./deploy/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    depends_on:
+      - web
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    profiles: ["monitoring"]
+    env_file: .env.prod
+    environment:
+      # GF_SECURITY_ADMIN_PASSWORD comes from .env.prod via env_file. Do NOT use
+      # ${VAR} interpolation here — Compose interpolates from the host env / ./.env,
+      # not from a service's env_file, so it would resolve to empty.
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./deploy/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deploy/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - prometheus
+
+  postgres_exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    restart: unless-stopped
+    profiles: ["monitoring"]
+    env_file: .env.prod
+    depends_on:
+      db:
+        condition: service_healthy
+
+  blackbox_exporter:
+    image: prom/blackbox-exporter:latest
+    restart: unless-stopped
+    profiles: ["monitoring"]
+    command:
+      - --config.file=/etc/blackbox/blackbox.yml
+    volumes:
+      - ./deploy/monitoring/blackbox.yml:/etc/blackbox/blackbox.yml:ro
+
 volumes:
   pg_data:
   static_volume:
   media_volume:
+  prometheus_data:
+  grafana_data:

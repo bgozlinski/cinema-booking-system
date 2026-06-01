@@ -110,3 +110,44 @@ Watch under the repo's **Actions** tab.
 - **Cert errors** — DNS must resolve to the EIP before `init-letsencrypt.sh`; re-run after fixing.
 - **Static 404** — confirm `web` ran `collectstatic` (entrypoint logs) and `static_volume` is shared with nginx.
 - **GHCR pull denied on deploy** — re-run `docker login ghcr.io` on the box (PAT expired).
+
+## Monitoring (Prometheus + Grafana)
+
+Optional stack under the `monitoring` profile — Prometheus, Grafana,
+postgres_exporter, blackbox_exporter. UIs bind to `127.0.0.1`, not reachable
+publicly. It **does not touch** the live `web`/`db`/`nginx` services.
+
+### First run (on EC2, from `/opt/kinomania`)
+
+1. Append to `.env.prod`: `GF_SECURITY_ADMIN_PASSWORD` and `DATA_SOURCE_NAME`
+   (see `.env.prod.example`; `DATA_SOURCE_NAME` must use the same password as `DATABASE_URL`).
+2. Start the profile:
+   ```sh
+   docker compose -f docker-compose.prod.yml --profile monitoring up -d
+   ```
+3. Confirm Prometheus sees its targets: tunnel + `http://localhost:9090/targets`
+   — all `UP`.
+
+### UI access (SSH tunnel from your laptop)
+
+```sh
+ssh -L 3000:localhost:3000 -L 9090:localhost:9090 <user>@<ec2-host>
+```
+- Grafana: http://localhost:3000 (login `admin` / `GF_SECURITY_ADMIN_PASSWORD`).
+- Prometheus: http://localhost:9090.
+
+### CD vs the monitoring profile
+
+`deploy/deploy.sh` runs `docker compose ... up -d` **without** `--profile monitoring`,
+so CD neither stops nor restarts the monitoring services — they keep running.
+After changing their config, re-run `up -d` with the profile manually (step above).
+
+### Resources
+
+The stack adds ~300–500 MB RAM. On a small instance (`t2.micro`, 1 GB) lower
+Prometheus retention (`--storage.tsdb.retention.time`) or the scrape interval.
+
+### `/metrics` is private
+
+`https://kinomaniak.bnbg.pl/metrics` returns **404** by design (denied in nginx).
+Prometheus scrapes `web:8000/metrics` over the internal Docker network.

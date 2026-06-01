@@ -72,3 +72,5 @@ media/*
 !media/.gitkeep
 
 .superpowers/
+
+/docs/presentation
