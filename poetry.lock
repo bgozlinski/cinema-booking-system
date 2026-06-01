@@ -432,6 +432,22 @@ Django = ">=5.2"
 drf = ["djangorestframework"]
 
 [[package]]
+name = "django-prometheus"
+version = "2.5.0"
+description = "Django middlewares to monitor your application with Prometheus.io."
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "django_prometheus-2.5.0-py2.py3-none-any.whl", hash = "sha256:f15efb526cd53f9cf12da72dc55506322f5566b017a819ff27be1da302303134"},
+    {file = "django_prometheus-2.5.0.tar.gz", hash = "sha256:4837b3c3734d8350880839ab8235aafd250b668c348e159d4aecc3cbefeee53e"},
+]
+
+[package.dependencies]
+Django = ">=4.2,<5.0.dev0 || >=5.1.dev0,<6.1"
+prometheus-client = ">=0.7"
+
+[[package]]
 name = "django-stubs"
 version = "6.0.4"
 description = "Mypy stubs for Django"
@@ -1173,6 +1189,23 @@ pyyaml = ">=5.1"
 virtualenv = ">=20.10.0"
 
 [[package]]
+name = "prometheus-client"
+version = "0.25.0"
+description = "Python client for the Prometheus monitoring system."
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "prometheus_client-0.25.0-py3-none-any.whl", hash = "sha256:d5aec89e349a6ec230805d0df882f3807f74fd6c1a2fa86864e3c2279059fed1"},
+    {file = "prometheus_client-0.25.0.tar.gz", hash = "sha256:5e373b75c31afb3c86f1a52fa1ad470c9aace18082d39ec0d2f918d11cc9ba28"},
+]
+
+[package.extras]
+aiohttp = ["aiohttp"]
+django = ["django"]
+twisted = ["twisted"]
+
+[[package]]
 name = "psycopg"
 version = "3.3.4"
 description = "PostgreSQL database adapter for Python"
@@ -1842,4 +1875,4 @@ python-discovery = ">=1.2.2"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<4.0"
-content-hash = "961bd710166b0824f172ced0c258d2469725a16003274e05c3d49b43f86d8072"
+content-hash = "a937ff3c54c6a228126880de63124f9a5b257aef44f5137ca6fb15461474bfde"
