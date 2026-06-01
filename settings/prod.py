@@ -21,6 +21,11 @@ EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = True
 
+# Prometheus scrapes /metrics internally over plain HTTP on the Docker network
+# (no X-Forwarded-Proto), so the HTTPS redirect would 301 the scrape and break it.
+# /metrics is blocked publicly at nginx, so exempting it from the redirect is safe.
+SECURE_REDIRECT_EXEMPT = [r"^metrics$"]
+
 # Cookies only over HTTPS.
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
