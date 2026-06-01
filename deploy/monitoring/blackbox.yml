@@ -1,0 +1,9 @@
+modules:
+  http_2xx:
+    prober: http
+    timeout: 5s
+    http:
+      method: GET
+      fail_if_not_ssl: true
+      preferred_ip_protocol: ip4
+      # valid_status_codes empty -> defaults to any 2xx.
